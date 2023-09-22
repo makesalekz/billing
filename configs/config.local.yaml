@@ -5,12 +5,6 @@ server:
   grpc:
     addr: 0.0.0.0:9004
     timeout: 30s
-consul:
-  address: 0.0.0.0:8500
-  path: app/media/
-vault:
-  address: 0.0.0.0:8200
-  token: myroot
 db:
   address: host=localhost port=54400 user=me dbname=api password=password sslmode=disable
 discovery:

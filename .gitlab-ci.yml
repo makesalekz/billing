@@ -13,7 +13,7 @@ docker-build:
   stage: build
   variables:
     SERVICE_NAME: ${CI_PROJECT_NAME}
-    DB_PORT: 54403
+    DB_PORT: 54404
     DB_NAME: api
     DB_USER: me
     DB_PASS: password
