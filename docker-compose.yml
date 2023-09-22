@@ -6,7 +6,7 @@ services:
     restart: always
     image: postgres:latest
     volumes:
-      - ./.docker/data/postgres:/var/lib/postgresql/data
+      - ${DB_VOLUME}:/var/lib/postgresql/data
     ports:
       - '${DB_PORT}:5432'
     environment:
@@ -17,6 +17,28 @@ services:
     networks:
       - backend
   service:
+    image: ${REGISTRY_IMAGE}
+    container_name: ${SERVICE_NAME}_service
+    networks:
+      - backend
+    volumes:
+      - ./configs:/data/conf
+    restart: unless-stopped
+    depends_on:
+      - db
+    profiles:
+      - stage
+    environment:
+      - SERVICE_NAME=${SERVICE_NAME}
+      - CONSUL_ADDRESS=${CONSUL_ADDRESS}
+      - VAULT_ADDRESS=${VAULT_ADDRESS}
+      - VAULT_ROLE_ID=${VAULT_ROLE_ID}
+      - VAULT_SECRET_ID_PATH=/run/secrets/vault_secret_id
+      - AWS_ACCESS_KEY_ID={AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY={AWS_SECRET_ACCESS_KEY}
+    secrets:
+      - vault_secret_id
+  dev-service:
     build:
       context: ./
       dockerfile: Dockerfile
@@ -29,15 +51,28 @@ services:
     volumes:
       - ./configs:/data/conf
     restart: unless-stopped
-    depends_on:
-      - db
     profiles:
-      - build
+      - dev
     environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AUTOMIGRATE=true
+      - SERVICE_NAME=${SERVICE_NAME}
+      - CONSUL_ADDRESS=http://consul:8500
+      - VAULT_ADDRESS=http://vault:8200
+      - VAULT_TOKEN=myroot
+      - AWS_ACCESS_KEY_ID={AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY={AWS_SECRET_ACCESS_KEY}
+
+volumes:
+  dbvol:
+    name: ${SERVICE_NAME}_db
+    external: true
 
 networks:
   backend:
-    name: backend
+    name: ${NETWORK}
+    driver: bridge
     external: true
+
+secrets:
+  vault_secret_id:
+    environment: 'VAULT_SECRET_ID'

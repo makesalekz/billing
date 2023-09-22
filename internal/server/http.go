@@ -2,11 +2,12 @@ package server
 
 import (
 	"io"
-	upload_v1 "media/api/upload/v1"
-	"media/internal/biz"
-	"media/internal/conf"
-	"media/internal/service"
 	"net/http"
+
+	upload_v1 "media/api/upload/v1"
+	"media/internal/conf"
+	"media/internal/data"
+	"media/internal/service"
 
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -19,13 +20,13 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Bootstrap, logger log.Logger, jwtBiz *biz.JwtProcessor, upload *service.UploadService) *khttp.Server {
+func NewHTTPServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor, upload *service.UploadService) *khttp.Server {
 	var opts = []khttp.ServerOption{
 		khttp.Middleware(
 			recovery.Recovery(),
 			metadata.Server(),
 			jwt.Server(func(token *jwtv4.Token) (interface{}, error) {
-				return jwtBiz.GetSecret(), nil
+				return jwtp.GetSecret(), nil
 			}, jwt.WithSigningMethod(jwtv4.SigningMethodHS256), jwt.WithClaims(func() jwtv4.Claims { return &jwtv4.RegisteredClaims{} })),
 		),
 		khttp.RequestDecoder(func(r *http.Request, v interface{}) error {

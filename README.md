@@ -1,4 +1,4 @@
-# Media
+# media
 
 ## Proto files
 
@@ -42,14 +42,19 @@ make api
 make all
 ```
 
+### Generate migrations
+
+[Install Atlas](https://entgo.io/docs/versioned-migrations#generating-migrations)
+
+```bash
+make migrations
+```
+
 ## Run
 
 ### Run debug
 
 ```bash
-export AWS_ACCESS_KEY_ID={aws-key}
-export AWS_SECRET_ACCESS_KEY={aws-secret}
-
 make run
 ```
 
@@ -66,8 +71,11 @@ go build -o ./bin/ ./...
 ## Run in Docker
 
 ```bash
-export AWS_ACCESS_KEY_ID={aws-key}
-export AWS_SECRET_ACCESS_KEY={aws-secret}
+make start
+```
 
-docker compose up -d
+To stop docker:
+
+```bash
+make stop
 ```

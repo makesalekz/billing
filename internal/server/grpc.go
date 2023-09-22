@@ -2,8 +2,8 @@ package server
 
 import (
 	upload_v1 "media/api/upload/v1"
-	"media/internal/biz"
 	"media/internal/conf"
+	"media/internal/data"
 	"media/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -15,13 +15,13 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Bootstrap, logger log.Logger, jwtBiz *biz.JwtProcessor, upload *service.UploadService) *grpc.Server {
+func NewGRPCServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor, upload *service.UploadService) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
 			metadata.Server(),
 			jwt.Server(func(token *jwtv4.Token) (interface{}, error) {
-				return jwtBiz.GetSecret(), nil
+				return jwtp.GetSecret(), nil
 			}, jwt.WithSigningMethod(jwtv4.SigningMethodHS256)),
 		),
 	}

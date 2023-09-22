@@ -3,9 +3,9 @@ package biz
 import (
 	"context"
 	_ "embed"
-	upload_v1 "media/api/upload/v1"
 	"strings"
 
+	upload_v1 "media/api/upload/v1"
 	"media/internal/conf"
 	"media/internal/data"
 
@@ -16,7 +16,6 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	jwtv4 "github.com/golang-jwt/jwt/v4"
-	"github.com/hashicorp/consul/api"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
@@ -25,19 +24,17 @@ type MediaUsecase struct {
 	conf      *conf.Bootstrap
 	log       *log.Helper
 	discovery *consul.Registry
-	jwt       *JwtProcessor
+	jwt       *data.JwtProcessor
 	mediaRepo data.MediaRepo
 	s3        *data.S3Uploader
 }
 
 // NewGreeterUsecase new a Greeter usecase.
-func NewMediaUsecase(c *conf.Bootstrap, logger log.Logger, consulClient *api.Client, jwt *JwtProcessor, mediaRepo data.MediaRepo, s3 *data.S3Uploader) (*MediaUsecase, error) {
-	dis := consul.New(consulClient)
-
+func NewMediaUsecase(logger log.Logger, c *data.Config, jwt *data.JwtProcessor, mediaRepo data.MediaRepo, s3 *data.S3Uploader) (*MediaUsecase, error) {
 	return &MediaUsecase{
-		conf:      c,
+		conf:      c.Bootstrap,
 		log:       log.NewHelper(logger),
-		discovery: dis,
+		discovery: c.GetRegistry(),
 		jwt:       jwt,
 		mediaRepo: mediaRepo,
 		s3:        s3,

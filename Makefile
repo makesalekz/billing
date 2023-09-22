@@ -28,12 +28,30 @@ init:
 .PHONY: run
 # run
 run:	
+	set -a && source .env && set +a && \
 	kratos run
+
+.PHONY: db
+# db
+db:
+	set -a && source .env && set +a && \
+	export REGISTRY_IMAGE=busybox && \
+	docker compose up -d
 
 .PHONY: start
 # start
 start:
-	docker-compose up -d
+	set -a && source .env && set +a && \
+	export REGISTRY_IMAGE=busybox && \
+	docker compose build dev-service && \
+	docker compose --profile=dev up -d dev-service
+
+.PHONY: stop
+# stop
+stop:
+	set -a && source .env && set +a && \
+	export REGISTRY_IMAGE=busybox && \
+	docker compose --profile=dev down
 
 .PHONY: config
 # generate internal proto
@@ -56,6 +74,14 @@ errors:
 # generate ent
 ent:
 	go generate ./ent
+
+.PHONY: migrations
+# generate migrations
+migrations:
+	atlas migrate diff init \
+		--dir "file://ent/migrate/migrations" \
+		--to "ent://ent/schema" \
+		--dev-url "docker://postgres/15/test?search_path=public"
 
 .PHONY: api
 # generate api proto
@@ -86,7 +112,6 @@ all:
 	make api;
 	make errors;
 	make config;
-	make ent;
 	make generate;
 
 # show help

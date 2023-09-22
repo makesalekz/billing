@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/go-kratos/kratos/v2/config"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
@@ -19,7 +18,7 @@ type S3Uploader struct {
 }
 
 // NewS3Uploader .
-func NewS3Uploader(c config.Config) (*S3Uploader, error) {
+func NewS3Uploader(c *Config) (*S3Uploader, error) {
 	region, err := c.Value("AWS_REGION").String()
 	if err != nil {
 		return nil, err

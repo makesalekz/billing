@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"media/internal/conf"
+	"media/internal/data"
 
-	consul "github.com/go-kratos/consul/registry"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/config/file"
@@ -14,7 +14,6 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
-	"github.com/hashicorp/consul/api"
 
 	_ "go.uber.org/automaxprocs"
 )
@@ -35,13 +34,10 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs/config.local.yaml", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, consulClient *api.Client, gs *grpc.Server, hs *http.Server) *kratos.App {
-	// new reg with consul client
-	reg := consul.New(consulClient)
-
+func newApp(logger log.Logger, c *data.Config, gs *grpc.Server, hs *http.Server) *kratos.App {
 	return kratos.New(
 		kratos.ID(id),
-		kratos.Name(Name),
+		kratos.Name(c.GetAppName()),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
 		kratos.Logger(logger),
@@ -50,7 +46,7 @@ func newApp(logger log.Logger, consulClient *api.Client, gs *grpc.Server, hs *ht
 			hs,
 		),
 		// with registrar
-		kratos.Registrar(reg),
+		kratos.Registrar(c.GetRegistry()),
 	)
 }
 
@@ -82,15 +78,7 @@ func main() {
 		panic(err)
 	}
 
-	// new consul client
-	consulClient, err := api.NewClient(&api.Config{
-		Address: bc.Consul.Address,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	app, cleanup, err := wireApp(&bc, consulClient, logger)
+	app, cleanup, err := wireApp(&bc, logger)
 	if err != nil {
 		panic(err)
 	}

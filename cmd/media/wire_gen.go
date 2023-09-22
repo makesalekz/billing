@@ -9,7 +9,6 @@ package main
 import (
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/hashicorp/consul/api"
 	"media/internal/biz"
 	"media/internal/conf"
 	"media/internal/data"
@@ -24,8 +23,12 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(bootstrap *conf.Bootstrap, client *api.Client, logger log.Logger) (*kratos.App, func(), error) {
-	jwtProcessor, err := biz.NewJwtProcessor()
+func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(), error) {
+	config, err := data.NewConfig(bootstrap)
+	if err != nil {
+		return nil, nil, err
+	}
+	jwtProcessor, err := data.NewJwtProcessor(config)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -34,17 +37,12 @@ func wireApp(bootstrap *conf.Bootstrap, client *api.Client, logger log.Logger) (
 		return nil, nil, err
 	}
 	mediaRepo := data.NewMediaRepo(dataData)
-	config, err := data.NewConfig(client, bootstrap)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
 	s3Uploader, err := data.NewS3Uploader(config)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	mediaUsecase, err := biz.NewMediaUsecase(bootstrap, logger, client, jwtProcessor, mediaRepo, s3Uploader)
+	mediaUsecase, err := biz.NewMediaUsecase(logger, config, jwtProcessor, mediaRepo, s3Uploader)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -52,7 +50,7 @@ func wireApp(bootstrap *conf.Bootstrap, client *api.Client, logger log.Logger) (
 	uploadService := service.NewUploadService(logger, jwtProcessor, mediaUsecase)
 	grpcServer := server.NewGRPCServer(bootstrap, logger, jwtProcessor, uploadService)
 	httpServer := server.NewHTTPServer(bootstrap, logger, jwtProcessor, uploadService)
-	app := newApp(logger, client, grpcServer, httpServer)
+	app := newApp(logger, config, grpcServer, httpServer)
 	return app, func() {
 		cleanup()
 	}, nil

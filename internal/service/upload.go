@@ -5,6 +5,7 @@ import (
 
 	v1 "media/api/upload/v1"
 	"media/internal/biz"
+	"media/internal/data"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -13,11 +14,11 @@ type UploadService struct {
 	v1.UnimplementedUploadServer
 
 	log *log.Helper
-	jwt *biz.JwtProcessor
+	jwt *data.JwtProcessor
 	uc  *biz.MediaUsecase
 }
 
-func NewUploadService(logger log.Logger, jwt *biz.JwtProcessor, uc *biz.MediaUsecase) *UploadService {
+func NewUploadService(logger log.Logger, jwt *data.JwtProcessor, uc *biz.MediaUsecase) *UploadService {
 	return &UploadService{
 		log: log.NewHelper(logger),
 		jwt: jwt,
