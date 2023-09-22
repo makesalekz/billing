@@ -1,4 +1,11 @@
-# media
+# dummy
+
+## Init project
+
+1. Change module name in go.mod
+2. Replace every "dummy" code with your code
+3. Local env: create .env from .example, replace SERVICE_NAME, set unused HTTP_PORT, GRPC_PORT
+4. CI: create .gitlab-ci.yml from .example, replace "DB_PORT: 5440X" with unused port
 
 ## Proto files
 

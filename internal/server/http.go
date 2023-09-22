@@ -1,26 +1,21 @@
 package server
 
 import (
-	"io"
-	"net/http"
+	dummy_v1 "dummy/api/dummy/v1"
+	"dummy/internal/conf"
+	"dummy/internal/data"
+	"dummy/internal/service"
 
-	upload_v1 "media/api/upload/v1"
-	"media/internal/conf"
-	"media/internal/data"
-	"media/internal/service"
-
-	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 	jwtv4 "github.com/golang-jwt/jwt/v4"
-	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor, upload *service.UploadService) *khttp.Server {
+func NewHTTPServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor, srvc *service.DummyService) *khttp.Server {
 	var opts = []khttp.ServerOption{
 		khttp.Middleware(
 			recovery.Recovery(),
@@ -29,24 +24,6 @@ func NewHTTPServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor
 				return jwtp.GetSecret(), nil
 			}, jwt.WithSigningMethod(jwtv4.SigningMethodHS256), jwt.WithClaims(func() jwtv4.Claims { return &jwtv4.RegisteredClaims{} })),
 		),
-		khttp.RequestDecoder(func(r *http.Request, v interface{}) error {
-			_, ok := khttp.CodecForRequest(r, "Content-Type")
-			if ok {
-				return khttp.DefaultRequestDecoder(r, v)
-			}
-
-			file, err := io.ReadAll(r.Body)
-			if err != nil {
-				return errors.BadRequest("CODEC", err.Error())
-			}
-			defer r.Body.Close()
-
-			v.(*upload_v1.UploadMediaRequest).Content = &httpbody.HttpBody{
-				ContentType: http.DetectContentType(file),
-				Data:        file,
-			}
-			return nil
-		}),
 	}
 	if c.Server.Http.Network != "" {
 		opts = append(opts, khttp.Network(c.Server.Http.Network))
@@ -59,7 +36,7 @@ func NewHTTPServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor
 	}
 	srv := khttp.NewServer(opts...)
 
-	upload_v1.RegisterUploadHTTPServer(srv, upload)
+	dummy_v1.RegisterDummyHTTPServer(srv, srvc)
 
 	return srv
 }

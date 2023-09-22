@@ -3,19 +3,19 @@
 
 openapi: 3.0.3
 info:
-    title: Upload API
+    title: Dummy API
     version: 0.0.1
 paths:
-    /v1/media/avatar:
+    /v1/dummy:
         post:
             tags:
-                - Upload
-            operationId: Upload_UploadAvatar
+                - Dummy
+            operationId: Dummy_CreateDummy
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/api.upload.v1.UploadMediaRequest'
+                            $ref: '#/components/schemas/api.dummy.v1.DummyRequest'
                 required: true
             responses:
                 "200":
@@ -23,36 +23,14 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/api.upload.v1.UploadMediaReply'
-    /v1/media/upload:
-        post:
-            tags:
-                - Upload
-            operationId: Upload_UploadMedia
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/api.upload.v1.UploadMediaRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/api.upload.v1.UploadMediaReply'
+                                $ref: '#/components/schemas/api.dummy.v1.DummyReply'
 components:
     schemas:
-        api.upload.v1.UploadMediaReply:
+        api.dummy.v1.DummyReply:
             type: object
-            properties:
-                url:
-                    type: string
-        api.upload.v1.UploadMediaRequest:
+            properties: {}
+        api.dummy.v1.DummyRequest:
             type: object
-            properties:
-                content:
-                    type: string
+            properties: {}
 tags:
-    - name: Upload
+    - name: Dummy

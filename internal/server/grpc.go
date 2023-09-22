@@ -1,10 +1,10 @@
 package server
 
 import (
-	upload_v1 "media/api/upload/v1"
-	"media/internal/conf"
-	"media/internal/data"
-	"media/internal/service"
+	dummy_v1 "dummy/api/dummy/v1"
+	"dummy/internal/conf"
+	"dummy/internal/data"
+	"dummy/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
@@ -15,7 +15,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor, upload *service.UploadService) *grpc.Server {
+func NewGRPCServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor, srvc *service.DummyService) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
@@ -36,7 +36,7 @@ func NewGRPCServer(c *conf.Bootstrap, logger log.Logger, jwtp *data.JwtProcessor
 	}
 	srv := grpc.NewServer(opts...)
 
-	upload_v1.RegisterUploadServer(srv, upload)
+	dummy_v1.RegisterDummyServer(srv, srvc)
 
 	return srv
 }

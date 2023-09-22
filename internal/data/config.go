@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"media/internal/conf"
+	"dummy/internal/conf"
 
 	"github.com/go-kratos/consul/registry"
 	"github.com/go-kratos/kratos/contrib/config/consul/v2"

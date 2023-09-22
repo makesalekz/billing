@@ -4,9 +4,9 @@ package ent
 
 import (
 	"context"
+	"dummy/ent/dummy"
 	"errors"
 	"fmt"
-	"media/ent/media"
 	"reflect"
 	"sync"
 
@@ -73,7 +73,7 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			media.Table: media.ValidColumn,
+			dummy.Table: dummy.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

@@ -4,11 +4,11 @@ package enttest
 
 import (
 	"context"
-	"media/ent"
+	"dummy/ent"
 	// required by schema hooks.
-	_ "media/ent/runtime"
+	_ "dummy/ent/runtime"
 
-	"media/ent/migrate"
+	"dummy/ent/migrate"
 
 	"entgo.io/ent/dialect/sql/schema"
 )

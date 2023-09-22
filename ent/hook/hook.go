@@ -4,20 +4,20 @@ package hook
 
 import (
 	"context"
+	"dummy/ent"
 	"fmt"
-	"media/ent"
 )
 
-// The MediaFunc type is an adapter to allow the use of ordinary
-// function as Media mutator.
-type MediaFunc func(context.Context, *ent.MediaMutation) (ent.Value, error)
+// The DummyFunc type is an adapter to allow the use of ordinary
+// function as Dummy mutator.
+type DummyFunc func(context.Context, *ent.DummyMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f MediaFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.MediaMutation); ok {
+func (f DummyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DummyMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MediaMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DummyMutation", m)
 }
 
 // Condition is a hook condition function.

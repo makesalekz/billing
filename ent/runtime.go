@@ -3,8 +3,8 @@
 package ent
 
 import (
-	"media/ent/media"
-	"media/ent/schema"
+	"dummy/ent/dummy"
+	"dummy/ent/schema"
 	"time"
 )
 
@@ -12,32 +12,18 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	mediaFields := schema.Media{}.Fields()
-	_ = mediaFields
-	// mediaDescUserID is the schema descriptor for user_id field.
-	mediaDescUserID := mediaFields[0].Descriptor()
-	// media.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
-	media.UserIDValidator = mediaDescUserID.Validators[0].(func(int64) error)
-	// mediaDescExtension is the schema descriptor for extension field.
-	mediaDescExtension := mediaFields[1].Descriptor()
-	// media.ExtensionValidator is a validator for the "extension" field. It is called by the builders before save.
-	media.ExtensionValidator = func() func(string) error {
-		validators := mediaDescExtension.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(extension string) error {
-			for _, fn := range fns {
-				if err := fn(extension); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
-	// mediaDescCreatedAt is the schema descriptor for created_at field.
-	mediaDescCreatedAt := mediaFields[4].Descriptor()
-	// media.DefaultCreatedAt holds the default value on creation for the created_at field.
-	media.DefaultCreatedAt = mediaDescCreatedAt.Default.(func() time.Time)
+	dummyFields := schema.Dummy{}.Fields()
+	_ = dummyFields
+	// dummyDescName is the schema descriptor for name field.
+	dummyDescName := dummyFields[1].Descriptor()
+	// dummy.DefaultName holds the default value on creation for the name field.
+	dummy.DefaultName = dummyDescName.Default.(string)
+	// dummyDescCreatedAt is the schema descriptor for created_at field.
+	dummyDescCreatedAt := dummyFields[2].Descriptor()
+	// dummy.DefaultCreatedAt holds the default value on creation for the created_at field.
+	dummy.DefaultCreatedAt = dummyDescCreatedAt.Default.(func() time.Time)
+	// dummyDescUpdatedAt is the schema descriptor for updated_at field.
+	dummyDescUpdatedAt := dummyFields[3].Descriptor()
+	// dummy.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	dummy.DefaultUpdatedAt = dummyDescUpdatedAt.Default.(func() time.Time)
 }

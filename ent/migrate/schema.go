@@ -8,25 +8,23 @@ import (
 )
 
 var (
-	// MediaColumns holds the columns for the "media" table.
-	MediaColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
+	// DummiesColumns holds the columns for the "dummies" table.
+	DummiesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "user_id", Type: field.TypeInt64},
-		{Name: "extension", Type: field.TypeString, Size: 10},
-		{Name: "path", Type: field.TypeString, Unique: true},
-		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "name", Type: field.TypeString, Default: ""},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "uploaded_at", Type: field.TypeTime, Nullable: true},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
-	// MediaTable holds the schema information for the "media" table.
-	MediaTable = &schema.Table{
-		Name:       "media",
-		Columns:    MediaColumns,
-		PrimaryKey: []*schema.Column{MediaColumns[0]},
+	// DummiesTable holds the schema information for the "dummies" table.
+	DummiesTable = &schema.Table{
+		Name:       "dummies",
+		Columns:    DummiesColumns,
+		PrimaryKey: []*schema.Column{DummiesColumns[0]},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		MediaTable,
+		DummiesTable,
 	}
 )
 

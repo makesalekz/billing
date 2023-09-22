@@ -21,4 +21,4 @@ EXPOSE 8000
 EXPOSE 9000
 VOLUME /data/conf
 
-CMD ["./media", "-conf", "/data/conf/config.yaml"]
+CMD ["./dummy", "-conf", "/data/conf/config.yaml"]

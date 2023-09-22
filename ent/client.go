@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 
-	"media/ent/migrate"
+	"dummy/ent/migrate"
 
-	"media/ent/media"
+	"dummy/ent/dummy"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -22,8 +22,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// Media is the client for interacting with the Media builders.
-	Media *MediaClient
+	// Dummy is the client for interacting with the Dummy builders.
+	Dummy *DummyClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,7 +37,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
-	c.Media = NewMediaClient(c.config)
+	c.Dummy = NewDummyClient(c.config)
 }
 
 type (
@@ -120,7 +120,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
-		Media:  NewMediaClient(cfg),
+		Dummy:  NewDummyClient(cfg),
 	}, nil
 }
 
@@ -140,14 +140,14 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
-		Media:  NewMediaClient(cfg),
+		Dummy:  NewDummyClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Media.
+//		Dummy.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -169,111 +169,111 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Media.Use(hooks...)
+	c.Dummy.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Media.Intercept(interceptors...)
+	c.Dummy.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
-	case *MediaMutation:
-		return c.Media.mutate(ctx, m)
+	case *DummyMutation:
+		return c.Dummy.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
 }
 
-// MediaClient is a client for the Media schema.
-type MediaClient struct {
+// DummyClient is a client for the Dummy schema.
+type DummyClient struct {
 	config
 }
 
-// NewMediaClient returns a client for the Media from the given config.
-func NewMediaClient(c config) *MediaClient {
-	return &MediaClient{config: c}
+// NewDummyClient returns a client for the Dummy from the given config.
+func NewDummyClient(c config) *DummyClient {
+	return &DummyClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `media.Hooks(f(g(h())))`.
-func (c *MediaClient) Use(hooks ...Hook) {
-	c.hooks.Media = append(c.hooks.Media, hooks...)
+// A call to `Use(f, g, h)` equals to `dummy.Hooks(f(g(h())))`.
+func (c *DummyClient) Use(hooks ...Hook) {
+	c.hooks.Dummy = append(c.hooks.Dummy, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `media.Intercept(f(g(h())))`.
-func (c *MediaClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Media = append(c.inters.Media, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `dummy.Intercept(f(g(h())))`.
+func (c *DummyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Dummy = append(c.inters.Dummy, interceptors...)
 }
 
-// Create returns a builder for creating a Media entity.
-func (c *MediaClient) Create() *MediaCreate {
-	mutation := newMediaMutation(c.config, OpCreate)
-	return &MediaCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Dummy entity.
+func (c *DummyClient) Create() *DummyCreate {
+	mutation := newDummyMutation(c.config, OpCreate)
+	return &DummyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Media entities.
-func (c *MediaClient) CreateBulk(builders ...*MediaCreate) *MediaCreateBulk {
-	return &MediaCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Dummy entities.
+func (c *DummyClient) CreateBulk(builders ...*DummyCreate) *DummyCreateBulk {
+	return &DummyCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Media.
-func (c *MediaClient) Update() *MediaUpdate {
-	mutation := newMediaMutation(c.config, OpUpdate)
-	return &MediaUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Dummy.
+func (c *DummyClient) Update() *DummyUpdate {
+	mutation := newDummyMutation(c.config, OpUpdate)
+	return &DummyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *MediaClient) UpdateOne(m *Media) *MediaUpdateOne {
-	mutation := newMediaMutation(c.config, OpUpdateOne, withMedia(m))
-	return &MediaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *DummyClient) UpdateOne(d *Dummy) *DummyUpdateOne {
+	mutation := newDummyMutation(c.config, OpUpdateOne, withDummy(d))
+	return &DummyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *MediaClient) UpdateOneID(id int64) *MediaUpdateOne {
-	mutation := newMediaMutation(c.config, OpUpdateOne, withMediaID(id))
-	return &MediaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *DummyClient) UpdateOneID(id int) *DummyUpdateOne {
+	mutation := newDummyMutation(c.config, OpUpdateOne, withDummyID(id))
+	return &DummyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Media.
-func (c *MediaClient) Delete() *MediaDelete {
-	mutation := newMediaMutation(c.config, OpDelete)
-	return &MediaDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Dummy.
+func (c *DummyClient) Delete() *DummyDelete {
+	mutation := newDummyMutation(c.config, OpDelete)
+	return &DummyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *MediaClient) DeleteOne(m *Media) *MediaDeleteOne {
-	return c.DeleteOneID(m.ID)
+func (c *DummyClient) DeleteOne(d *Dummy) *DummyDeleteOne {
+	return c.DeleteOneID(d.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *MediaClient) DeleteOneID(id int64) *MediaDeleteOne {
-	builder := c.Delete().Where(media.ID(id))
+func (c *DummyClient) DeleteOneID(id int) *DummyDeleteOne {
+	builder := c.Delete().Where(dummy.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &MediaDeleteOne{builder}
+	return &DummyDeleteOne{builder}
 }
 
-// Query returns a query builder for Media.
-func (c *MediaClient) Query() *MediaQuery {
-	return &MediaQuery{
+// Query returns a query builder for Dummy.
+func (c *DummyClient) Query() *DummyQuery {
+	return &DummyQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeMedia},
+		ctx:    &QueryContext{Type: TypeDummy},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a Media entity by its id.
-func (c *MediaClient) Get(ctx context.Context, id int64) (*Media, error) {
-	return c.Query().Where(media.ID(id)).Only(ctx)
+// Get returns a Dummy entity by its id.
+func (c *DummyClient) Get(ctx context.Context, id int) (*Dummy, error) {
+	return c.Query().Where(dummy.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *MediaClient) GetX(ctx context.Context, id int64) *Media {
+func (c *DummyClient) GetX(ctx context.Context, id int) *Dummy {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -282,36 +282,36 @@ func (c *MediaClient) GetX(ctx context.Context, id int64) *Media {
 }
 
 // Hooks returns the client hooks.
-func (c *MediaClient) Hooks() []Hook {
-	return c.hooks.Media
+func (c *DummyClient) Hooks() []Hook {
+	return c.hooks.Dummy
 }
 
 // Interceptors returns the client interceptors.
-func (c *MediaClient) Interceptors() []Interceptor {
-	return c.inters.Media
+func (c *DummyClient) Interceptors() []Interceptor {
+	return c.inters.Dummy
 }
 
-func (c *MediaClient) mutate(ctx context.Context, m *MediaMutation) (Value, error) {
+func (c *DummyClient) mutate(ctx context.Context, m *DummyMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&MediaCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&DummyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&MediaUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&DummyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&MediaUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&DummyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&MediaDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&DummyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown Media mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Dummy mutation op: %q", m.Op())
 	}
 }
 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Media []ent.Hook
+		Dummy []ent.Hook
 	}
 	inters struct {
-		Media []ent.Interceptor
+		Dummy []ent.Interceptor
 	}
 )

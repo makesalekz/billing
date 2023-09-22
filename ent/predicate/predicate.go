@@ -6,5 +6,5 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// Media is the predicate function for media builders.
-type Media func(*sql.Selector)
+// Dummy is the predicate function for dummy builders.
+type Dummy func(*sql.Selector)
