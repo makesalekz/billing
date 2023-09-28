@@ -3,9 +3,10 @@
 ## Init project
 
 1. Change module name in go.mod
-2. Replace every "dummy" code with your code
-3. Local env: create .env from .example, replace SERVICE_NAME, set unused HTTP_PORT, GRPC_PORT
-4. CI: create .gitlab-ci.yml from .example, replace "DB_PORT: 5440X" with unused port
+2. Rename cmd/dummy directory
+3. Replace every "dummy" code with your code
+4. Local env: create .env from .example, replace SERVICE_NAME, set unused HTTP_PORT, GRPC_PORT
+5. CI: create .gitlab-ci.yml from .example, replace "DB_PORT: 5440X" with unused port
 
 ## Proto files
 
@@ -71,8 +72,7 @@ make run
 export AWS_ACCESS_KEY_ID={aws-key}
 export AWS_SECRET_ACCESS_KEY={aws-secret}
 
-go build -o ./bin/ ./...
-./bin/media -conf ./configs
+make build
 ```
 
 ## Run in Docker
