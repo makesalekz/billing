@@ -6,11 +6,11 @@
 package main
 
 import (
-	"media/internal/biz"
-	"media/internal/conf"
-	"media/internal/data"
-	"media/internal/server"
-	"media/internal/service"
+	"dummy/internal/biz"
+	"dummy/internal/conf"
+	"dummy/internal/data"
+	"dummy/internal/server"
+	"dummy/internal/service"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"

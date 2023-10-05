@@ -4,8 +4,8 @@ import (
 	"flag"
 	"os"
 
-	"media/internal/conf"
-	"media/internal/data"
+	"dummy/internal/conf"
+	"dummy/internal/data"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -21,7 +21,7 @@ import (
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name string = "{TODO: Write SERVICE_NAME here}"
+	Name string = "dummy"
 	// Version is the version of the compiled software.
 	Version string = "1.0.0"
 	// flagconf is the config flag.

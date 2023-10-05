@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 
+	dummy_v1 "dummy/api/dummy/v1"
 	"dummy/ent"
 	"dummy/internal/conf"
 	"dummy/internal/data"
@@ -32,6 +33,11 @@ func NewDummyUsecase(logger log.Logger, c *data.Config, jwt *data.JwtProcessor, 
 	}, nil
 }
 
-func (d *DummyUsecase) DummyMethod(ctx context.Context, userId int64) (*ent.Dummy, error) {
-	return d.repo.CreateDummy(ctx, userId)
+func (uc *DummyUsecase) DummyMethod(ctx context.Context) (*ent.Dummy, error) {
+	userId, ok := uc.jwt.GetUserIdFromContext(ctx)
+	if !ok {
+		return nil, dummy_v1.ErrorUnauthorized("Unauthorized")
+	}
+
+	return uc.repo.CreateDummy(ctx, userId)
 }

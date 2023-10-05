@@ -7,13 +7,13 @@
 package main
 
 import (
+	"dummy/internal/biz"
+	"dummy/internal/conf"
+	"dummy/internal/data"
+	"dummy/internal/server"
+	"dummy/internal/service"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
-	"media/internal/biz"
-	"media/internal/conf"
-	"media/internal/data"
-	"media/internal/server"
-	"media/internal/service"
 )
 
 import (
@@ -36,20 +36,15 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	if err != nil {
 		return nil, nil, err
 	}
-	mediaRepo := data.NewMediaRepo(dataData)
-	s3Uploader, err := data.NewS3Uploader(config)
+	dummyRepo := data.NewDummyRepo(dataData)
+	dummyUsecase, err := biz.NewDummyUsecase(logger, config, jwtProcessor, dummyRepo)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	mediaUsecase, err := biz.NewMediaUsecase(logger, config, jwtProcessor, mediaRepo, s3Uploader)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
-	uploadService := service.NewUploadService(logger, jwtProcessor, mediaUsecase)
-	grpcServer := server.NewGRPCServer(bootstrap, logger, jwtProcessor, uploadService)
-	httpServer := server.NewHTTPServer(bootstrap, logger, jwtProcessor, uploadService)
+	dummyService := service.NewDummyService(logger, dummyUsecase)
+	grpcServer := server.NewGRPCServer(bootstrap, logger, jwtProcessor, dummyService)
+	httpServer := server.NewHTTPServer(bootstrap, logger, jwtProcessor, dummyService)
 	app := newApp(logger, config, grpcServer, httpServer)
 	return app, func() {
 		cleanup()
