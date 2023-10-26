@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"dummy/ent"
+	_ "dummy/ent/runtime"
 	"dummy/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"
