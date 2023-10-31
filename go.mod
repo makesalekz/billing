@@ -2,8 +2,6 @@ module dummy
 
 go 1.19
 
-replace iam => ./third_party/iam
-
 require (
 	entgo.io/ent v0.12.3
 	github.com/go-kratos/consul v0.1.5
