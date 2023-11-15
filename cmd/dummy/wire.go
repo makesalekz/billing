@@ -6,11 +6,11 @@
 package main
 
 import (
-	"dummy/internal/biz"
-	"dummy/internal/conf"
-	"dummy/internal/data"
-	"dummy/internal/server"
-	"dummy/internal/service"
+	"gitlab.calendaria.team/services/dummy/internal/biz"
+	"gitlab.calendaria.team/services/dummy/internal/conf"
+	"gitlab.calendaria.team/services/dummy/internal/data"
+	"gitlab.calendaria.team/services/dummy/internal/server"
+	"gitlab.calendaria.team/services/dummy/internal/service"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"

@@ -3,10 +3,9 @@ package service
 import (
 	"context"
 
-	v1 "dummy/api/dummy/v1"
-	"dummy/internal/biz"
-
 	"github.com/go-kratos/kratos/v2/log"
+	v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
+	"gitlab.calendaria.team/services/dummy/internal/biz"
 )
 
 type DummyService struct {

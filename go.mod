@@ -1,4 +1,4 @@
-module dummy
+module gitlab.calendaria.team/services/dummy
 
 go 1.19
 

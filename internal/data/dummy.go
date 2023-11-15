@@ -3,7 +3,7 @@ package data
 import (
 	"context"
 
-	"dummy/ent"
+	"gitlab.calendaria.team/services/dummy/ent"
 
 	_ "github.com/lib/pq"
 )

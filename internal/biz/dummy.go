@@ -4,13 +4,12 @@ import (
 	"context"
 	_ "embed"
 
-	dummy_v1 "dummy/api/dummy/v1"
-	"dummy/ent"
-	"dummy/internal/conf"
-	"dummy/internal/data"
-
 	consul "github.com/go-kratos/consul/registry"
 	"github.com/go-kratos/kratos/v2/log"
+	dummy_v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
+	"gitlab.calendaria.team/services/dummy/ent"
+	"gitlab.calendaria.team/services/dummy/internal/conf"
+	"gitlab.calendaria.team/services/dummy/internal/data"
 )
 
 // DummyUsecase is a Greeter usecase.

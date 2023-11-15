@@ -4,13 +4,13 @@ import (
 	"context"
 	"os"
 
-	"dummy/ent"
-	_ "dummy/ent/runtime"
-	"dummy/internal/conf"
-
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
+	"gitlab.calendaria.team/services/dummy/ent"
+	"gitlab.calendaria.team/services/dummy/internal/conf"
+
 	_ "github.com/lib/pq"
+	_ "gitlab.calendaria.team/services/dummy/ent/runtime"
 )
 
 // ProviderSet is data providers.

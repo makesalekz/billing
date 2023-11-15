@@ -3,10 +3,9 @@ package biz
 import (
 	"context"
 
-	"dummy/internal/data"
-
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/nats-io/nats.go"
+	"gitlab.calendaria.team/services/dummy/internal/data"
 )
 
 type QueueManager struct {

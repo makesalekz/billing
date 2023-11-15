@@ -4,9 +4,6 @@ import (
 	"flag"
 	"os"
 
-	"dummy/internal/conf"
-	"dummy/internal/data"
-
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/config/file"
@@ -14,6 +11,8 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	"gitlab.calendaria.team/services/dummy/internal/conf"
+	"gitlab.calendaria.team/services/dummy/internal/data"
 
 	_ "go.uber.org/automaxprocs"
 )
@@ -23,7 +22,7 @@ var (
 	// Name is the name of the compiled software.
 	Name string = "dummy"
 	// Version is the version of the compiled software.
-	Version string = "1.0.0"
+	Version string = "0.1.0"
 	// flagconf is the config flag.
 	flagconf string
 

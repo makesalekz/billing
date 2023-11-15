@@ -1,17 +1,16 @@
 package server
 
 import (
-	dummy_v1 "dummy/api/dummy/v1"
-	"dummy/internal/conf"
-	"dummy/internal/data"
-	"dummy/internal/service"
-
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 	jwtv4 "github.com/golang-jwt/jwt/v4"
+	dummy_v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
+	"gitlab.calendaria.team/services/dummy/internal/conf"
+	"gitlab.calendaria.team/services/dummy/internal/data"
+	"gitlab.calendaria.team/services/dummy/internal/service"
 )
 
 // NewHTTPServer new an HTTP server.

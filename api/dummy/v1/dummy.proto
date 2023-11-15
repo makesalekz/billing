@@ -1,37 +1,19 @@
 syntax = "proto3";
 
-package api.dummy.v1;
+package dummy.v1;
 
 import "google/api/annotations.proto";
-import "errors/errors.proto";
+import "api/dummy/v1/utils.proto";
 
-option go_package = "dummy/api/dummy/v1;dummy_v1";
+option go_package = "gitlab.calendaria.team/services/dummy/api/dummy/v1;dummy_v1";
 option java_multiple_files = true;
-option java_package = "api.dummy.v1";
+option java_package = "dummy.v1";
 
 service Dummy {
-	rpc CreateDummy (DummyRequest) returns (DummyReply) {
+	rpc CreateDummy (EmptyRequest) returns (EmptyReply) {
 		option (google.api.http) = {
 			post: "/v1/dummy"
 			body: "*"
 		};
 	};
-}
-
-message DummyRequest {}
-message DummyReply {}
-
-enum ErrorReason {
-  // Set default error code.
-  option (errors.default_code) = 500;
-
-  // Set the error code separately for an enumeration.
-  INTERNAL = 0;
-  GRPC_CONNECTION = 1;
-  SERVICE_FAILED = 2;
-  DATABASE_QUERY = 3;
-  
-  UNAUTHORIZED = 10 [(errors.code) = 401];
-  
-  INVALID_REQUEST = 20 [(errors.code) = 400];
 }

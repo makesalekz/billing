@@ -1,9 +1,13 @@
 syntax = "proto3";
 
-package utils;
+package dummy.v1;
 
-option go_package = "dummy/api/utils";
-option java_package = "utils";
+option go_package = "gitlab.calendaria.team/services/dummy/api/dummy/v1;dummy_v1";
+option java_multiple_files = true;
+option java_package = "dummy.v1";
+
+message EmptyRequest {}
+message EmptyReply {}
 
 message PaginateRequest {
     int32 limit = 1;

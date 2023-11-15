@@ -3,13 +3,12 @@ package data
 import (
 	"context"
 
-	"dummy/internal/conf"
-	users_v1 "dummy/third_party/api/users/v1"
-
 	consul "github.com/go-kratos/consul/registry"
 	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	jwtv4 "github.com/golang-jwt/jwt/v4"
+	"gitlab.calendaria.team/services/dummy/internal/conf"
+	users_v1 "gitlab.calendaria.team/services/dummy/third_party/api/users/v1"
 )
 
 type Dialer struct {
