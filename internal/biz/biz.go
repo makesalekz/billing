@@ -1,6 +1,9 @@
 package biz
 
-import "github.com/google/wire"
+import (
+	"github.com/google/wire"
+	"gitlab.calendaria.team/services/utils/v1/nats"
+)
 
 // ProviderSet is biz providers.
-var ProviderSet = wire.NewSet(NewQueueManager, NewDummyUsecase)
+var ProviderSet = wire.NewSet(nats.NewQueueManager)

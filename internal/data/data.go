@@ -4,41 +4,60 @@ import (
 	"context"
 	"os"
 
+	"gitlab.calendaria.team/services/iam/ent"
+	"gitlab.calendaria.team/services/iam/internal/conf"
+	"gitlab.calendaria.team/services/utils/v1/config"
+	"gitlab.calendaria.team/services/utils/v1/jwt"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
-	"gitlab.calendaria.team/services/dummy/ent"
-	"gitlab.calendaria.team/services/dummy/internal/conf"
 
 	_ "github.com/lib/pq"
-	_ "gitlab.calendaria.team/services/dummy/ent/runtime"
+	_ "gitlab.calendaria.team/services/iam/ent/runtime"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewConfig, NewJwtProcessor, NewNatsClient, NewDummyRepo)
+var ProviderSet = wire.NewSet(
+	NewData,
+	NewNatsClient,
+	config.NewConfig,
+	jwt.NewJwtProcessor,
+)
 
 // Data .
 type Data struct {
-	log *log.Helper
-	db  *ent.Client
+	db *ent.Client
 }
 
 // NewData .
-func NewData(c *conf.Bootstrap, logger log.Logger) (*Data, func(), error) {
+func NewData(bc *conf.Bootstrap, c *config.Config, logger log.Logger) (*Data, func(), error) {
 	l := log.NewHelper(logger)
 
-	automigrate := os.Getenv("AUTOMIGRATE")
-	options := []ent.Option{}
-	if automigrate != "" {
-		options = append(options, ent.Debug(), ent.Log(l.Info))
+	dbDsn := bc.Db // read from local config
+	if dbDsn == "" {
+		// read from vault
+		secret, err := c.ReadSecretsFor(context.Background(), "db-dsn")
+		if err != nil {
+			l.Fatalf("db dsn not found: %v", err)
+			return nil, nil, err
+		}
+		dbDsn = secret["data"].(string)
 	}
 
-	client, err := ent.Open("postgres", c.Db, options...)
+	autoMigrate := os.Getenv("AUTOMIGRATE")
+	entLogging := os.Getenv("ENT_LOGGING")
+	var options []ent.Option
+	if entLogging == "true" {
+		options = append(options, ent.Debug(), ent.Log(l.Debug))
+	}
+
+	client, err := ent.Open("postgres", dbDsn, options...)
 	if err != nil {
 		l.Fatalf("failed opening connection to postgres: %v", err)
 		return nil, nil, err
 	}
 
-	if automigrate != "" {
+	if autoMigrate != "" {
 		if err := client.Schema.Create(context.Background()); err != nil {
 			l.Errorf("failed creating schema resources: %v", err)
 			return nil, nil, err
@@ -54,7 +73,6 @@ func NewData(c *conf.Bootstrap, logger log.Logger) (*Data, func(), error) {
 	}
 
 	return &Data{
-		log: log.NewHelper(logger),
-		db:  client,
+		db: client,
 	}, cleanup, nil
 }

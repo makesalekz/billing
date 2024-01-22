@@ -17,8 +17,8 @@ enum ErrorReason {
   GRPC_CONNECTION = 1;
   SERVICE_FAILED = 2;
   DATABASE_QUERY = 3;
-  
+
   UNAUTHORIZED = 10 [(errors.code) = 401];
-  
+
   INVALID_REQUEST = 20 [(errors.code) = 400];
 }
