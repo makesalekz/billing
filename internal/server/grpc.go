@@ -1,9 +1,8 @@
 package server
 
 import (
-	v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
+	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
 	"gitlab.calendaria.team/services/dummy/internal/conf"
-	"gitlab.calendaria.team/services/dummy/internal/service"
 	"gitlab.calendaria.team/services/utils/v1/jwt"
 	u_auth "gitlab.calendaria.team/services/utils/v1/middlewares/auth"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
@@ -18,7 +17,7 @@ import (
 func NewGRPCServer(
 	c *conf.Bootstrap,
 	jwtp *jwt.JwtProcessor,
-	dummy *service.DummyService,
+	// dummy *service.DummyService,
 ) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
@@ -43,7 +42,7 @@ func NewGRPCServer(
 	}
 	srv := grpc.NewServer(opts...)
 
-	v1.RegisterDummyServer(srv, dummy)
+	// v1.RegisterDummyServer(srv, dummy)
 
 	return srv
 }

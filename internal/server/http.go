@@ -1,15 +1,13 @@
 package server
 
 import (
-	v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
+	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
 	"gitlab.calendaria.team/services/dummy/internal/conf"
-	"gitlab.calendaria.team/services/dummy/internal/service"
 	"gitlab.calendaria.team/services/utils/v1/jwt"
 	u_auth "gitlab.calendaria.team/services/utils/v1/middlewares/auth"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
 
 	prom "github.com/go-kratos/kratos/contrib/metrics/prometheus/v2"
-	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
@@ -43,7 +41,7 @@ var _activeRequests = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 func NewHTTPServer(
 	c *conf.Bootstrap,
 	jwtp *jwt.JwtProcessor,
-	dummy *service.DummyService,
+	// dummy *service.DummyService,
 ) *khttp.Server {
 	prometheus.MustRegister(_metricSeconds, _metricRequests, _activeRequests)
 
@@ -70,7 +68,7 @@ func NewHTTPServer(
 	}
 	srv := khttp.NewServer(opts...)
 
-	v1.RegisterDummyHTTPServer(srv, dummy)
+	// v1.RegisterDummyHTTPServer(srv, dummy)
 
 	srv.Handle("/metrics", promhttp.Handler())
 

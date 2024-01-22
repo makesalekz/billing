@@ -6,4 +6,6 @@ import (
 )
 
 // ProviderSet is biz providers.
-var ProviderSet = wire.NewSet(nats.NewQueueManager)
+var ProviderSet = wire.NewSet(
+	nats.NewQueueManager,
+)

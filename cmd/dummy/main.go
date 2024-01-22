@@ -53,7 +53,7 @@ func newApp(logger log.Logger, c *config.Config, gs *grpc.Server, hs *http.Serve
 
 func main() {
 	flag.Parse()
-	logger := log.With(u_log.NewStdLogger(os.Stdout),
+	logger := log.With(u_log.NewStdLogger(),
 		"ts", log.DefaultTimestamp,
 		"caller", log.DefaultCaller,
 		"service.id", id,

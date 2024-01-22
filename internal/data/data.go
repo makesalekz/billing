@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"gitlab.calendaria.team/services/iam/ent"
-	"gitlab.calendaria.team/services/iam/internal/conf"
+	"gitlab.calendaria.team/services/dummy/ent"
+	"gitlab.calendaria.team/services/dummy/internal/conf"
 	"gitlab.calendaria.team/services/utils/v1/config"
 	"gitlab.calendaria.team/services/utils/v1/jwt"
 
@@ -13,7 +13,7 @@ import (
 	"github.com/google/wire"
 
 	_ "github.com/lib/pq"
-	_ "gitlab.calendaria.team/services/iam/ent/runtime"
+	// _ "gitlab.calendaria.team/services/dummy/ent/runtime" // uncomment this line to avoid ent code cycle import
 )
 
 // ProviderSet is data providers.

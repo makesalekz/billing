@@ -65,7 +65,9 @@ config:
 .PHONY: ent
 # generate ent
 ent:
-	go generate ./ent
+	go generate ./ent;
+	go mod tidy;
+	go mod vendor;
 
 .PHONY: migrations
 # generate migrations

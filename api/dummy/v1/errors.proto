@@ -18,7 +18,8 @@ enum ErrorReason {
   SERVICE_FAILED = 2;
   DATABASE_QUERY = 3;
 
-  UNAUTHORIZED = 10 [(errors.code) = 401];
-
-  INVALID_REQUEST = 20 [(errors.code) = 400];
+  INVALID_REQUEST = 10 [(errors.code) = 400];
+  UNAUTHORIZED = 11 [(errors.code) = 401];
+  FORBIDDEN = 13 [(errors.code) = 403];
+  NOT_FOUND = 14 [(errors.code) = 404];
 }
