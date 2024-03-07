@@ -1,8 +1,14 @@
 include:
   - project: 'deploy/dev'
-    file: '/go-microservice.yml'
+    file: '/go-app.yml'
     ref: 'main'
   
+lint dev:
+  extends: .lint-dev
+
+test dev:
+  extends: .test-dev
+
 build dev:
   extends: .build-dev
 
@@ -10,7 +16,7 @@ deploy dev:
   extends: .deploy-dev
   variables:
     DB_PORT: 54400
-
+  
 build:
   extends: .build
 

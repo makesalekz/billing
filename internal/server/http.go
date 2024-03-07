@@ -4,8 +4,8 @@ import (
 	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
 	"gitlab.calendaria.team/services/dummy/internal/conf"
 	"gitlab.calendaria.team/services/utils/v1/jwt"
-	u_auth "gitlab.calendaria.team/services/utils/v1/middlewares/auth"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
+	"gitlab.calendaria.team/services/utils/v2/middlewares/auth"
 
 	prom "github.com/go-kratos/kratos/contrib/metrics/prometheus/v2"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -49,7 +49,7 @@ func NewHTTPServer(
 		khttp.Middleware(
 			recovery.Recovery(),
 			metadata.Server(),
-			u_auth.Server(jwtp),
+			auth.Server(jwtp),
 			metrics.Server(
 				metrics.WithSeconds(prom.NewHistogram(_metricSeconds)),
 				metrics.WithRequests(prom.NewCounter(_metricRequests)),

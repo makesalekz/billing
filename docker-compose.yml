@@ -4,7 +4,7 @@ services:
   db:
     container_name: ${SERVICE_NAME}_db
     restart: always
-    image: postgres:latest
+    image: postgres:15.4
     volumes:
       - ${DB_VOLUME}:/var/lib/postgresql/data
     ports:
@@ -21,13 +21,9 @@ services:
     container_name: ${SERVICE_NAME}_service
     networks:
       - backend
-    volumes:
-      - ./configs:/data/conf
     restart: unless-stopped
     depends_on:
       - db
-    profiles:
-      - stage
     environment:
       - SERVICE_NAME=${SERVICE_NAME}
       - CONSUL_ADDRESS=${CONSUL_ADDRESS}
@@ -36,27 +32,28 @@ services:
       - VAULT_SECRET_ID_PATH=/run/secrets/vault_secret_id
     secrets:
       - vault_secret_id
-  dev-service:
+    command: ["./app"]
+  local-service:
     build:
       context: ./
       dockerfile: Dockerfile
+      args:
+        - TOKEN=${TOKEN}
+        - ENV=dev
     container_name: ${SERVICE_NAME}_service
     ports:
       - '${HTTP_PORT}:8000'
       - '${GRPC_PORT}:9000'
     networks:
       - backend
-    volumes:
-      - ./configs:/data/conf
     restart: unless-stopped
-    profiles:
-      - dev
     environment:
       - AUTOMIGRATE=true
       - SERVICE_NAME=${SERVICE_NAME}
       - CONSUL_ADDRESS=http://consul:8500
       - VAULT_ADDRESS=http://vault:8200
       - VAULT_TOKEN=myroot
+    command: ["./app"]
 
 volumes:
   dbvol:
