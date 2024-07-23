@@ -6,8 +6,8 @@ import (
 
 	"gitlab.calendaria.team/services/dummy/ent"
 	"gitlab.calendaria.team/services/dummy/internal/conf"
-	"gitlab.calendaria.team/services/utils/v1/config"
-	"gitlab.calendaria.team/services/utils/v1/jwt"
+	u_config "gitlab.calendaria.team/services/utils/v1/config"
+	u_jwt "gitlab.calendaria.team/services/utils/v1/jwt"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -20,8 +20,8 @@ import (
 var ProviderSet = wire.NewSet(
 	NewData,
 	NewNatsClient,
-	config.NewConfig,
-	jwt.NewJwtProcessor,
+	u_config.NewConfig,
+	u_jwt.NewJwtProcessor,
 )
 
 // Data .
@@ -30,10 +30,10 @@ type Data struct {
 }
 
 // NewData .
-func NewData(bc *conf.Bootstrap, c *config.Config, logger log.Logger) (*Data, func(), error) {
+func NewData(bc *conf.Bootstrap, c *u_config.Config, logger log.Logger) (*Data, func(), error) {
 	l := log.NewHelper(logger)
 
-	dbDsn := bc.Db // read from local config
+	dbDsn := bc.GetDb() // read from local config
 	if dbDsn == "" {
 		// read from vault
 		secret, err := c.ReadSecretsFor(context.Background(), "db-dsn")
@@ -41,14 +41,22 @@ func NewData(bc *conf.Bootstrap, c *config.Config, logger log.Logger) (*Data, fu
 			l.Fatalf("db dsn not found: %v", err)
 			return nil, nil, err
 		}
-		dbDsn = secret["data"].(string)
+
+		var ok bool
+
+		dbDsn, ok = secret["data"].(string)
+		if !ok {
+			l.Fatalf("db dsn not found: %v", err)
+
+			return nil, nil, err
+		}
 	}
 
 	autoMigrate := os.Getenv("AUTOMIGRATE")
 	entLogging := os.Getenv("ENT_LOGGING")
 	var options []ent.Option
 	if entLogging == "true" {
-		options = append(options, ent.Debug(), ent.Log(l.Debug))
+		options = append(options, ent.Debug(), ent.Log(l.Info))
 	}
 
 	client, err := ent.Open("postgres", dbDsn, options...)
@@ -58,7 +66,7 @@ func NewData(bc *conf.Bootstrap, c *config.Config, logger log.Logger) (*Data, fu
 	}
 
 	if autoMigrate != "" {
-		if err := client.Schema.Create(context.Background()); err != nil {
+		if err = client.Schema.Create(context.Background()); err != nil {
 			l.Errorf("failed creating schema resources: %v", err)
 			return nil, nil, err
 		}
@@ -67,7 +75,7 @@ func NewData(bc *conf.Bootstrap, c *config.Config, logger log.Logger) (*Data, fu
 	l.Info("Connected to postgres")
 
 	cleanup := func() {
-		if err := client.Close(); err != nil {
+		if err = client.Close(); err != nil {
 			l.Error(err)
 		}
 	}
