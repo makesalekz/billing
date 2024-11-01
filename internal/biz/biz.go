@@ -8,4 +8,5 @@ import (
 // ProviderSet is biz providers.
 var ProviderSet = wire.NewSet(
 	nats.NewQueueManager,
+	NewItemsUsecase,
 )

@@ -1,11 +1,14 @@
 package server
 
 import (
+	v1 "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1"
 	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
-	"gitlab.calendaria.team/services/dummy/internal/conf"
-	"gitlab.calendaria.team/services/utils/v1/jwt"
+	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
+	"gitlab.calendaria.team/services/finance/invoices/internal/service"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
+	"gitlab.calendaria.team/services/utils/v2/jwt"
 	"gitlab.calendaria.team/services/utils/v2/middlewares/auth"
+	u_tracing "gitlab.calendaria.team/services/utils/v2/tracing"
 
 	prom "github.com/go-kratos/kratos/contrib/metrics/prometheus/v2"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -16,9 +19,15 @@ import (
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(
 	c *conf.Bootstrap,
-	jwtp *jwt.JwtProcessor,
-	// dummy *service.DummyService,
+	jwtp jwt.IJwtProcessor,
+	tracer *u_tracing.Tracer,
+	itemService *service.ItemService,
 ) *grpc.Server {
+	err := tracer.Initialize()
+	if err != nil {
+		panic(err)
+	}
+
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
@@ -42,7 +51,7 @@ func NewGRPCServer(
 	}
 	srv := grpc.NewServer(opts...)
 
-	// v1.RegisterDummyServer(srv, dummy)
+	v1.RegisterItemsServer(srv, itemService)
 
 	return srv
 }

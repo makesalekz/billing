@@ -2,9 +2,9 @@ package server
 
 import (
 	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
-	"gitlab.calendaria.team/services/dummy/internal/conf"
-	"gitlab.calendaria.team/services/utils/v1/jwt"
+	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
+	"gitlab.calendaria.team/services/utils/v2/jwt"
 	"gitlab.calendaria.team/services/utils/v2/middlewares/auth"
 
 	prom "github.com/go-kratos/kratos/contrib/metrics/prometheus/v2"
@@ -40,8 +40,7 @@ var _activeRequests = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(
 	c *conf.Bootstrap,
-	jwtp *jwt.JwtProcessor,
-	// dummy *service.DummyService,
+	jwtp jwt.IJwtProcessor,
 ) *khttp.Server {
 	prometheus.MustRegister(_metricSeconds, _metricRequests, _activeRequests)
 
@@ -67,8 +66,6 @@ func NewHTTPServer(
 		opts = append(opts, khttp.Timeout(c.Server.Http.Timeout.AsDuration()))
 	}
 	srv := khttp.NewServer(opts...)
-
-	// v1.RegisterDummyHTTPServer(srv, dummy)
 
 	srv.Handle("/metrics", promhttp.Handler())
 

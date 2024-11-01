@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package invoices.v1;
+
+option go_package = "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1;invoices_v1";
+option java_multiple_files = true;
+option java_package = "invoices.v1";
+
+message Item{
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message ItemDto{
+  string name = 1;
+  string description = 2;
+}

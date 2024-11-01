@@ -6,11 +6,11 @@
 package main
 
 import (
-	"gitlab.calendaria.team/services/dummy/internal/biz"
-	"gitlab.calendaria.team/services/dummy/internal/conf"
-	"gitlab.calendaria.team/services/dummy/internal/data"
-	"gitlab.calendaria.team/services/dummy/internal/server"
-	"gitlab.calendaria.team/services/dummy/internal/service"
+	"gitlab.calendaria.team/services/finance/invoices/internal/biz"
+	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
+	"gitlab.calendaria.team/services/finance/invoices/internal/data"
+	"gitlab.calendaria.team/services/finance/invoices/internal/server"
+	"gitlab.calendaria.team/services/finance/invoices/internal/service"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"

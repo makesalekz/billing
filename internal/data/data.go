@@ -4,16 +4,17 @@ import (
 	"context"
 	"os"
 
-	"gitlab.calendaria.team/services/dummy/ent"
-	"gitlab.calendaria.team/services/dummy/internal/conf"
+	"gitlab.calendaria.team/services/finance/invoices/ent"
+	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
 	u_config "gitlab.calendaria.team/services/utils/v1/config"
-	u_jwt "gitlab.calendaria.team/services/utils/v1/jwt"
+	u_jwt "gitlab.calendaria.team/services/utils/v2/jwt"
+	u_tracing "gitlab.calendaria.team/services/utils/v2/tracing"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 
 	_ "github.com/lib/pq"
-	// _ "gitlab.calendaria.team/services/dummy/ent/runtime" // uncomment this line to avoid ent code cycle import
+	_ "gitlab.calendaria.team/services/finance/invoices/ent/runtime"
 )
 
 // ProviderSet is data providers.
@@ -22,6 +23,8 @@ var ProviderSet = wire.NewSet(
 	NewNatsClient,
 	u_config.NewConfig,
 	u_jwt.NewJwtProcessor,
+	u_tracing.NewTracer,
+	NewItemsRepo,
 )
 
 // Data .

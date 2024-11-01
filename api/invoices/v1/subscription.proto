@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package invoices.v1;
+
+import "api/utils/v1/models.proto";
+
+option go_package = "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1;invoices_v1";
+option java_multiple_files = true;
+option java_package = "invoices.v1";
+
+service Subscription {
+  rpc GetSubscription(GetSubscriptionRequest) returns (GetSubscriptionReply);
+}
+
+message GetSubscriptionRequest {
+  int64 itemId = 1;
+}
+
+message GetSubscriptionReply {
+  int64 id = 1;
+}
