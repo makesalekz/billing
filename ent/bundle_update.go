@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
 )
@@ -73,6 +74,27 @@ func (bu *BundleUpdate) SetNillableAmount(f *float64) *BundleUpdate {
 // AddAmount adds f to the "amount" field.
 func (bu *BundleUpdate) AddAmount(f float64) *BundleUpdate {
 	bu.mutation.AddAmount(f)
+	return bu
+}
+
+// SetOverusagePrice sets the "overusage_price" field.
+func (bu *BundleUpdate) SetOverusagePrice(d decimal.Decimal) *BundleUpdate {
+	bu.mutation.ResetOverusagePrice()
+	bu.mutation.SetOverusagePrice(d)
+	return bu
+}
+
+// SetNillableOverusagePrice sets the "overusage_price" field if the given value is not nil.
+func (bu *BundleUpdate) SetNillableOverusagePrice(d *decimal.Decimal) *BundleUpdate {
+	if d != nil {
+		bu.SetOverusagePrice(*d)
+	}
+	return bu
+}
+
+// AddOverusagePrice adds d to the "overusage_price" field.
+func (bu *BundleUpdate) AddOverusagePrice(d decimal.Decimal) *BundleUpdate {
+	bu.mutation.AddOverusagePrice(d)
 	return bu
 }
 
@@ -167,6 +189,12 @@ func (bu *BundleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := bu.mutation.AddedAmount(); ok {
 		_spec.AddField(bundle.FieldAmount, field.TypeFloat64, value)
 	}
+	if value, ok := bu.mutation.OverusagePrice(); ok {
+		_spec.SetField(bundle.FieldOverusagePrice, field.TypeFloat64, value)
+	}
+	if value, ok := bu.mutation.AddedOverusagePrice(); ok {
+		_spec.AddField(bundle.FieldOverusagePrice, field.TypeFloat64, value)
+	}
 	_spec.AddModifiers(bu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, bu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -233,6 +261,27 @@ func (buo *BundleUpdateOne) SetNillableAmount(f *float64) *BundleUpdateOne {
 // AddAmount adds f to the "amount" field.
 func (buo *BundleUpdateOne) AddAmount(f float64) *BundleUpdateOne {
 	buo.mutation.AddAmount(f)
+	return buo
+}
+
+// SetOverusagePrice sets the "overusage_price" field.
+func (buo *BundleUpdateOne) SetOverusagePrice(d decimal.Decimal) *BundleUpdateOne {
+	buo.mutation.ResetOverusagePrice()
+	buo.mutation.SetOverusagePrice(d)
+	return buo
+}
+
+// SetNillableOverusagePrice sets the "overusage_price" field if the given value is not nil.
+func (buo *BundleUpdateOne) SetNillableOverusagePrice(d *decimal.Decimal) *BundleUpdateOne {
+	if d != nil {
+		buo.SetOverusagePrice(*d)
+	}
+	return buo
+}
+
+// AddOverusagePrice adds d to the "overusage_price" field.
+func (buo *BundleUpdateOne) AddOverusagePrice(d decimal.Decimal) *BundleUpdateOne {
+	buo.mutation.AddOverusagePrice(d)
 	return buo
 }
 
@@ -356,6 +405,12 @@ func (buo *BundleUpdateOne) sqlSave(ctx context.Context) (_node *Bundle, err err
 	}
 	if value, ok := buo.mutation.AddedAmount(); ok {
 		_spec.AddField(bundle.FieldAmount, field.TypeFloat64, value)
+	}
+	if value, ok := buo.mutation.OverusagePrice(); ok {
+		_spec.SetField(bundle.FieldOverusagePrice, field.TypeFloat64, value)
+	}
+	if value, ok := buo.mutation.AddedOverusagePrice(); ok {
+		_spec.AddField(bundle.FieldOverusagePrice, field.TypeFloat64, value)
 	}
 	_spec.AddModifiers(buo.modifiers...)
 	_node = &Bundle{config: buo.config}

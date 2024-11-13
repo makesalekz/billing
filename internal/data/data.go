@@ -7,6 +7,7 @@ import (
 	"gitlab.calendaria.team/services/finance/invoices/ent"
 	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
 	u_config "gitlab.calendaria.team/services/utils/v1/config"
+	u_nats "gitlab.calendaria.team/services/utils/v1/nats"
 	u_jwt "gitlab.calendaria.team/services/utils/v2/jwt"
 	u_tracing "gitlab.calendaria.team/services/utils/v2/tracing"
 
@@ -24,6 +25,7 @@ var ProviderSet = wire.NewSet(
 	u_config.NewConfig,
 	u_jwt.NewJwtProcessor,
 	u_tracing.NewTracer,
+	u_nats.NewQueueManager,
 	NewItemsRepo,
 )
 

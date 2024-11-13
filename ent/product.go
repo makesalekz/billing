@@ -18,6 +18,8 @@ type Product struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int64 `json:"id,omitempty"`
+	// AppID holds the value of the "app_id" field.
+	AppID string `json:"app_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
@@ -38,6 +40,12 @@ type Product struct {
 	IsUnique bool `json:"is_unique,omitempty"`
 	// Number of times this product can be purchased.
 	UniqueLimit int64 `json:"unique_limit,omitempty"`
+	// Indicates that this product requires renewal.
+	IsExpiring bool `json:"is_expiring,omitempty"`
+	// Recurrence rule for renewal.
+	RecurrenceRule *string `json:"recurrence_rule,omitempty"`
+	// Indicates that this product is available in Apple Store.
+	OfferInAppleStore bool `json:"offer_in_apple_store,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProductQuery when eager-loading is set.
 	Edges        ProductEdges `json:"edges"`
@@ -48,11 +56,13 @@ type Product struct {
 type ProductEdges struct {
 	// Invoices holds the value of the invoices edge.
 	Invoices []*Invoice `json:"invoices,omitempty"`
+	// Subscriptions holds the value of the subscriptions edge.
+	Subscriptions []*Subscriptions `json:"subscriptions,omitempty"`
 	// Bundles holds the value of the bundles edge.
 	Bundles []*Bundle `json:"bundles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // InvoicesOrErr returns the Invoices value or an error if the edge
@@ -64,10 +74,19 @@ func (e ProductEdges) InvoicesOrErr() ([]*Invoice, error) {
 	return nil, &NotLoadedError{edge: "invoices"}
 }
 
+// SubscriptionsOrErr returns the Subscriptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProductEdges) SubscriptionsOrErr() ([]*Subscriptions, error) {
+	if e.loadedTypes[1] {
+		return e.Subscriptions, nil
+	}
+	return nil, &NotLoadedError{edge: "subscriptions"}
+}
+
 // BundlesOrErr returns the Bundles value or an error if the edge
 // was not loaded in eager-loading.
 func (e ProductEdges) BundlesOrErr() ([]*Bundle, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.Bundles, nil
 	}
 	return nil, &NotLoadedError{edge: "bundles"}
@@ -80,11 +99,11 @@ func (*Product) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case product.FieldPrice:
 			values[i] = new(decimal.Decimal)
-		case product.FieldIsActive, product.FieldIsLimited, product.FieldIsUnique:
+		case product.FieldIsActive, product.FieldIsLimited, product.FieldIsUnique, product.FieldIsExpiring, product.FieldOfferInAppleStore:
 			values[i] = new(sql.NullBool)
 		case product.FieldID, product.FieldLeft, product.FieldUniqueLimit:
 			values[i] = new(sql.NullInt64)
-		case product.FieldName, product.FieldDescription, product.FieldCurrency:
+		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency, product.FieldRecurrenceRule:
 			values[i] = new(sql.NullString)
 		case product.FieldLimitedTill:
 			values[i] = new(sql.NullTime)
@@ -109,6 +128,12 @@ func (pr *Product) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			pr.ID = int64(value.Int64)
+		case product.FieldAppID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field app_id", values[i])
+			} else if value.Valid {
+				pr.AppID = value.String
+			}
 		case product.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -170,6 +195,25 @@ func (pr *Product) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pr.UniqueLimit = value.Int64
 			}
+		case product.FieldIsExpiring:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_expiring", values[i])
+			} else if value.Valid {
+				pr.IsExpiring = value.Bool
+			}
+		case product.FieldRecurrenceRule:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field recurrence_rule", values[i])
+			} else if value.Valid {
+				pr.RecurrenceRule = new(string)
+				*pr.RecurrenceRule = value.String
+			}
+		case product.FieldOfferInAppleStore:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field offer_in_apple_store", values[i])
+			} else if value.Valid {
+				pr.OfferInAppleStore = value.Bool
+			}
 		default:
 			pr.selectValues.Set(columns[i], values[i])
 		}
@@ -186,6 +230,11 @@ func (pr *Product) Value(name string) (ent.Value, error) {
 // QueryInvoices queries the "invoices" edge of the Product entity.
 func (pr *Product) QueryInvoices() *InvoiceQuery {
 	return NewProductClient(pr.config).QueryInvoices(pr)
+}
+
+// QuerySubscriptions queries the "subscriptions" edge of the Product entity.
+func (pr *Product) QuerySubscriptions() *SubscriptionsQuery {
+	return NewProductClient(pr.config).QuerySubscriptions(pr)
 }
 
 // QueryBundles queries the "bundles" edge of the Product entity.
@@ -216,6 +265,9 @@ func (pr *Product) String() string {
 	var builder strings.Builder
 	builder.WriteString("Product(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", pr.ID))
+	builder.WriteString("app_id=")
+	builder.WriteString(pr.AppID)
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(pr.Name)
 	builder.WriteString(", ")
@@ -247,6 +299,17 @@ func (pr *Product) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("unique_limit=")
 	builder.WriteString(fmt.Sprintf("%v", pr.UniqueLimit))
+	builder.WriteString(", ")
+	builder.WriteString("is_expiring=")
+	builder.WriteString(fmt.Sprintf("%v", pr.IsExpiring))
+	builder.WriteString(", ")
+	if v := pr.RecurrenceRule; v != nil {
+		builder.WriteString("recurrence_rule=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("offer_in_apple_store=")
+	builder.WriteString(fmt.Sprintf("%v", pr.OfferInAppleStore))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -12,9 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
 )
 
 // ItemCreate is the builder for creating a Item entity.
@@ -79,6 +77,20 @@ func (ic *ItemCreate) SetDescription(s string) *ItemCreate {
 	return ic
 }
 
+// SetTopicName sets the "topic_name" field.
+func (ic *ItemCreate) SetTopicName(s string) *ItemCreate {
+	ic.mutation.SetTopicName(s)
+	return ic
+}
+
+// SetNillableTopicName sets the "topic_name" field if the given value is not nil.
+func (ic *ItemCreate) SetNillableTopicName(s *string) *ItemCreate {
+	if s != nil {
+		ic.SetTopicName(*s)
+	}
+	return ic
+}
+
 // SetID sets the "id" field.
 func (ic *ItemCreate) SetID(i int64) *ItemCreate {
 	ic.mutation.SetID(i)
@@ -98,36 +110,6 @@ func (ic *ItemCreate) AddBundles(b ...*Bundle) *ItemCreate {
 		ids[i] = b[i].ID
 	}
 	return ic.AddBundleIDs(ids...)
-}
-
-// AddConsumedStatusIDs adds the "consumed_statuses" edge to the ConsumedStatus entity by IDs.
-func (ic *ItemCreate) AddConsumedStatusIDs(ids ...int64) *ItemCreate {
-	ic.mutation.AddConsumedStatusIDs(ids...)
-	return ic
-}
-
-// AddConsumedStatuses adds the "consumed_statuses" edges to the ConsumedStatus entity.
-func (ic *ItemCreate) AddConsumedStatuses(c ...*ConsumedStatus) *ItemCreate {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ic.AddConsumedStatusIDs(ids...)
-}
-
-// AddSubscriptionStatusIDs adds the "subscription_statuses" edge to the SubscriptionStatus entity by IDs.
-func (ic *ItemCreate) AddSubscriptionStatusIDs(ids ...int64) *ItemCreate {
-	ic.mutation.AddSubscriptionStatusIDs(ids...)
-	return ic
-}
-
-// AddSubscriptionStatuses adds the "subscription_statuses" edges to the SubscriptionStatus entity.
-func (ic *ItemCreate) AddSubscriptionStatuses(s ...*SubscriptionStatus) *ItemCreate {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return ic.AddSubscriptionStatusIDs(ids...)
 }
 
 // Mutation returns the ItemMutation object of the builder.
@@ -251,6 +233,10 @@ func (ic *ItemCreate) createSpec() (*Item, *sqlgraph.CreateSpec) {
 		_spec.SetField(item.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
+	if value, ok := ic.mutation.TopicName(); ok {
+		_spec.SetField(item.FieldTopicName, field.TypeString, value)
+		_node.TopicName = &value
+	}
 	if nodes := ic.mutation.BundlesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -260,38 +246,6 @@ func (ic *ItemCreate) createSpec() (*Item, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bundle.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.ConsumedStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.ConsumedStatusesTable,
-			Columns: []string{item.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.SubscriptionStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.SubscriptionStatusesTable,
-			Columns: []string{item.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -402,6 +356,24 @@ func (u *ItemUpsert) SetDescription(v string) *ItemUpsert {
 // UpdateDescription sets the "description" field to the value that was provided on create.
 func (u *ItemUpsert) UpdateDescription() *ItemUpsert {
 	u.SetExcluded(item.FieldDescription)
+	return u
+}
+
+// SetTopicName sets the "topic_name" field.
+func (u *ItemUpsert) SetTopicName(v string) *ItemUpsert {
+	u.Set(item.FieldTopicName, v)
+	return u
+}
+
+// UpdateTopicName sets the "topic_name" field to the value that was provided on create.
+func (u *ItemUpsert) UpdateTopicName() *ItemUpsert {
+	u.SetExcluded(item.FieldTopicName)
+	return u
+}
+
+// ClearTopicName clears the value of the "topic_name" field.
+func (u *ItemUpsert) ClearTopicName() *ItemUpsert {
+	u.SetNull(item.FieldTopicName)
 	return u
 }
 
@@ -516,6 +488,27 @@ func (u *ItemUpsertOne) SetDescription(v string) *ItemUpsertOne {
 func (u *ItemUpsertOne) UpdateDescription() *ItemUpsertOne {
 	return u.Update(func(s *ItemUpsert) {
 		s.UpdateDescription()
+	})
+}
+
+// SetTopicName sets the "topic_name" field.
+func (u *ItemUpsertOne) SetTopicName(v string) *ItemUpsertOne {
+	return u.Update(func(s *ItemUpsert) {
+		s.SetTopicName(v)
+	})
+}
+
+// UpdateTopicName sets the "topic_name" field to the value that was provided on create.
+func (u *ItemUpsertOne) UpdateTopicName() *ItemUpsertOne {
+	return u.Update(func(s *ItemUpsert) {
+		s.UpdateTopicName()
+	})
+}
+
+// ClearTopicName clears the value of the "topic_name" field.
+func (u *ItemUpsertOne) ClearTopicName() *ItemUpsertOne {
+	return u.Update(func(s *ItemUpsert) {
+		s.ClearTopicName()
 	})
 }
 
@@ -796,6 +789,27 @@ func (u *ItemUpsertBulk) SetDescription(v string) *ItemUpsertBulk {
 func (u *ItemUpsertBulk) UpdateDescription() *ItemUpsertBulk {
 	return u.Update(func(s *ItemUpsert) {
 		s.UpdateDescription()
+	})
+}
+
+// SetTopicName sets the "topic_name" field.
+func (u *ItemUpsertBulk) SetTopicName(v string) *ItemUpsertBulk {
+	return u.Update(func(s *ItemUpsert) {
+		s.SetTopicName(v)
+	})
+}
+
+// UpdateTopicName sets the "topic_name" field to the value that was provided on create.
+func (u *ItemUpsertBulk) UpdateTopicName() *ItemUpsertBulk {
+	return u.Update(func(s *ItemUpsert) {
+		s.UpdateTopicName()
+	})
+}
+
+// ClearTopicName clears the value of the "topic_name" field.
+func (u *ItemUpsertBulk) ClearTopicName() *ItemUpsertBulk {
+	return u.Update(func(s *ItemUpsert) {
+		s.ClearTopicName()
 	})
 }
 

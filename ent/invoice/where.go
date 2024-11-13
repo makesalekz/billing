@@ -62,6 +62,11 @@ func UserID(v int64) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldUserID, v))
 }
 
+// TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
+func TenantID(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldTenantID, v))
+}
+
 // AppID applies equality check predicate on the "app_id" field. It's identical to AppIDEQ.
 func AppID(v string) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldAppID, v))
@@ -90,6 +95,26 @@ func Currency(v string) predicate.Invoice {
 // PaidAt applies equality check predicate on the "paid_at" field. It's identical to PaidAtEQ.
 func PaidAt(v time.Time) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldPaidAt, v))
+}
+
+// PaidTill applies equality check predicate on the "paid_till" field. It's identical to PaidTillEQ.
+func PaidTill(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldPaidTill, v))
+}
+
+// IsPaidAtProcessed applies equality check predicate on the "is_paid_at_processed" field. It's identical to IsPaidAtProcessedEQ.
+func IsPaidAtProcessed(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsPaidAtProcessed, v))
+}
+
+// IsPaidTillProcessed applies equality check predicate on the "is_paid_till_processed" field. It's identical to IsPaidTillProcessedEQ.
+func IsPaidTillProcessed(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsPaidTillProcessed, v))
+}
+
+// SubscriptionID applies equality check predicate on the "subscription_id" field. It's identical to SubscriptionIDEQ.
+func SubscriptionID(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldSubscriptionID, v))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
@@ -130,6 +155,46 @@ func UserIDLT(v int64) predicate.Invoice {
 // UserIDLTE applies the LTE predicate on the "user_id" field.
 func UserIDLTE(v int64) predicate.Invoice {
 	return predicate.Invoice(sql.FieldLTE(FieldUserID, v))
+}
+
+// TenantIDEQ applies the EQ predicate on the "tenant_id" field.
+func TenantIDEQ(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldTenantID, v))
+}
+
+// TenantIDNEQ applies the NEQ predicate on the "tenant_id" field.
+func TenantIDNEQ(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldTenantID, v))
+}
+
+// TenantIDIn applies the In predicate on the "tenant_id" field.
+func TenantIDIn(vs ...int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldTenantID, vs...))
+}
+
+// TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
+func TenantIDNotIn(vs ...int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldTenantID, v))
 }
 
 // AppIDEQ applies the EQ predicate on the "app_id" field.
@@ -442,6 +507,106 @@ func PaidAtNotNil() predicate.Invoice {
 	return predicate.Invoice(sql.FieldNotNull(FieldPaidAt))
 }
 
+// PaidTillEQ applies the EQ predicate on the "paid_till" field.
+func PaidTillEQ(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldPaidTill, v))
+}
+
+// PaidTillNEQ applies the NEQ predicate on the "paid_till" field.
+func PaidTillNEQ(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldPaidTill, v))
+}
+
+// PaidTillIn applies the In predicate on the "paid_till" field.
+func PaidTillIn(vs ...time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldPaidTill, vs...))
+}
+
+// PaidTillNotIn applies the NotIn predicate on the "paid_till" field.
+func PaidTillNotIn(vs ...time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldPaidTill, vs...))
+}
+
+// PaidTillGT applies the GT predicate on the "paid_till" field.
+func PaidTillGT(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldPaidTill, v))
+}
+
+// PaidTillGTE applies the GTE predicate on the "paid_till" field.
+func PaidTillGTE(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldPaidTill, v))
+}
+
+// PaidTillLT applies the LT predicate on the "paid_till" field.
+func PaidTillLT(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldPaidTill, v))
+}
+
+// PaidTillLTE applies the LTE predicate on the "paid_till" field.
+func PaidTillLTE(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldPaidTill, v))
+}
+
+// PaidTillIsNil applies the IsNil predicate on the "paid_till" field.
+func PaidTillIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldPaidTill))
+}
+
+// PaidTillNotNil applies the NotNil predicate on the "paid_till" field.
+func PaidTillNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldPaidTill))
+}
+
+// IsPaidAtProcessedEQ applies the EQ predicate on the "is_paid_at_processed" field.
+func IsPaidAtProcessedEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsPaidAtProcessed, v))
+}
+
+// IsPaidAtProcessedNEQ applies the NEQ predicate on the "is_paid_at_processed" field.
+func IsPaidAtProcessedNEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldIsPaidAtProcessed, v))
+}
+
+// IsPaidTillProcessedEQ applies the EQ predicate on the "is_paid_till_processed" field.
+func IsPaidTillProcessedEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsPaidTillProcessed, v))
+}
+
+// IsPaidTillProcessedNEQ applies the NEQ predicate on the "is_paid_till_processed" field.
+func IsPaidTillProcessedNEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldIsPaidTillProcessed, v))
+}
+
+// SubscriptionIDEQ applies the EQ predicate on the "subscription_id" field.
+func SubscriptionIDEQ(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldSubscriptionID, v))
+}
+
+// SubscriptionIDNEQ applies the NEQ predicate on the "subscription_id" field.
+func SubscriptionIDNEQ(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldSubscriptionID, v))
+}
+
+// SubscriptionIDIn applies the In predicate on the "subscription_id" field.
+func SubscriptionIDIn(vs ...int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldSubscriptionID, vs...))
+}
+
+// SubscriptionIDNotIn applies the NotIn predicate on the "subscription_id" field.
+func SubscriptionIDNotIn(vs ...int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldSubscriptionID, vs...))
+}
+
+// SubscriptionIDIsNil applies the IsNil predicate on the "subscription_id" field.
+func SubscriptionIDIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldSubscriptionID))
+}
+
+// SubscriptionIDNotNil applies the NotNil predicate on the "subscription_id" field.
+func SubscriptionIDNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldSubscriptionID))
+}
+
 // HasProduct applies the HasEdge predicate on the "product" edge.
 func HasProduct() predicate.Invoice {
 	return predicate.Invoice(func(s *sql.Selector) {
@@ -465,44 +630,21 @@ func HasProductWith(preds ...predicate.Product) predicate.Invoice {
 	})
 }
 
-// HasConsumedStatuses applies the HasEdge predicate on the "consumed_statuses" edge.
-func HasConsumedStatuses() predicate.Invoice {
+// HasSubscriptions applies the HasEdge predicate on the "subscriptions" edge.
+func HasSubscriptions() predicate.Invoice {
 	return predicate.Invoice(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ConsumedStatusesTable, ConsumedStatusesColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, SubscriptionsTable, SubscriptionsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasConsumedStatusesWith applies the HasEdge predicate on the "consumed_statuses" edge with a given conditions (other predicates).
-func HasConsumedStatusesWith(preds ...predicate.ConsumedStatus) predicate.Invoice {
+// HasSubscriptionsWith applies the HasEdge predicate on the "subscriptions" edge with a given conditions (other predicates).
+func HasSubscriptionsWith(preds ...predicate.Subscriptions) predicate.Invoice {
 	return predicate.Invoice(func(s *sql.Selector) {
-		step := newConsumedStatusesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasSubscriptionStatuses applies the HasEdge predicate on the "subscription_statuses" edge.
-func HasSubscriptionStatuses() predicate.Invoice {
-	return predicate.Invoice(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionStatusesTable, SubscriptionStatusesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSubscriptionStatusesWith applies the HasEdge predicate on the "subscription_statuses" edge with a given conditions (other predicates).
-func HasSubscriptionStatusesWith(preds ...predicate.SubscriptionStatus) predicate.Invoice {
-	return predicate.Invoice(func(s *sql.Selector) {
-		step := newSubscriptionStatusesStep()
+		step := newSubscriptionsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

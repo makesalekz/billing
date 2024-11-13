@@ -12,10 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
 )
 
 // ItemUpdate is the builder for updating Item entities.
@@ -86,6 +84,26 @@ func (iu *ItemUpdate) SetNillableDescription(s *string) *ItemUpdate {
 	return iu
 }
 
+// SetTopicName sets the "topic_name" field.
+func (iu *ItemUpdate) SetTopicName(s string) *ItemUpdate {
+	iu.mutation.SetTopicName(s)
+	return iu
+}
+
+// SetNillableTopicName sets the "topic_name" field if the given value is not nil.
+func (iu *ItemUpdate) SetNillableTopicName(s *string) *ItemUpdate {
+	if s != nil {
+		iu.SetTopicName(*s)
+	}
+	return iu
+}
+
+// ClearTopicName clears the value of the "topic_name" field.
+func (iu *ItemUpdate) ClearTopicName() *ItemUpdate {
+	iu.mutation.ClearTopicName()
+	return iu
+}
+
 // AddBundleIDs adds the "bundles" edge to the Bundle entity by IDs.
 func (iu *ItemUpdate) AddBundleIDs(ids ...int64) *ItemUpdate {
 	iu.mutation.AddBundleIDs(ids...)
@@ -99,36 +117,6 @@ func (iu *ItemUpdate) AddBundles(b ...*Bundle) *ItemUpdate {
 		ids[i] = b[i].ID
 	}
 	return iu.AddBundleIDs(ids...)
-}
-
-// AddConsumedStatusIDs adds the "consumed_statuses" edge to the ConsumedStatus entity by IDs.
-func (iu *ItemUpdate) AddConsumedStatusIDs(ids ...int64) *ItemUpdate {
-	iu.mutation.AddConsumedStatusIDs(ids...)
-	return iu
-}
-
-// AddConsumedStatuses adds the "consumed_statuses" edges to the ConsumedStatus entity.
-func (iu *ItemUpdate) AddConsumedStatuses(c ...*ConsumedStatus) *ItemUpdate {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iu.AddConsumedStatusIDs(ids...)
-}
-
-// AddSubscriptionStatusIDs adds the "subscription_statuses" edge to the SubscriptionStatus entity by IDs.
-func (iu *ItemUpdate) AddSubscriptionStatusIDs(ids ...int64) *ItemUpdate {
-	iu.mutation.AddSubscriptionStatusIDs(ids...)
-	return iu
-}
-
-// AddSubscriptionStatuses adds the "subscription_statuses" edges to the SubscriptionStatus entity.
-func (iu *ItemUpdate) AddSubscriptionStatuses(s ...*SubscriptionStatus) *ItemUpdate {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iu.AddSubscriptionStatusIDs(ids...)
 }
 
 // Mutation returns the ItemMutation object of the builder.
@@ -155,48 +143,6 @@ func (iu *ItemUpdate) RemoveBundles(b ...*Bundle) *ItemUpdate {
 		ids[i] = b[i].ID
 	}
 	return iu.RemoveBundleIDs(ids...)
-}
-
-// ClearConsumedStatuses clears all "consumed_statuses" edges to the ConsumedStatus entity.
-func (iu *ItemUpdate) ClearConsumedStatuses() *ItemUpdate {
-	iu.mutation.ClearConsumedStatuses()
-	return iu
-}
-
-// RemoveConsumedStatusIDs removes the "consumed_statuses" edge to ConsumedStatus entities by IDs.
-func (iu *ItemUpdate) RemoveConsumedStatusIDs(ids ...int64) *ItemUpdate {
-	iu.mutation.RemoveConsumedStatusIDs(ids...)
-	return iu
-}
-
-// RemoveConsumedStatuses removes "consumed_statuses" edges to ConsumedStatus entities.
-func (iu *ItemUpdate) RemoveConsumedStatuses(c ...*ConsumedStatus) *ItemUpdate {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iu.RemoveConsumedStatusIDs(ids...)
-}
-
-// ClearSubscriptionStatuses clears all "subscription_statuses" edges to the SubscriptionStatus entity.
-func (iu *ItemUpdate) ClearSubscriptionStatuses() *ItemUpdate {
-	iu.mutation.ClearSubscriptionStatuses()
-	return iu
-}
-
-// RemoveSubscriptionStatusIDs removes the "subscription_statuses" edge to SubscriptionStatus entities by IDs.
-func (iu *ItemUpdate) RemoveSubscriptionStatusIDs(ids ...int64) *ItemUpdate {
-	iu.mutation.RemoveSubscriptionStatusIDs(ids...)
-	return iu
-}
-
-// RemoveSubscriptionStatuses removes "subscription_statuses" edges to SubscriptionStatus entities.
-func (iu *ItemUpdate) RemoveSubscriptionStatuses(s ...*SubscriptionStatus) *ItemUpdate {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iu.RemoveSubscriptionStatusIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -271,6 +217,12 @@ func (iu *ItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := iu.mutation.Description(); ok {
 		_spec.SetField(item.FieldDescription, field.TypeString, value)
 	}
+	if value, ok := iu.mutation.TopicName(); ok {
+		_spec.SetField(item.FieldTopicName, field.TypeString, value)
+	}
+	if iu.mutation.TopicNameCleared() {
+		_spec.ClearField(item.FieldTopicName, field.TypeString)
+	}
 	if iu.mutation.BundlesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -309,96 +261,6 @@ func (iu *ItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bundle.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.ConsumedStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.ConsumedStatusesTable,
-			Columns: []string{item.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedConsumedStatusesIDs(); len(nodes) > 0 && !iu.mutation.ConsumedStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.ConsumedStatusesTable,
-			Columns: []string{item.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.ConsumedStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.ConsumedStatusesTable,
-			Columns: []string{item.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.SubscriptionStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.SubscriptionStatusesTable,
-			Columns: []string{item.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedSubscriptionStatusesIDs(); len(nodes) > 0 && !iu.mutation.SubscriptionStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.SubscriptionStatusesTable,
-			Columns: []string{item.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.SubscriptionStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.SubscriptionStatusesTable,
-			Columns: []string{item.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -482,6 +344,26 @@ func (iuo *ItemUpdateOne) SetNillableDescription(s *string) *ItemUpdateOne {
 	return iuo
 }
 
+// SetTopicName sets the "topic_name" field.
+func (iuo *ItemUpdateOne) SetTopicName(s string) *ItemUpdateOne {
+	iuo.mutation.SetTopicName(s)
+	return iuo
+}
+
+// SetNillableTopicName sets the "topic_name" field if the given value is not nil.
+func (iuo *ItemUpdateOne) SetNillableTopicName(s *string) *ItemUpdateOne {
+	if s != nil {
+		iuo.SetTopicName(*s)
+	}
+	return iuo
+}
+
+// ClearTopicName clears the value of the "topic_name" field.
+func (iuo *ItemUpdateOne) ClearTopicName() *ItemUpdateOne {
+	iuo.mutation.ClearTopicName()
+	return iuo
+}
+
 // AddBundleIDs adds the "bundles" edge to the Bundle entity by IDs.
 func (iuo *ItemUpdateOne) AddBundleIDs(ids ...int64) *ItemUpdateOne {
 	iuo.mutation.AddBundleIDs(ids...)
@@ -495,36 +377,6 @@ func (iuo *ItemUpdateOne) AddBundles(b ...*Bundle) *ItemUpdateOne {
 		ids[i] = b[i].ID
 	}
 	return iuo.AddBundleIDs(ids...)
-}
-
-// AddConsumedStatusIDs adds the "consumed_statuses" edge to the ConsumedStatus entity by IDs.
-func (iuo *ItemUpdateOne) AddConsumedStatusIDs(ids ...int64) *ItemUpdateOne {
-	iuo.mutation.AddConsumedStatusIDs(ids...)
-	return iuo
-}
-
-// AddConsumedStatuses adds the "consumed_statuses" edges to the ConsumedStatus entity.
-func (iuo *ItemUpdateOne) AddConsumedStatuses(c ...*ConsumedStatus) *ItemUpdateOne {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iuo.AddConsumedStatusIDs(ids...)
-}
-
-// AddSubscriptionStatusIDs adds the "subscription_statuses" edge to the SubscriptionStatus entity by IDs.
-func (iuo *ItemUpdateOne) AddSubscriptionStatusIDs(ids ...int64) *ItemUpdateOne {
-	iuo.mutation.AddSubscriptionStatusIDs(ids...)
-	return iuo
-}
-
-// AddSubscriptionStatuses adds the "subscription_statuses" edges to the SubscriptionStatus entity.
-func (iuo *ItemUpdateOne) AddSubscriptionStatuses(s ...*SubscriptionStatus) *ItemUpdateOne {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iuo.AddSubscriptionStatusIDs(ids...)
 }
 
 // Mutation returns the ItemMutation object of the builder.
@@ -551,48 +403,6 @@ func (iuo *ItemUpdateOne) RemoveBundles(b ...*Bundle) *ItemUpdateOne {
 		ids[i] = b[i].ID
 	}
 	return iuo.RemoveBundleIDs(ids...)
-}
-
-// ClearConsumedStatuses clears all "consumed_statuses" edges to the ConsumedStatus entity.
-func (iuo *ItemUpdateOne) ClearConsumedStatuses() *ItemUpdateOne {
-	iuo.mutation.ClearConsumedStatuses()
-	return iuo
-}
-
-// RemoveConsumedStatusIDs removes the "consumed_statuses" edge to ConsumedStatus entities by IDs.
-func (iuo *ItemUpdateOne) RemoveConsumedStatusIDs(ids ...int64) *ItemUpdateOne {
-	iuo.mutation.RemoveConsumedStatusIDs(ids...)
-	return iuo
-}
-
-// RemoveConsumedStatuses removes "consumed_statuses" edges to ConsumedStatus entities.
-func (iuo *ItemUpdateOne) RemoveConsumedStatuses(c ...*ConsumedStatus) *ItemUpdateOne {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iuo.RemoveConsumedStatusIDs(ids...)
-}
-
-// ClearSubscriptionStatuses clears all "subscription_statuses" edges to the SubscriptionStatus entity.
-func (iuo *ItemUpdateOne) ClearSubscriptionStatuses() *ItemUpdateOne {
-	iuo.mutation.ClearSubscriptionStatuses()
-	return iuo
-}
-
-// RemoveSubscriptionStatusIDs removes the "subscription_statuses" edge to SubscriptionStatus entities by IDs.
-func (iuo *ItemUpdateOne) RemoveSubscriptionStatusIDs(ids ...int64) *ItemUpdateOne {
-	iuo.mutation.RemoveSubscriptionStatusIDs(ids...)
-	return iuo
-}
-
-// RemoveSubscriptionStatuses removes "subscription_statuses" edges to SubscriptionStatus entities.
-func (iuo *ItemUpdateOne) RemoveSubscriptionStatuses(s ...*SubscriptionStatus) *ItemUpdateOne {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iuo.RemoveSubscriptionStatusIDs(ids...)
 }
 
 // Where appends a list predicates to the ItemUpdate builder.
@@ -697,6 +507,12 @@ func (iuo *ItemUpdateOne) sqlSave(ctx context.Context) (_node *Item, err error) 
 	if value, ok := iuo.mutation.Description(); ok {
 		_spec.SetField(item.FieldDescription, field.TypeString, value)
 	}
+	if value, ok := iuo.mutation.TopicName(); ok {
+		_spec.SetField(item.FieldTopicName, field.TypeString, value)
+	}
+	if iuo.mutation.TopicNameCleared() {
+		_spec.ClearField(item.FieldTopicName, field.TypeString)
+	}
 	if iuo.mutation.BundlesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -735,96 +551,6 @@ func (iuo *ItemUpdateOne) sqlSave(ctx context.Context) (_node *Item, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bundle.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.ConsumedStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.ConsumedStatusesTable,
-			Columns: []string{item.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedConsumedStatusesIDs(); len(nodes) > 0 && !iuo.mutation.ConsumedStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.ConsumedStatusesTable,
-			Columns: []string{item.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.ConsumedStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.ConsumedStatusesTable,
-			Columns: []string{item.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.SubscriptionStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.SubscriptionStatusesTable,
-			Columns: []string{item.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedSubscriptionStatusesIDs(); len(nodes) > 0 && !iuo.mutation.SubscriptionStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.SubscriptionStatusesTable,
-			Columns: []string{item.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.SubscriptionStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.SubscriptionStatusesTable,
-			Columns: []string{item.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

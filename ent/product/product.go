@@ -12,6 +12,8 @@ const (
 	Label = "product"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldAppID holds the string denoting the app_id field in the database.
+	FieldAppID = "app_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
@@ -32,8 +34,16 @@ const (
 	FieldIsUnique = "is_unique"
 	// FieldUniqueLimit holds the string denoting the unique_limit field in the database.
 	FieldUniqueLimit = "unique_limit"
+	// FieldIsExpiring holds the string denoting the is_expiring field in the database.
+	FieldIsExpiring = "is_expiring"
+	// FieldRecurrenceRule holds the string denoting the recurrence_rule field in the database.
+	FieldRecurrenceRule = "recurrence_rule"
+	// FieldOfferInAppleStore holds the string denoting the offer_in_apple_store field in the database.
+	FieldOfferInAppleStore = "offer_in_apple_store"
 	// EdgeInvoices holds the string denoting the invoices edge name in mutations.
 	EdgeInvoices = "invoices"
+	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
+	EdgeSubscriptions = "subscriptions"
 	// EdgeBundles holds the string denoting the bundles edge name in mutations.
 	EdgeBundles = "bundles"
 	// Table holds the table name of the product in the database.
@@ -45,6 +55,13 @@ const (
 	InvoicesInverseTable = "invoices"
 	// InvoicesColumn is the table column denoting the invoices relation/edge.
 	InvoicesColumn = "product_id"
+	// SubscriptionsTable is the table that holds the subscriptions relation/edge.
+	SubscriptionsTable = "subscriptions"
+	// SubscriptionsInverseTable is the table name for the Subscriptions entity.
+	// It exists in this package in order to avoid circular dependency with the "subscriptions" package.
+	SubscriptionsInverseTable = "subscriptions"
+	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
+	SubscriptionsColumn = "product_id"
 	// BundlesTable is the table that holds the bundles relation/edge.
 	BundlesTable = "bundles"
 	// BundlesInverseTable is the table name for the Bundle entity.
@@ -57,6 +74,7 @@ const (
 // Columns holds all SQL columns for product fields.
 var Columns = []string{
 	FieldID,
+	FieldAppID,
 	FieldName,
 	FieldDescription,
 	FieldPrice,
@@ -67,6 +85,9 @@ var Columns = []string{
 	FieldLeft,
 	FieldIsUnique,
 	FieldUniqueLimit,
+	FieldIsExpiring,
+	FieldRecurrenceRule,
+	FieldOfferInAppleStore,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -94,6 +115,14 @@ var (
 	DefaultIsUnique bool
 	// DefaultUniqueLimit holds the default value on creation for the "unique_limit" field.
 	DefaultUniqueLimit int64
+	// UniqueLimitValidator is a validator for the "unique_limit" field. It is called by the builders before save.
+	UniqueLimitValidator func(int64) error
+	// DefaultIsExpiring holds the default value on creation for the "is_expiring" field.
+	DefaultIsExpiring bool
+	// RecurrenceRuleValidator is a validator for the "recurrence_rule" field. It is called by the builders before save.
+	RecurrenceRuleValidator func(string) error
+	// DefaultOfferInAppleStore holds the default value on creation for the "offer_in_apple_store" field.
+	DefaultOfferInAppleStore bool
 )
 
 // OrderOption defines the ordering options for the Product queries.
@@ -102,6 +131,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByAppID orders the results by the app_id field.
+func ByAppID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAppID, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -154,6 +188,21 @@ func ByUniqueLimit(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUniqueLimit, opts...).ToFunc()
 }
 
+// ByIsExpiring orders the results by the is_expiring field.
+func ByIsExpiring(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsExpiring, opts...).ToFunc()
+}
+
+// ByRecurrenceRule orders the results by the recurrence_rule field.
+func ByRecurrenceRule(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRecurrenceRule, opts...).ToFunc()
+}
+
+// ByOfferInAppleStore orders the results by the offer_in_apple_store field.
+func ByOfferInAppleStore(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOfferInAppleStore, opts...).ToFunc()
+}
+
 // ByInvoicesCount orders the results by invoices count.
 func ByInvoicesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -165,6 +214,20 @@ func ByInvoicesCount(opts ...sql.OrderTermOption) OrderOption {
 func ByInvoices(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newInvoicesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// BySubscriptionsCount orders the results by subscriptions count.
+func BySubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSubscriptionsStep(), opts...)
+	}
+}
+
+// BySubscriptions orders the results by subscriptions terms.
+func BySubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -186,6 +249,13 @@ func newInvoicesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(InvoicesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, InvoicesTable, InvoicesColumn),
+	)
+}
+func newSubscriptionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SubscriptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionsTable, SubscriptionsColumn),
 	)
 }
 func newBundlesStep() *sqlgraph.Step {

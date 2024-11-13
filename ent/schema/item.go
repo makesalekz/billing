@@ -18,6 +18,7 @@ func (Item) Fields() []ent.Field {
 		field.Int64("id"),
 		field.String("name"),
 		field.String("description"),
+		field.String("topic_name").Optional().Nillable().Unique(),
 	}
 }
 
@@ -25,8 +26,6 @@ func (Item) Fields() []ent.Field {
 func (Item) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("bundles", Bundle.Type),
-		edge.To("consumed_statuses", ConsumedStatus.Type),
-		edge.To("subscription_statuses", SubscriptionStatus.Type),
 	}
 }
 

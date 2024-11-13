@@ -13,23 +13,19 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
 )
 
 // ItemQuery is the builder for querying Item entities.
 type ItemQuery struct {
 	config
-	ctx                      *QueryContext
-	order                    []item.OrderOption
-	inters                   []Interceptor
-	predicates               []predicate.Item
-	withBundles              *BundleQuery
-	withConsumedStatuses     *ConsumedStatusQuery
-	withSubscriptionStatuses *SubscriptionStatusQuery
-	modifiers                []func(*sql.Selector)
+	ctx         *QueryContext
+	order       []item.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Item
+	withBundles *BundleQuery
+	modifiers   []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -81,50 +77,6 @@ func (iq *ItemQuery) QueryBundles() *BundleQuery {
 			sqlgraph.From(item.Table, item.FieldID, selector),
 			sqlgraph.To(bundle.Table, bundle.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, item.BundlesTable, item.BundlesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryConsumedStatuses chains the current query on the "consumed_statuses" edge.
-func (iq *ItemQuery) QueryConsumedStatuses() *ConsumedStatusQuery {
-	query := (&ConsumedStatusClient{config: iq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := iq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := iq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(item.Table, item.FieldID, selector),
-			sqlgraph.To(consumedstatus.Table, consumedstatus.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, item.ConsumedStatusesTable, item.ConsumedStatusesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QuerySubscriptionStatuses chains the current query on the "subscription_statuses" edge.
-func (iq *ItemQuery) QuerySubscriptionStatuses() *SubscriptionStatusQuery {
-	query := (&SubscriptionStatusClient{config: iq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := iq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := iq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(item.Table, item.FieldID, selector),
-			sqlgraph.To(subscriptionstatus.Table, subscriptionstatus.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, item.SubscriptionStatusesTable, item.SubscriptionStatusesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
 		return fromU, nil
@@ -319,14 +271,12 @@ func (iq *ItemQuery) Clone() *ItemQuery {
 		return nil
 	}
 	return &ItemQuery{
-		config:                   iq.config,
-		ctx:                      iq.ctx.Clone(),
-		order:                    append([]item.OrderOption{}, iq.order...),
-		inters:                   append([]Interceptor{}, iq.inters...),
-		predicates:               append([]predicate.Item{}, iq.predicates...),
-		withBundles:              iq.withBundles.Clone(),
-		withConsumedStatuses:     iq.withConsumedStatuses.Clone(),
-		withSubscriptionStatuses: iq.withSubscriptionStatuses.Clone(),
+		config:      iq.config,
+		ctx:         iq.ctx.Clone(),
+		order:       append([]item.OrderOption{}, iq.order...),
+		inters:      append([]Interceptor{}, iq.inters...),
+		predicates:  append([]predicate.Item{}, iq.predicates...),
+		withBundles: iq.withBundles.Clone(),
 		// clone intermediate query.
 		sql:       iq.sql.Clone(),
 		path:      iq.path,
@@ -342,28 +292,6 @@ func (iq *ItemQuery) WithBundles(opts ...func(*BundleQuery)) *ItemQuery {
 		opt(query)
 	}
 	iq.withBundles = query
-	return iq
-}
-
-// WithConsumedStatuses tells the query-builder to eager-load the nodes that are connected to
-// the "consumed_statuses" edge. The optional arguments are used to configure the query builder of the edge.
-func (iq *ItemQuery) WithConsumedStatuses(opts ...func(*ConsumedStatusQuery)) *ItemQuery {
-	query := (&ConsumedStatusClient{config: iq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	iq.withConsumedStatuses = query
-	return iq
-}
-
-// WithSubscriptionStatuses tells the query-builder to eager-load the nodes that are connected to
-// the "subscription_statuses" edge. The optional arguments are used to configure the query builder of the edge.
-func (iq *ItemQuery) WithSubscriptionStatuses(opts ...func(*SubscriptionStatusQuery)) *ItemQuery {
-	query := (&SubscriptionStatusClient{config: iq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	iq.withSubscriptionStatuses = query
 	return iq
 }
 
@@ -445,10 +373,8 @@ func (iq *ItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Item, e
 	var (
 		nodes       = []*Item{}
 		_spec       = iq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [1]bool{
 			iq.withBundles != nil,
-			iq.withConsumedStatuses != nil,
-			iq.withSubscriptionStatuses != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -479,22 +405,6 @@ func (iq *ItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Item, e
 			return nil, err
 		}
 	}
-	if query := iq.withConsumedStatuses; query != nil {
-		if err := iq.loadConsumedStatuses(ctx, query, nodes,
-			func(n *Item) { n.Edges.ConsumedStatuses = []*ConsumedStatus{} },
-			func(n *Item, e *ConsumedStatus) { n.Edges.ConsumedStatuses = append(n.Edges.ConsumedStatuses, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := iq.withSubscriptionStatuses; query != nil {
-		if err := iq.loadSubscriptionStatuses(ctx, query, nodes,
-			func(n *Item) { n.Edges.SubscriptionStatuses = []*SubscriptionStatus{} },
-			func(n *Item, e *SubscriptionStatus) {
-				n.Edges.SubscriptionStatuses = append(n.Edges.SubscriptionStatuses, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
@@ -513,67 +423,6 @@ func (iq *ItemQuery) loadBundles(ctx context.Context, query *BundleQuery, nodes 
 	}
 	query.Where(predicate.Bundle(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(item.BundlesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.ItemID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "item_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (iq *ItemQuery) loadConsumedStatuses(ctx context.Context, query *ConsumedStatusQuery, nodes []*Item, init func(*Item), assign func(*Item, *ConsumedStatus)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*Item)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(consumedstatus.FieldItemID)
-	}
-	query.Where(predicate.ConsumedStatus(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(item.ConsumedStatusesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.ItemID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "item_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (iq *ItemQuery) loadSubscriptionStatuses(ctx context.Context, query *SubscriptionStatusQuery, nodes []*Item, init func(*Item), assign func(*Item, *SubscriptionStatus)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*Item)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(subscriptionstatus.FieldItemID)
-	}
-	query.Where(predicate.SubscriptionStatus(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(item.SubscriptionStatusesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

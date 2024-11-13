@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         && apt-get autoremove -y && apt-get autoclean -y
 
 ARG ENV
+COPY --from=builder /src/.well-known /.well-known
 COPY --from=builder /src/bin /app
 COPY --from=builder /src/configs/config.${ENV}.yaml /app/config.yaml
 

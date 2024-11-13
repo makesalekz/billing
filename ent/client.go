@@ -16,11 +16,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // Client is the client that holds all ent builders.
@@ -30,16 +29,14 @@ type Client struct {
 	Schema *migrate.Schema
 	// Bundle is the client for interacting with the Bundle builders.
 	Bundle *BundleClient
-	// ConsumedStatus is the client for interacting with the ConsumedStatus builders.
-	ConsumedStatus *ConsumedStatusClient
 	// Invoice is the client for interacting with the Invoice builders.
 	Invoice *InvoiceClient
 	// Item is the client for interacting with the Item builders.
 	Item *ItemClient
 	// Product is the client for interacting with the Product builders.
 	Product *ProductClient
-	// SubscriptionStatus is the client for interacting with the SubscriptionStatus builders.
-	SubscriptionStatus *SubscriptionStatusClient
+	// Subscriptions is the client for interacting with the Subscriptions builders.
+	Subscriptions *SubscriptionsClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -52,11 +49,10 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Bundle = NewBundleClient(c.config)
-	c.ConsumedStatus = NewConsumedStatusClient(c.config)
 	c.Invoice = NewInvoiceClient(c.config)
 	c.Item = NewItemClient(c.config)
 	c.Product = NewProductClient(c.config)
-	c.SubscriptionStatus = NewSubscriptionStatusClient(c.config)
+	c.Subscriptions = NewSubscriptionsClient(c.config)
 }
 
 type (
@@ -147,14 +143,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                ctx,
-		config:             cfg,
-		Bundle:             NewBundleClient(cfg),
-		ConsumedStatus:     NewConsumedStatusClient(cfg),
-		Invoice:            NewInvoiceClient(cfg),
-		Item:               NewItemClient(cfg),
-		Product:            NewProductClient(cfg),
-		SubscriptionStatus: NewSubscriptionStatusClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		Bundle:        NewBundleClient(cfg),
+		Invoice:       NewInvoiceClient(cfg),
+		Item:          NewItemClient(cfg),
+		Product:       NewProductClient(cfg),
+		Subscriptions: NewSubscriptionsClient(cfg),
 	}, nil
 }
 
@@ -172,14 +167,13 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                ctx,
-		config:             cfg,
-		Bundle:             NewBundleClient(cfg),
-		ConsumedStatus:     NewConsumedStatusClient(cfg),
-		Invoice:            NewInvoiceClient(cfg),
-		Item:               NewItemClient(cfg),
-		Product:            NewProductClient(cfg),
-		SubscriptionStatus: NewSubscriptionStatusClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		Bundle:        NewBundleClient(cfg),
+		Invoice:       NewInvoiceClient(cfg),
+		Item:          NewItemClient(cfg),
+		Product:       NewProductClient(cfg),
+		Subscriptions: NewSubscriptionsClient(cfg),
 	}, nil
 }
 
@@ -208,21 +202,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	for _, n := range []interface{ Use(...Hook) }{
-		c.Bundle, c.ConsumedStatus, c.Invoice, c.Item, c.Product, c.SubscriptionStatus,
-	} {
-		n.Use(hooks...)
-	}
+	c.Bundle.Use(hooks...)
+	c.Invoice.Use(hooks...)
+	c.Item.Use(hooks...)
+	c.Product.Use(hooks...)
+	c.Subscriptions.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Bundle, c.ConsumedStatus, c.Invoice, c.Item, c.Product, c.SubscriptionStatus,
-	} {
-		n.Intercept(interceptors...)
-	}
+	c.Bundle.Intercept(interceptors...)
+	c.Invoice.Intercept(interceptors...)
+	c.Item.Intercept(interceptors...)
+	c.Product.Intercept(interceptors...)
+	c.Subscriptions.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -230,16 +224,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *BundleMutation:
 		return c.Bundle.mutate(ctx, m)
-	case *ConsumedStatusMutation:
-		return c.ConsumedStatus.mutate(ctx, m)
 	case *InvoiceMutation:
 		return c.Invoice.mutate(ctx, m)
 	case *ItemMutation:
 		return c.Item.mutate(ctx, m)
 	case *ProductMutation:
 		return c.Product.mutate(ctx, m)
-	case *SubscriptionStatusMutation:
-		return c.SubscriptionStatus.mutate(ctx, m)
+	case *SubscriptionsMutation:
+		return c.Subscriptions.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -412,155 +404,6 @@ func (c *BundleClient) mutate(ctx context.Context, m *BundleMutation) (Value, er
 	}
 }
 
-// ConsumedStatusClient is a client for the ConsumedStatus schema.
-type ConsumedStatusClient struct {
-	config
-}
-
-// NewConsumedStatusClient returns a client for the ConsumedStatus from the given config.
-func NewConsumedStatusClient(c config) *ConsumedStatusClient {
-	return &ConsumedStatusClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `consumedstatus.Hooks(f(g(h())))`.
-func (c *ConsumedStatusClient) Use(hooks ...Hook) {
-	c.hooks.ConsumedStatus = append(c.hooks.ConsumedStatus, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `consumedstatus.Intercept(f(g(h())))`.
-func (c *ConsumedStatusClient) Intercept(interceptors ...Interceptor) {
-	c.inters.ConsumedStatus = append(c.inters.ConsumedStatus, interceptors...)
-}
-
-// Create returns a builder for creating a ConsumedStatus entity.
-func (c *ConsumedStatusClient) Create() *ConsumedStatusCreate {
-	mutation := newConsumedStatusMutation(c.config, OpCreate)
-	return &ConsumedStatusCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of ConsumedStatus entities.
-func (c *ConsumedStatusClient) CreateBulk(builders ...*ConsumedStatusCreate) *ConsumedStatusCreateBulk {
-	return &ConsumedStatusCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *ConsumedStatusClient) MapCreateBulk(slice any, setFunc func(*ConsumedStatusCreate, int)) *ConsumedStatusCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &ConsumedStatusCreateBulk{err: fmt.Errorf("calling to ConsumedStatusClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*ConsumedStatusCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &ConsumedStatusCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for ConsumedStatus.
-func (c *ConsumedStatusClient) Update() *ConsumedStatusUpdate {
-	mutation := newConsumedStatusMutation(c.config, OpUpdate)
-	return &ConsumedStatusUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *ConsumedStatusClient) UpdateOne(cs *ConsumedStatus) *ConsumedStatusUpdateOne {
-	mutation := newConsumedStatusMutation(c.config, OpUpdateOne, withConsumedStatus(cs))
-	return &ConsumedStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *ConsumedStatusClient) UpdateOneID(id int64) *ConsumedStatusUpdateOne {
-	mutation := newConsumedStatusMutation(c.config, OpUpdateOne, withConsumedStatusID(id))
-	return &ConsumedStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for ConsumedStatus.
-func (c *ConsumedStatusClient) Delete() *ConsumedStatusDelete {
-	mutation := newConsumedStatusMutation(c.config, OpDelete)
-	return &ConsumedStatusDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *ConsumedStatusClient) DeleteOne(cs *ConsumedStatus) *ConsumedStatusDeleteOne {
-	return c.DeleteOneID(cs.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ConsumedStatusClient) DeleteOneID(id int64) *ConsumedStatusDeleteOne {
-	builder := c.Delete().Where(consumedstatus.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &ConsumedStatusDeleteOne{builder}
-}
-
-// Query returns a query builder for ConsumedStatus.
-func (c *ConsumedStatusClient) Query() *ConsumedStatusQuery {
-	return &ConsumedStatusQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeConsumedStatus},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a ConsumedStatus entity by its id.
-func (c *ConsumedStatusClient) Get(ctx context.Context, id int64) (*ConsumedStatus, error) {
-	return c.Query().Where(consumedstatus.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *ConsumedStatusClient) GetX(ctx context.Context, id int64) *ConsumedStatus {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryItem queries the item edge of a ConsumedStatus.
-func (c *ConsumedStatusClient) QueryItem(cs *ConsumedStatus) *ItemQuery {
-	query := (&ItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cs.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(consumedstatus.Table, consumedstatus.FieldID, id),
-			sqlgraph.To(item.Table, item.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, consumedstatus.ItemTable, consumedstatus.ItemColumn),
-		)
-		fromV = sqlgraph.Neighbors(cs.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *ConsumedStatusClient) Hooks() []Hook {
-	return c.hooks.ConsumedStatus
-}
-
-// Interceptors returns the client interceptors.
-func (c *ConsumedStatusClient) Interceptors() []Interceptor {
-	return c.inters.ConsumedStatus
-}
-
-func (c *ConsumedStatusClient) mutate(ctx context.Context, m *ConsumedStatusMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&ConsumedStatusCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&ConsumedStatusUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&ConsumedStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&ConsumedStatusDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown ConsumedStatus mutation op: %q", m.Op())
-	}
-}
-
 // InvoiceClient is a client for the Invoice schema.
 type InvoiceClient struct {
 	config
@@ -685,31 +528,15 @@ func (c *InvoiceClient) QueryProduct(i *Invoice) *ProductQuery {
 	return query
 }
 
-// QueryConsumedStatuses queries the consumed_statuses edge of a Invoice.
-func (c *InvoiceClient) QueryConsumedStatuses(i *Invoice) *ConsumedStatusQuery {
-	query := (&ConsumedStatusClient{config: c.config}).Query()
+// QuerySubscriptions queries the subscriptions edge of a Invoice.
+func (c *InvoiceClient) QuerySubscriptions(i *Invoice) *SubscriptionsQuery {
+	query := (&SubscriptionsClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(invoice.Table, invoice.FieldID, id),
-			sqlgraph.To(consumedstatus.Table, consumedstatus.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, invoice.ConsumedStatusesTable, invoice.ConsumedStatusesColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySubscriptionStatuses queries the subscription_statuses edge of a Invoice.
-func (c *InvoiceClient) QuerySubscriptionStatuses(i *Invoice) *SubscriptionStatusQuery {
-	query := (&SubscriptionStatusClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(invoice.Table, invoice.FieldID, id),
-			sqlgraph.To(subscriptionstatus.Table, subscriptionstatus.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, invoice.SubscriptionStatusesTable, invoice.SubscriptionStatusesColumn),
+			sqlgraph.To(subscriptions.Table, subscriptions.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invoice.SubscriptionsTable, invoice.SubscriptionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil
@@ -859,38 +686,6 @@ func (c *ItemClient) QueryBundles(i *Item) *BundleQuery {
 			sqlgraph.From(item.Table, item.FieldID, id),
 			sqlgraph.To(bundle.Table, bundle.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, item.BundlesTable, item.BundlesColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryConsumedStatuses queries the consumed_statuses edge of a Item.
-func (c *ItemClient) QueryConsumedStatuses(i *Item) *ConsumedStatusQuery {
-	query := (&ConsumedStatusClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(item.Table, item.FieldID, id),
-			sqlgraph.To(consumedstatus.Table, consumedstatus.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, item.ConsumedStatusesTable, item.ConsumedStatusesColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySubscriptionStatuses queries the subscription_statuses edge of a Item.
-func (c *ItemClient) QuerySubscriptionStatuses(i *Item) *SubscriptionStatusQuery {
-	query := (&SubscriptionStatusClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(item.Table, item.FieldID, id),
-			sqlgraph.To(subscriptionstatus.Table, subscriptionstatus.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, item.SubscriptionStatusesTable, item.SubscriptionStatusesColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil
@@ -1049,6 +844,22 @@ func (c *ProductClient) QueryInvoices(pr *Product) *InvoiceQuery {
 	return query
 }
 
+// QuerySubscriptions queries the subscriptions edge of a Product.
+func (c *ProductClient) QuerySubscriptions(pr *Product) *SubscriptionsQuery {
+	query := (&SubscriptionsClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(product.Table, product.FieldID, id),
+			sqlgraph.To(subscriptions.Table, subscriptions.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, product.SubscriptionsTable, product.SubscriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryBundles queries the bundles edge of a Product.
 func (c *ProductClient) QueryBundles(pr *Product) *BundleQuery {
 	query := (&BundleClient{config: c.config}).Query()
@@ -1090,107 +901,107 @@ func (c *ProductClient) mutate(ctx context.Context, m *ProductMutation) (Value, 
 	}
 }
 
-// SubscriptionStatusClient is a client for the SubscriptionStatus schema.
-type SubscriptionStatusClient struct {
+// SubscriptionsClient is a client for the Subscriptions schema.
+type SubscriptionsClient struct {
 	config
 }
 
-// NewSubscriptionStatusClient returns a client for the SubscriptionStatus from the given config.
-func NewSubscriptionStatusClient(c config) *SubscriptionStatusClient {
-	return &SubscriptionStatusClient{config: c}
+// NewSubscriptionsClient returns a client for the Subscriptions from the given config.
+func NewSubscriptionsClient(c config) *SubscriptionsClient {
+	return &SubscriptionsClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `subscriptionstatus.Hooks(f(g(h())))`.
-func (c *SubscriptionStatusClient) Use(hooks ...Hook) {
-	c.hooks.SubscriptionStatus = append(c.hooks.SubscriptionStatus, hooks...)
+// A call to `Use(f, g, h)` equals to `subscriptions.Hooks(f(g(h())))`.
+func (c *SubscriptionsClient) Use(hooks ...Hook) {
+	c.hooks.Subscriptions = append(c.hooks.Subscriptions, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `subscriptionstatus.Intercept(f(g(h())))`.
-func (c *SubscriptionStatusClient) Intercept(interceptors ...Interceptor) {
-	c.inters.SubscriptionStatus = append(c.inters.SubscriptionStatus, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `subscriptions.Intercept(f(g(h())))`.
+func (c *SubscriptionsClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Subscriptions = append(c.inters.Subscriptions, interceptors...)
 }
 
-// Create returns a builder for creating a SubscriptionStatus entity.
-func (c *SubscriptionStatusClient) Create() *SubscriptionStatusCreate {
-	mutation := newSubscriptionStatusMutation(c.config, OpCreate)
-	return &SubscriptionStatusCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Subscriptions entity.
+func (c *SubscriptionsClient) Create() *SubscriptionsCreate {
+	mutation := newSubscriptionsMutation(c.config, OpCreate)
+	return &SubscriptionsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of SubscriptionStatus entities.
-func (c *SubscriptionStatusClient) CreateBulk(builders ...*SubscriptionStatusCreate) *SubscriptionStatusCreateBulk {
-	return &SubscriptionStatusCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Subscriptions entities.
+func (c *SubscriptionsClient) CreateBulk(builders ...*SubscriptionsCreate) *SubscriptionsCreateBulk {
+	return &SubscriptionsCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *SubscriptionStatusClient) MapCreateBulk(slice any, setFunc func(*SubscriptionStatusCreate, int)) *SubscriptionStatusCreateBulk {
+func (c *SubscriptionsClient) MapCreateBulk(slice any, setFunc func(*SubscriptionsCreate, int)) *SubscriptionsCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &SubscriptionStatusCreateBulk{err: fmt.Errorf("calling to SubscriptionStatusClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &SubscriptionsCreateBulk{err: fmt.Errorf("calling to SubscriptionsClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*SubscriptionStatusCreate, rv.Len())
+	builders := make([]*SubscriptionsCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &SubscriptionStatusCreateBulk{config: c.config, builders: builders}
+	return &SubscriptionsCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for SubscriptionStatus.
-func (c *SubscriptionStatusClient) Update() *SubscriptionStatusUpdate {
-	mutation := newSubscriptionStatusMutation(c.config, OpUpdate)
-	return &SubscriptionStatusUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Subscriptions.
+func (c *SubscriptionsClient) Update() *SubscriptionsUpdate {
+	mutation := newSubscriptionsMutation(c.config, OpUpdate)
+	return &SubscriptionsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *SubscriptionStatusClient) UpdateOne(ss *SubscriptionStatus) *SubscriptionStatusUpdateOne {
-	mutation := newSubscriptionStatusMutation(c.config, OpUpdateOne, withSubscriptionStatus(ss))
-	return &SubscriptionStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *SubscriptionsClient) UpdateOne(s *Subscriptions) *SubscriptionsUpdateOne {
+	mutation := newSubscriptionsMutation(c.config, OpUpdateOne, withSubscriptions(s))
+	return &SubscriptionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *SubscriptionStatusClient) UpdateOneID(id int64) *SubscriptionStatusUpdateOne {
-	mutation := newSubscriptionStatusMutation(c.config, OpUpdateOne, withSubscriptionStatusID(id))
-	return &SubscriptionStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *SubscriptionsClient) UpdateOneID(id int64) *SubscriptionsUpdateOne {
+	mutation := newSubscriptionsMutation(c.config, OpUpdateOne, withSubscriptionsID(id))
+	return &SubscriptionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for SubscriptionStatus.
-func (c *SubscriptionStatusClient) Delete() *SubscriptionStatusDelete {
-	mutation := newSubscriptionStatusMutation(c.config, OpDelete)
-	return &SubscriptionStatusDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Subscriptions.
+func (c *SubscriptionsClient) Delete() *SubscriptionsDelete {
+	mutation := newSubscriptionsMutation(c.config, OpDelete)
+	return &SubscriptionsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *SubscriptionStatusClient) DeleteOne(ss *SubscriptionStatus) *SubscriptionStatusDeleteOne {
-	return c.DeleteOneID(ss.ID)
+func (c *SubscriptionsClient) DeleteOne(s *Subscriptions) *SubscriptionsDeleteOne {
+	return c.DeleteOneID(s.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SubscriptionStatusClient) DeleteOneID(id int64) *SubscriptionStatusDeleteOne {
-	builder := c.Delete().Where(subscriptionstatus.ID(id))
+func (c *SubscriptionsClient) DeleteOneID(id int64) *SubscriptionsDeleteOne {
+	builder := c.Delete().Where(subscriptions.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &SubscriptionStatusDeleteOne{builder}
+	return &SubscriptionsDeleteOne{builder}
 }
 
-// Query returns a query builder for SubscriptionStatus.
-func (c *SubscriptionStatusClient) Query() *SubscriptionStatusQuery {
-	return &SubscriptionStatusQuery{
+// Query returns a query builder for Subscriptions.
+func (c *SubscriptionsClient) Query() *SubscriptionsQuery {
+	return &SubscriptionsQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeSubscriptionStatus},
+		ctx:    &QueryContext{Type: TypeSubscriptions},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a SubscriptionStatus entity by its id.
-func (c *SubscriptionStatusClient) Get(ctx context.Context, id int64) (*SubscriptionStatus, error) {
-	return c.Query().Where(subscriptionstatus.ID(id)).Only(ctx)
+// Get returns a Subscriptions entity by its id.
+func (c *SubscriptionsClient) Get(ctx context.Context, id int64) (*Subscriptions, error) {
+	return c.Query().Where(subscriptions.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *SubscriptionStatusClient) GetX(ctx context.Context, id int64) *SubscriptionStatus {
+func (c *SubscriptionsClient) GetX(ctx context.Context, id int64) *Subscriptions {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1198,70 +1009,69 @@ func (c *SubscriptionStatusClient) GetX(ctx context.Context, id int64) *Subscrip
 	return obj
 }
 
-// QueryInvoice queries the invoice edge of a SubscriptionStatus.
-func (c *SubscriptionStatusClient) QueryInvoice(ss *SubscriptionStatus) *InvoiceQuery {
+// QueryInvoices queries the invoices edge of a Subscriptions.
+func (c *SubscriptionsClient) QueryInvoices(s *Subscriptions) *InvoiceQuery {
 	query := (&InvoiceClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ss.ID
+		id := s.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(subscriptionstatus.Table, subscriptionstatus.FieldID, id),
+			sqlgraph.From(subscriptions.Table, subscriptions.FieldID, id),
 			sqlgraph.To(invoice.Table, invoice.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, subscriptionstatus.InvoiceTable, subscriptionstatus.InvoiceColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, subscriptions.InvoicesTable, subscriptions.InvoicesColumn),
 		)
-		fromV = sqlgraph.Neighbors(ss.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
-// QueryItem queries the item edge of a SubscriptionStatus.
-func (c *SubscriptionStatusClient) QueryItem(ss *SubscriptionStatus) *ItemQuery {
-	query := (&ItemClient{config: c.config}).Query()
+// QueryProduct queries the product edge of a Subscriptions.
+func (c *SubscriptionsClient) QueryProduct(s *Subscriptions) *ProductQuery {
+	query := (&ProductClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ss.ID
+		id := s.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(subscriptionstatus.Table, subscriptionstatus.FieldID, id),
-			sqlgraph.To(item.Table, item.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, subscriptionstatus.ItemTable, subscriptionstatus.ItemColumn),
+			sqlgraph.From(subscriptions.Table, subscriptions.FieldID, id),
+			sqlgraph.To(product.Table, product.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, subscriptions.ProductTable, subscriptions.ProductColumn),
 		)
-		fromV = sqlgraph.Neighbors(ss.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *SubscriptionStatusClient) Hooks() []Hook {
-	return c.hooks.SubscriptionStatus
+func (c *SubscriptionsClient) Hooks() []Hook {
+	return c.hooks.Subscriptions
 }
 
 // Interceptors returns the client interceptors.
-func (c *SubscriptionStatusClient) Interceptors() []Interceptor {
-	return c.inters.SubscriptionStatus
+func (c *SubscriptionsClient) Interceptors() []Interceptor {
+	return c.inters.Subscriptions
 }
 
-func (c *SubscriptionStatusClient) mutate(ctx context.Context, m *SubscriptionStatusMutation) (Value, error) {
+func (c *SubscriptionsClient) mutate(ctx context.Context, m *SubscriptionsMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&SubscriptionStatusCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&SubscriptionsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&SubscriptionStatusUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&SubscriptionsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&SubscriptionStatusUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&SubscriptionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&SubscriptionStatusDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&SubscriptionsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown SubscriptionStatus mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Subscriptions mutation op: %q", m.Op())
 	}
 }
 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Bundle, ConsumedStatus, Invoice, Item, Product, SubscriptionStatus []ent.Hook
+		Bundle, Invoice, Item, Product, Subscriptions []ent.Hook
 	}
 	inters struct {
-		Bundle, ConsumedStatus, Invoice, Item, Product,
-		SubscriptionStatus []ent.Interceptor
+		Bundle, Invoice, Item, Product, Subscriptions []ent.Interceptor
 	}
 )

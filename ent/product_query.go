@@ -16,18 +16,20 @@ import (
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // ProductQuery is the builder for querying Product entities.
 type ProductQuery struct {
 	config
-	ctx          *QueryContext
-	order        []product.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.Product
-	withInvoices *InvoiceQuery
-	withBundles  *BundleQuery
-	modifiers    []func(*sql.Selector)
+	ctx               *QueryContext
+	order             []product.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.Product
+	withInvoices      *InvoiceQuery
+	withSubscriptions *SubscriptionsQuery
+	withBundles       *BundleQuery
+	modifiers         []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -79,6 +81,28 @@ func (pq *ProductQuery) QueryInvoices() *InvoiceQuery {
 			sqlgraph.From(product.Table, product.FieldID, selector),
 			sqlgraph.To(invoice.Table, invoice.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, product.InvoicesTable, product.InvoicesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySubscriptions chains the current query on the "subscriptions" edge.
+func (pq *ProductQuery) QuerySubscriptions() *SubscriptionsQuery {
+	query := (&SubscriptionsClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(product.Table, product.FieldID, selector),
+			sqlgraph.To(subscriptions.Table, subscriptions.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, product.SubscriptionsTable, product.SubscriptionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -295,13 +319,14 @@ func (pq *ProductQuery) Clone() *ProductQuery {
 		return nil
 	}
 	return &ProductQuery{
-		config:       pq.config,
-		ctx:          pq.ctx.Clone(),
-		order:        append([]product.OrderOption{}, pq.order...),
-		inters:       append([]Interceptor{}, pq.inters...),
-		predicates:   append([]predicate.Product{}, pq.predicates...),
-		withInvoices: pq.withInvoices.Clone(),
-		withBundles:  pq.withBundles.Clone(),
+		config:            pq.config,
+		ctx:               pq.ctx.Clone(),
+		order:             append([]product.OrderOption{}, pq.order...),
+		inters:            append([]Interceptor{}, pq.inters...),
+		predicates:        append([]predicate.Product{}, pq.predicates...),
+		withInvoices:      pq.withInvoices.Clone(),
+		withSubscriptions: pq.withSubscriptions.Clone(),
+		withBundles:       pq.withBundles.Clone(),
 		// clone intermediate query.
 		sql:       pq.sql.Clone(),
 		path:      pq.path,
@@ -317,6 +342,17 @@ func (pq *ProductQuery) WithInvoices(opts ...func(*InvoiceQuery)) *ProductQuery 
 		opt(query)
 	}
 	pq.withInvoices = query
+	return pq
+}
+
+// WithSubscriptions tells the query-builder to eager-load the nodes that are connected to
+// the "subscriptions" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProductQuery) WithSubscriptions(opts ...func(*SubscriptionsQuery)) *ProductQuery {
+	query := (&SubscriptionsClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withSubscriptions = query
 	return pq
 }
 
@@ -337,12 +373,12 @@ func (pq *ProductQuery) WithBundles(opts ...func(*BundleQuery)) *ProductQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		AppID string `json:"app_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Product.Query().
-//		GroupBy(product.FieldName).
+//		GroupBy(product.FieldAppID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (pq *ProductQuery) GroupBy(field string, fields ...string) *ProductGroupBy {
@@ -360,11 +396,11 @@ func (pq *ProductQuery) GroupBy(field string, fields ...string) *ProductGroupBy 
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		AppID string `json:"app_id,omitempty"`
 //	}
 //
 //	client.Product.Query().
-//		Select(product.FieldName).
+//		Select(product.FieldAppID).
 //		Scan(ctx, &v)
 func (pq *ProductQuery) Select(fields ...string) *ProductSelect {
 	pq.ctx.Fields = append(pq.ctx.Fields, fields...)
@@ -409,8 +445,9 @@ func (pq *ProductQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Prod
 	var (
 		nodes       = []*Product{}
 		_spec       = pq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			pq.withInvoices != nil,
+			pq.withSubscriptions != nil,
 			pq.withBundles != nil,
 		}
 	)
@@ -442,6 +479,13 @@ func (pq *ProductQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Prod
 			return nil, err
 		}
 	}
+	if query := pq.withSubscriptions; query != nil {
+		if err := pq.loadSubscriptions(ctx, query, nodes,
+			func(n *Product) { n.Edges.Subscriptions = []*Subscriptions{} },
+			func(n *Product, e *Subscriptions) { n.Edges.Subscriptions = append(n.Edges.Subscriptions, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := pq.withBundles; query != nil {
 		if err := pq.loadBundles(ctx, query, nodes,
 			func(n *Product) { n.Edges.Bundles = []*Bundle{} },
@@ -467,6 +511,36 @@ func (pq *ProductQuery) loadInvoices(ctx context.Context, query *InvoiceQuery, n
 	}
 	query.Where(predicate.Invoice(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(product.InvoicesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProductID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "product_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *ProductQuery) loadSubscriptions(ctx context.Context, query *SubscriptionsQuery, nodes []*Product, init func(*Product), assign func(*Product, *Subscriptions)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Product)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(subscriptions.FieldProductID)
+	}
+	query.Where(predicate.Subscriptions(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(product.SubscriptionsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

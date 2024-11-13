@@ -80,6 +80,11 @@ func Description(v string) predicate.Item {
 	return predicate.Item(sql.FieldEQ(FieldDescription, v))
 }
 
+// TopicName applies equality check predicate on the "topic_name" field. It's identical to TopicNameEQ.
+func TopicName(v string) predicate.Item {
+	return predicate.Item(sql.FieldEQ(FieldTopicName, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Item {
 	return predicate.Item(sql.FieldEQ(FieldCreatedAt, v))
@@ -340,6 +345,81 @@ func DescriptionContainsFold(v string) predicate.Item {
 	return predicate.Item(sql.FieldContainsFold(FieldDescription, v))
 }
 
+// TopicNameEQ applies the EQ predicate on the "topic_name" field.
+func TopicNameEQ(v string) predicate.Item {
+	return predicate.Item(sql.FieldEQ(FieldTopicName, v))
+}
+
+// TopicNameNEQ applies the NEQ predicate on the "topic_name" field.
+func TopicNameNEQ(v string) predicate.Item {
+	return predicate.Item(sql.FieldNEQ(FieldTopicName, v))
+}
+
+// TopicNameIn applies the In predicate on the "topic_name" field.
+func TopicNameIn(vs ...string) predicate.Item {
+	return predicate.Item(sql.FieldIn(FieldTopicName, vs...))
+}
+
+// TopicNameNotIn applies the NotIn predicate on the "topic_name" field.
+func TopicNameNotIn(vs ...string) predicate.Item {
+	return predicate.Item(sql.FieldNotIn(FieldTopicName, vs...))
+}
+
+// TopicNameGT applies the GT predicate on the "topic_name" field.
+func TopicNameGT(v string) predicate.Item {
+	return predicate.Item(sql.FieldGT(FieldTopicName, v))
+}
+
+// TopicNameGTE applies the GTE predicate on the "topic_name" field.
+func TopicNameGTE(v string) predicate.Item {
+	return predicate.Item(sql.FieldGTE(FieldTopicName, v))
+}
+
+// TopicNameLT applies the LT predicate on the "topic_name" field.
+func TopicNameLT(v string) predicate.Item {
+	return predicate.Item(sql.FieldLT(FieldTopicName, v))
+}
+
+// TopicNameLTE applies the LTE predicate on the "topic_name" field.
+func TopicNameLTE(v string) predicate.Item {
+	return predicate.Item(sql.FieldLTE(FieldTopicName, v))
+}
+
+// TopicNameContains applies the Contains predicate on the "topic_name" field.
+func TopicNameContains(v string) predicate.Item {
+	return predicate.Item(sql.FieldContains(FieldTopicName, v))
+}
+
+// TopicNameHasPrefix applies the HasPrefix predicate on the "topic_name" field.
+func TopicNameHasPrefix(v string) predicate.Item {
+	return predicate.Item(sql.FieldHasPrefix(FieldTopicName, v))
+}
+
+// TopicNameHasSuffix applies the HasSuffix predicate on the "topic_name" field.
+func TopicNameHasSuffix(v string) predicate.Item {
+	return predicate.Item(sql.FieldHasSuffix(FieldTopicName, v))
+}
+
+// TopicNameIsNil applies the IsNil predicate on the "topic_name" field.
+func TopicNameIsNil() predicate.Item {
+	return predicate.Item(sql.FieldIsNull(FieldTopicName))
+}
+
+// TopicNameNotNil applies the NotNil predicate on the "topic_name" field.
+func TopicNameNotNil() predicate.Item {
+	return predicate.Item(sql.FieldNotNull(FieldTopicName))
+}
+
+// TopicNameEqualFold applies the EqualFold predicate on the "topic_name" field.
+func TopicNameEqualFold(v string) predicate.Item {
+	return predicate.Item(sql.FieldEqualFold(FieldTopicName, v))
+}
+
+// TopicNameContainsFold applies the ContainsFold predicate on the "topic_name" field.
+func TopicNameContainsFold(v string) predicate.Item {
+	return predicate.Item(sql.FieldContainsFold(FieldTopicName, v))
+}
+
 // HasBundles applies the HasEdge predicate on the "bundles" edge.
 func HasBundles() predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
@@ -355,52 +435,6 @@ func HasBundles() predicate.Item {
 func HasBundlesWith(preds ...predicate.Bundle) predicate.Item {
 	return predicate.Item(func(s *sql.Selector) {
 		step := newBundlesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasConsumedStatuses applies the HasEdge predicate on the "consumed_statuses" edge.
-func HasConsumedStatuses() predicate.Item {
-	return predicate.Item(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ConsumedStatusesTable, ConsumedStatusesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasConsumedStatusesWith applies the HasEdge predicate on the "consumed_statuses" edge with a given conditions (other predicates).
-func HasConsumedStatusesWith(preds ...predicate.ConsumedStatus) predicate.Item {
-	return predicate.Item(func(s *sql.Selector) {
-		step := newConsumedStatusesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasSubscriptionStatuses applies the HasEdge predicate on the "subscription_statuses" edge.
-func HasSubscriptionStatuses() predicate.Item {
-	return predicate.Item(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionStatusesTable, SubscriptionStatusesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSubscriptionStatusesWith applies the HasEdge predicate on the "subscription_statuses" edge with a given conditions (other predicates).
-func HasSubscriptionStatusesWith(preds ...predicate.SubscriptionStatus) predicate.Item {
-	return predicate.Item(func(s *sql.Selector) {
-		step := newSubscriptionStatusesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

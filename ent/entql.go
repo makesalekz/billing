@@ -4,12 +4,11 @@ package ent
 
 import (
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -19,7 +18,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 6)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 5)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   bundle.Table,
@@ -31,36 +30,16 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Bundle",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			bundle.FieldDeletedAt: {Type: field.TypeTime, Column: bundle.FieldDeletedAt},
-			bundle.FieldCreatedAt: {Type: field.TypeTime, Column: bundle.FieldCreatedAt},
-			bundle.FieldUpdatedAt: {Type: field.TypeTime, Column: bundle.FieldUpdatedAt},
-			bundle.FieldProductID: {Type: field.TypeInt64, Column: bundle.FieldProductID},
-			bundle.FieldItemID:    {Type: field.TypeInt64, Column: bundle.FieldItemID},
-			bundle.FieldAmount:    {Type: field.TypeFloat64, Column: bundle.FieldAmount},
+			bundle.FieldDeletedAt:      {Type: field.TypeTime, Column: bundle.FieldDeletedAt},
+			bundle.FieldCreatedAt:      {Type: field.TypeTime, Column: bundle.FieldCreatedAt},
+			bundle.FieldUpdatedAt:      {Type: field.TypeTime, Column: bundle.FieldUpdatedAt},
+			bundle.FieldProductID:      {Type: field.TypeInt64, Column: bundle.FieldProductID},
+			bundle.FieldItemID:         {Type: field.TypeInt64, Column: bundle.FieldItemID},
+			bundle.FieldAmount:         {Type: field.TypeFloat64, Column: bundle.FieldAmount},
+			bundle.FieldOverusagePrice: {Type: field.TypeFloat64, Column: bundle.FieldOverusagePrice},
 		},
 	}
 	graph.Nodes[1] = &sqlgraph.Node{
-		NodeSpec: sqlgraph.NodeSpec{
-			Table:   consumedstatus.Table,
-			Columns: consumedstatus.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt64,
-				Column: consumedstatus.FieldID,
-			},
-		},
-		Type: "ConsumedStatus",
-		Fields: map[string]*sqlgraph.FieldSpec{
-			consumedstatus.FieldUserID:     {Type: field.TypeInt64, Column: consumedstatus.FieldUserID},
-			consumedstatus.FieldTenantID:   {Type: field.TypeInt64, Column: consumedstatus.FieldTenantID},
-			consumedstatus.FieldAppID:      {Type: field.TypeInt64, Column: consumedstatus.FieldAppID},
-			consumedstatus.FieldItemID:     {Type: field.TypeInt64, Column: consumedstatus.FieldItemID},
-			consumedstatus.FieldConsumed:   {Type: field.TypeFloat64, Column: consumedstatus.FieldConsumed},
-			consumedstatus.FieldLeft:       {Type: field.TypeFloat64, Column: consumedstatus.FieldLeft},
-			consumedstatus.FieldActiveTill: {Type: field.TypeTime, Column: consumedstatus.FieldActiveTill},
-			consumedstatus.FieldStartFrom:  {Type: field.TypeTime, Column: consumedstatus.FieldStartFrom},
-		},
-	}
-	graph.Nodes[2] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   invoice.Table,
 			Columns: invoice.Columns,
@@ -71,17 +50,22 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Invoice",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			invoice.FieldUserID:    {Type: field.TypeInt64, Column: invoice.FieldUserID},
-			invoice.FieldAppID:     {Type: field.TypeString, Column: invoice.FieldAppID},
-			invoice.FieldProductID: {Type: field.TypeInt64, Column: invoice.FieldProductID},
-			invoice.FieldAmount:    {Type: field.TypeInt64, Column: invoice.FieldAmount},
-			invoice.FieldPrice:     {Type: field.TypeFloat64, Column: invoice.FieldPrice},
-			invoice.FieldCurrency:  {Type: field.TypeString, Column: invoice.FieldCurrency},
-			invoice.FieldStatus:    {Type: field.TypeEnum, Column: invoice.FieldStatus},
-			invoice.FieldPaidAt:    {Type: field.TypeTime, Column: invoice.FieldPaidAt},
+			invoice.FieldUserID:              {Type: field.TypeInt64, Column: invoice.FieldUserID},
+			invoice.FieldTenantID:            {Type: field.TypeInt64, Column: invoice.FieldTenantID},
+			invoice.FieldAppID:               {Type: field.TypeString, Column: invoice.FieldAppID},
+			invoice.FieldProductID:           {Type: field.TypeInt64, Column: invoice.FieldProductID},
+			invoice.FieldAmount:              {Type: field.TypeInt64, Column: invoice.FieldAmount},
+			invoice.FieldPrice:               {Type: field.TypeFloat64, Column: invoice.FieldPrice},
+			invoice.FieldCurrency:            {Type: field.TypeString, Column: invoice.FieldCurrency},
+			invoice.FieldStatus:              {Type: field.TypeEnum, Column: invoice.FieldStatus},
+			invoice.FieldPaidAt:              {Type: field.TypeTime, Column: invoice.FieldPaidAt},
+			invoice.FieldPaidTill:            {Type: field.TypeTime, Column: invoice.FieldPaidTill},
+			invoice.FieldIsPaidAtProcessed:   {Type: field.TypeBool, Column: invoice.FieldIsPaidAtProcessed},
+			invoice.FieldIsPaidTillProcessed: {Type: field.TypeBool, Column: invoice.FieldIsPaidTillProcessed},
+			invoice.FieldSubscriptionID:      {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
 		},
 	}
-	graph.Nodes[3] = &sqlgraph.Node{
+	graph.Nodes[2] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   item.Table,
 			Columns: item.Columns,
@@ -97,9 +81,10 @@ var schemaGraph = func() *sqlgraph.Schema {
 			item.FieldDeletedAt:   {Type: field.TypeTime, Column: item.FieldDeletedAt},
 			item.FieldName:        {Type: field.TypeString, Column: item.FieldName},
 			item.FieldDescription: {Type: field.TypeString, Column: item.FieldDescription},
+			item.FieldTopicName:   {Type: field.TypeString, Column: item.FieldTopicName},
 		},
 	}
-	graph.Nodes[4] = &sqlgraph.Node{
+	graph.Nodes[3] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   product.Table,
 			Columns: product.Columns,
@@ -110,33 +95,38 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Product",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			product.FieldName:        {Type: field.TypeString, Column: product.FieldName},
-			product.FieldDescription: {Type: field.TypeString, Column: product.FieldDescription},
-			product.FieldPrice:       {Type: field.TypeFloat64, Column: product.FieldPrice},
-			product.FieldCurrency:    {Type: field.TypeString, Column: product.FieldCurrency},
-			product.FieldIsActive:    {Type: field.TypeBool, Column: product.FieldIsActive},
-			product.FieldIsLimited:   {Type: field.TypeBool, Column: product.FieldIsLimited},
-			product.FieldLimitedTill: {Type: field.TypeTime, Column: product.FieldLimitedTill},
-			product.FieldLeft:        {Type: field.TypeInt64, Column: product.FieldLeft},
-			product.FieldIsUnique:    {Type: field.TypeBool, Column: product.FieldIsUnique},
-			product.FieldUniqueLimit: {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
+			product.FieldAppID:             {Type: field.TypeString, Column: product.FieldAppID},
+			product.FieldName:              {Type: field.TypeString, Column: product.FieldName},
+			product.FieldDescription:       {Type: field.TypeString, Column: product.FieldDescription},
+			product.FieldPrice:             {Type: field.TypeFloat64, Column: product.FieldPrice},
+			product.FieldCurrency:          {Type: field.TypeString, Column: product.FieldCurrency},
+			product.FieldIsActive:          {Type: field.TypeBool, Column: product.FieldIsActive},
+			product.FieldIsLimited:         {Type: field.TypeBool, Column: product.FieldIsLimited},
+			product.FieldLimitedTill:       {Type: field.TypeTime, Column: product.FieldLimitedTill},
+			product.FieldLeft:              {Type: field.TypeInt64, Column: product.FieldLeft},
+			product.FieldIsUnique:          {Type: field.TypeBool, Column: product.FieldIsUnique},
+			product.FieldUniqueLimit:       {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
+			product.FieldIsExpiring:        {Type: field.TypeBool, Column: product.FieldIsExpiring},
+			product.FieldRecurrenceRule:    {Type: field.TypeString, Column: product.FieldRecurrenceRule},
+			product.FieldOfferInAppleStore: {Type: field.TypeBool, Column: product.FieldOfferInAppleStore},
 		},
 	}
-	graph.Nodes[5] = &sqlgraph.Node{
+	graph.Nodes[4] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
-			Table:   subscriptionstatus.Table,
-			Columns: subscriptionstatus.Columns,
+			Table:   subscriptions.Table,
+			Columns: subscriptions.Columns,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt64,
-				Column: subscriptionstatus.FieldID,
+				Column: subscriptions.FieldID,
 			},
 		},
-		Type: "SubscriptionStatus",
+		Type: "Subscriptions",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			subscriptionstatus.FieldInvoiceID:  {Type: field.TypeInt64, Column: subscriptionstatus.FieldInvoiceID},
-			subscriptionstatus.FieldItemID:     {Type: field.TypeInt64, Column: subscriptionstatus.FieldItemID},
-			subscriptionstatus.FieldActiveTill: {Type: field.TypeTime, Column: subscriptionstatus.FieldActiveTill},
-			subscriptionstatus.FieldStartFrom:  {Type: field.TypeTime, Column: subscriptionstatus.FieldStartFrom},
+			subscriptions.FieldUserID:      {Type: field.TypeInt64, Column: subscriptions.FieldUserID},
+			subscriptions.FieldTenantID:    {Type: field.TypeInt64, Column: subscriptions.FieldTenantID},
+			subscriptions.FieldAppID:       {Type: field.TypeString, Column: subscriptions.FieldAppID},
+			subscriptions.FieldProductID:   {Type: field.TypeInt64, Column: subscriptions.FieldProductID},
+			subscriptions.FieldRenewalRate: {Type: field.TypeTime, Column: subscriptions.FieldRenewalRate},
 		},
 	}
 	graph.MustAddE(
@@ -164,18 +154,6 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Item",
 	)
 	graph.MustAddE(
-		"item",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   consumedstatus.ItemTable,
-			Columns: []string{consumedstatus.ItemColumn},
-			Bidi:    false,
-		},
-		"ConsumedStatus",
-		"Item",
-	)
-	graph.MustAddE(
 		"product",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -188,28 +166,16 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Product",
 	)
 	graph.MustAddE(
-		"consumed_statuses",
+		"subscriptions",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.ConsumedStatusesTable,
-			Columns: []string{invoice.ConsumedStatusesColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.SubscriptionsTable,
+			Columns: []string{invoice.SubscriptionsColumn},
 			Bidi:    false,
 		},
 		"Invoice",
-		"ConsumedStatus",
-	)
-	graph.MustAddE(
-		"subscription_statuses",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.SubscriptionStatusesTable,
-			Columns: []string{invoice.SubscriptionStatusesColumn},
-			Bidi:    false,
-		},
-		"Invoice",
-		"SubscriptionStatus",
+		"Subscriptions",
 	)
 	graph.MustAddE(
 		"bundles",
@@ -224,30 +190,6 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Bundle",
 	)
 	graph.MustAddE(
-		"consumed_statuses",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.ConsumedStatusesTable,
-			Columns: []string{item.ConsumedStatusesColumn},
-			Bidi:    false,
-		},
-		"Item",
-		"ConsumedStatus",
-	)
-	graph.MustAddE(
-		"subscription_statuses",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   item.SubscriptionStatusesTable,
-			Columns: []string{item.SubscriptionStatusesColumn},
-			Bidi:    false,
-		},
-		"Item",
-		"SubscriptionStatus",
-	)
-	graph.MustAddE(
 		"invoices",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -258,6 +200,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"Product",
 		"Invoice",
+	)
+	graph.MustAddE(
+		"subscriptions",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.SubscriptionsTable,
+			Columns: []string{product.SubscriptionsColumn},
+			Bidi:    false,
+		},
+		"Product",
+		"Subscriptions",
 	)
 	graph.MustAddE(
 		"bundles",
@@ -272,28 +226,28 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Bundle",
 	)
 	graph.MustAddE(
-		"invoice",
+		"invoices",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   subscriptionstatus.InvoiceTable,
-			Columns: []string{subscriptionstatus.InvoiceColumn},
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   subscriptions.InvoicesTable,
+			Columns: []string{subscriptions.InvoicesColumn},
 			Bidi:    false,
 		},
-		"SubscriptionStatus",
+		"Subscriptions",
 		"Invoice",
 	)
 	graph.MustAddE(
-		"item",
+		"product",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   subscriptionstatus.ItemTable,
-			Columns: []string{subscriptionstatus.ItemColumn},
+			Table:   subscriptions.ProductTable,
+			Columns: []string{subscriptions.ProductColumn},
 			Bidi:    false,
 		},
-		"SubscriptionStatus",
-		"Item",
+		"Subscriptions",
+		"Product",
 	)
 	return graph
 }()
@@ -374,6 +328,11 @@ func (f *BundleFilter) WhereAmount(p entql.Float64P) {
 	f.Where(p.Field(bundle.FieldAmount))
 }
 
+// WhereOverusagePrice applies the entql float64 predicate on the overusage_price field.
+func (f *BundleFilter) WhereOverusagePrice(p entql.Float64P) {
+	f.Where(p.Field(bundle.FieldOverusagePrice))
+}
+
 // WhereHasProduct applies a predicate to check if query has an edge product.
 func (f *BundleFilter) WhereHasProduct() {
 	f.Where(entql.HasEdge("product"))
@@ -395,100 +354,6 @@ func (f *BundleFilter) WhereHasItem() {
 
 // WhereHasItemWith applies a predicate to check if query has an edge item with a given conditions (other predicates).
 func (f *BundleFilter) WhereHasItemWith(preds ...predicate.Item) {
-	f.Where(entql.HasEdgeWith("item", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// addPredicate implements the predicateAdder interface.
-func (csq *ConsumedStatusQuery) addPredicate(pred func(s *sql.Selector)) {
-	csq.predicates = append(csq.predicates, pred)
-}
-
-// Filter returns a Filter implementation to apply filters on the ConsumedStatusQuery builder.
-func (csq *ConsumedStatusQuery) Filter() *ConsumedStatusFilter {
-	return &ConsumedStatusFilter{config: csq.config, predicateAdder: csq}
-}
-
-// addPredicate implements the predicateAdder interface.
-func (m *ConsumedStatusMutation) addPredicate(pred func(s *sql.Selector)) {
-	m.predicates = append(m.predicates, pred)
-}
-
-// Filter returns an entql.Where implementation to apply filters on the ConsumedStatusMutation builder.
-func (m *ConsumedStatusMutation) Filter() *ConsumedStatusFilter {
-	return &ConsumedStatusFilter{config: m.config, predicateAdder: m}
-}
-
-// ConsumedStatusFilter provides a generic filtering capability at runtime for ConsumedStatusQuery.
-type ConsumedStatusFilter struct {
-	predicateAdder
-	config
-}
-
-// Where applies the entql predicate on the query filter.
-func (f *ConsumedStatusFilter) Where(p entql.P) {
-	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[1].Type, p, s); err != nil {
-			s.AddError(err)
-		}
-	})
-}
-
-// WhereID applies the entql int64 predicate on the id field.
-func (f *ConsumedStatusFilter) WhereID(p entql.Int64P) {
-	f.Where(p.Field(consumedstatus.FieldID))
-}
-
-// WhereUserID applies the entql int64 predicate on the user_id field.
-func (f *ConsumedStatusFilter) WhereUserID(p entql.Int64P) {
-	f.Where(p.Field(consumedstatus.FieldUserID))
-}
-
-// WhereTenantID applies the entql int64 predicate on the tenant_id field.
-func (f *ConsumedStatusFilter) WhereTenantID(p entql.Int64P) {
-	f.Where(p.Field(consumedstatus.FieldTenantID))
-}
-
-// WhereAppID applies the entql int64 predicate on the app_id field.
-func (f *ConsumedStatusFilter) WhereAppID(p entql.Int64P) {
-	f.Where(p.Field(consumedstatus.FieldAppID))
-}
-
-// WhereItemID applies the entql int64 predicate on the item_id field.
-func (f *ConsumedStatusFilter) WhereItemID(p entql.Int64P) {
-	f.Where(p.Field(consumedstatus.FieldItemID))
-}
-
-// WhereConsumed applies the entql float64 predicate on the consumed field.
-func (f *ConsumedStatusFilter) WhereConsumed(p entql.Float64P) {
-	f.Where(p.Field(consumedstatus.FieldConsumed))
-}
-
-// WhereLeft applies the entql float64 predicate on the left field.
-func (f *ConsumedStatusFilter) WhereLeft(p entql.Float64P) {
-	f.Where(p.Field(consumedstatus.FieldLeft))
-}
-
-// WhereActiveTill applies the entql time.Time predicate on the active_till field.
-func (f *ConsumedStatusFilter) WhereActiveTill(p entql.TimeP) {
-	f.Where(p.Field(consumedstatus.FieldActiveTill))
-}
-
-// WhereStartFrom applies the entql time.Time predicate on the start_from field.
-func (f *ConsumedStatusFilter) WhereStartFrom(p entql.TimeP) {
-	f.Where(p.Field(consumedstatus.FieldStartFrom))
-}
-
-// WhereHasItem applies a predicate to check if query has an edge item.
-func (f *ConsumedStatusFilter) WhereHasItem() {
-	f.Where(entql.HasEdge("item"))
-}
-
-// WhereHasItemWith applies a predicate to check if query has an edge item with a given conditions (other predicates).
-func (f *ConsumedStatusFilter) WhereHasItemWith(preds ...predicate.Item) {
 	f.Where(entql.HasEdgeWith("item", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
@@ -525,7 +390,7 @@ type InvoiceFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *InvoiceFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[1].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -539,6 +404,11 @@ func (f *InvoiceFilter) WhereID(p entql.Int64P) {
 // WhereUserID applies the entql int64 predicate on the user_id field.
 func (f *InvoiceFilter) WhereUserID(p entql.Int64P) {
 	f.Where(p.Field(invoice.FieldUserID))
+}
+
+// WhereTenantID applies the entql int64 predicate on the tenant_id field.
+func (f *InvoiceFilter) WhereTenantID(p entql.Int64P) {
+	f.Where(p.Field(invoice.FieldTenantID))
 }
 
 // WhereAppID applies the entql string predicate on the app_id field.
@@ -576,6 +446,26 @@ func (f *InvoiceFilter) WherePaidAt(p entql.TimeP) {
 	f.Where(p.Field(invoice.FieldPaidAt))
 }
 
+// WherePaidTill applies the entql time.Time predicate on the paid_till field.
+func (f *InvoiceFilter) WherePaidTill(p entql.TimeP) {
+	f.Where(p.Field(invoice.FieldPaidTill))
+}
+
+// WhereIsPaidAtProcessed applies the entql bool predicate on the is_paid_at_processed field.
+func (f *InvoiceFilter) WhereIsPaidAtProcessed(p entql.BoolP) {
+	f.Where(p.Field(invoice.FieldIsPaidAtProcessed))
+}
+
+// WhereIsPaidTillProcessed applies the entql bool predicate on the is_paid_till_processed field.
+func (f *InvoiceFilter) WhereIsPaidTillProcessed(p entql.BoolP) {
+	f.Where(p.Field(invoice.FieldIsPaidTillProcessed))
+}
+
+// WhereSubscriptionID applies the entql int64 predicate on the subscription_id field.
+func (f *InvoiceFilter) WhereSubscriptionID(p entql.Int64P) {
+	f.Where(p.Field(invoice.FieldSubscriptionID))
+}
+
 // WhereHasProduct applies a predicate to check if query has an edge product.
 func (f *InvoiceFilter) WhereHasProduct() {
 	f.Where(entql.HasEdge("product"))
@@ -590,28 +480,14 @@ func (f *InvoiceFilter) WhereHasProductWith(preds ...predicate.Product) {
 	})))
 }
 
-// WhereHasConsumedStatuses applies a predicate to check if query has an edge consumed_statuses.
-func (f *InvoiceFilter) WhereHasConsumedStatuses() {
-	f.Where(entql.HasEdge("consumed_statuses"))
+// WhereHasSubscriptions applies a predicate to check if query has an edge subscriptions.
+func (f *InvoiceFilter) WhereHasSubscriptions() {
+	f.Where(entql.HasEdge("subscriptions"))
 }
 
-// WhereHasConsumedStatusesWith applies a predicate to check if query has an edge consumed_statuses with a given conditions (other predicates).
-func (f *InvoiceFilter) WhereHasConsumedStatusesWith(preds ...predicate.ConsumedStatus) {
-	f.Where(entql.HasEdgeWith("consumed_statuses", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// WhereHasSubscriptionStatuses applies a predicate to check if query has an edge subscription_statuses.
-func (f *InvoiceFilter) WhereHasSubscriptionStatuses() {
-	f.Where(entql.HasEdge("subscription_statuses"))
-}
-
-// WhereHasSubscriptionStatusesWith applies a predicate to check if query has an edge subscription_statuses with a given conditions (other predicates).
-func (f *InvoiceFilter) WhereHasSubscriptionStatusesWith(preds ...predicate.SubscriptionStatus) {
-	f.Where(entql.HasEdgeWith("subscription_statuses", sqlgraph.WrapFunc(func(s *sql.Selector) {
+// WhereHasSubscriptionsWith applies a predicate to check if query has an edge subscriptions with a given conditions (other predicates).
+func (f *InvoiceFilter) WhereHasSubscriptionsWith(preds ...predicate.Subscriptions) {
+	f.Where(entql.HasEdgeWith("subscriptions", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -647,7 +523,7 @@ type ItemFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ItemFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -683,6 +559,11 @@ func (f *ItemFilter) WhereDescription(p entql.StringP) {
 	f.Where(p.Field(item.FieldDescription))
 }
 
+// WhereTopicName applies the entql string predicate on the topic_name field.
+func (f *ItemFilter) WhereTopicName(p entql.StringP) {
+	f.Where(p.Field(item.FieldTopicName))
+}
+
 // WhereHasBundles applies a predicate to check if query has an edge bundles.
 func (f *ItemFilter) WhereHasBundles() {
 	f.Where(entql.HasEdge("bundles"))
@@ -691,34 +572,6 @@ func (f *ItemFilter) WhereHasBundles() {
 // WhereHasBundlesWith applies a predicate to check if query has an edge bundles with a given conditions (other predicates).
 func (f *ItemFilter) WhereHasBundlesWith(preds ...predicate.Bundle) {
 	f.Where(entql.HasEdgeWith("bundles", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// WhereHasConsumedStatuses applies a predicate to check if query has an edge consumed_statuses.
-func (f *ItemFilter) WhereHasConsumedStatuses() {
-	f.Where(entql.HasEdge("consumed_statuses"))
-}
-
-// WhereHasConsumedStatusesWith applies a predicate to check if query has an edge consumed_statuses with a given conditions (other predicates).
-func (f *ItemFilter) WhereHasConsumedStatusesWith(preds ...predicate.ConsumedStatus) {
-	f.Where(entql.HasEdgeWith("consumed_statuses", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// WhereHasSubscriptionStatuses applies a predicate to check if query has an edge subscription_statuses.
-func (f *ItemFilter) WhereHasSubscriptionStatuses() {
-	f.Where(entql.HasEdge("subscription_statuses"))
-}
-
-// WhereHasSubscriptionStatusesWith applies a predicate to check if query has an edge subscription_statuses with a given conditions (other predicates).
-func (f *ItemFilter) WhereHasSubscriptionStatusesWith(preds ...predicate.SubscriptionStatus) {
-	f.Where(entql.HasEdgeWith("subscription_statuses", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -754,7 +607,7 @@ type ProductFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProductFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[4].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -763,6 +616,11 @@ func (f *ProductFilter) Where(p entql.P) {
 // WhereID applies the entql int64 predicate on the id field.
 func (f *ProductFilter) WhereID(p entql.Int64P) {
 	f.Where(p.Field(product.FieldID))
+}
+
+// WhereAppID applies the entql string predicate on the app_id field.
+func (f *ProductFilter) WhereAppID(p entql.StringP) {
+	f.Where(p.Field(product.FieldAppID))
 }
 
 // WhereName applies the entql string predicate on the name field.
@@ -815,6 +673,21 @@ func (f *ProductFilter) WhereUniqueLimit(p entql.Int64P) {
 	f.Where(p.Field(product.FieldUniqueLimit))
 }
 
+// WhereIsExpiring applies the entql bool predicate on the is_expiring field.
+func (f *ProductFilter) WhereIsExpiring(p entql.BoolP) {
+	f.Where(p.Field(product.FieldIsExpiring))
+}
+
+// WhereRecurrenceRule applies the entql string predicate on the recurrence_rule field.
+func (f *ProductFilter) WhereRecurrenceRule(p entql.StringP) {
+	f.Where(p.Field(product.FieldRecurrenceRule))
+}
+
+// WhereOfferInAppleStore applies the entql bool predicate on the offer_in_apple_store field.
+func (f *ProductFilter) WhereOfferInAppleStore(p entql.BoolP) {
+	f.Where(p.Field(product.FieldOfferInAppleStore))
+}
+
 // WhereHasInvoices applies a predicate to check if query has an edge invoices.
 func (f *ProductFilter) WhereHasInvoices() {
 	f.Where(entql.HasEdge("invoices"))
@@ -823,6 +696,20 @@ func (f *ProductFilter) WhereHasInvoices() {
 // WhereHasInvoicesWith applies a predicate to check if query has an edge invoices with a given conditions (other predicates).
 func (f *ProductFilter) WhereHasInvoicesWith(preds ...predicate.Invoice) {
 	f.Where(entql.HasEdgeWith("invoices", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasSubscriptions applies a predicate to check if query has an edge subscriptions.
+func (f *ProductFilter) WhereHasSubscriptions() {
+	f.Where(entql.HasEdge("subscriptions"))
+}
+
+// WhereHasSubscriptionsWith applies a predicate to check if query has an edge subscriptions with a given conditions (other predicates).
+func (f *ProductFilter) WhereHasSubscriptionsWith(preds ...predicate.Subscriptions) {
+	f.Where(entql.HasEdgeWith("subscriptions", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -844,87 +731,92 @@ func (f *ProductFilter) WhereHasBundlesWith(preds ...predicate.Bundle) {
 }
 
 // addPredicate implements the predicateAdder interface.
-func (ssq *SubscriptionStatusQuery) addPredicate(pred func(s *sql.Selector)) {
-	ssq.predicates = append(ssq.predicates, pred)
+func (sq *SubscriptionsQuery) addPredicate(pred func(s *sql.Selector)) {
+	sq.predicates = append(sq.predicates, pred)
 }
 
-// Filter returns a Filter implementation to apply filters on the SubscriptionStatusQuery builder.
-func (ssq *SubscriptionStatusQuery) Filter() *SubscriptionStatusFilter {
-	return &SubscriptionStatusFilter{config: ssq.config, predicateAdder: ssq}
+// Filter returns a Filter implementation to apply filters on the SubscriptionsQuery builder.
+func (sq *SubscriptionsQuery) Filter() *SubscriptionsFilter {
+	return &SubscriptionsFilter{config: sq.config, predicateAdder: sq}
 }
 
 // addPredicate implements the predicateAdder interface.
-func (m *SubscriptionStatusMutation) addPredicate(pred func(s *sql.Selector)) {
+func (m *SubscriptionsMutation) addPredicate(pred func(s *sql.Selector)) {
 	m.predicates = append(m.predicates, pred)
 }
 
-// Filter returns an entql.Where implementation to apply filters on the SubscriptionStatusMutation builder.
-func (m *SubscriptionStatusMutation) Filter() *SubscriptionStatusFilter {
-	return &SubscriptionStatusFilter{config: m.config, predicateAdder: m}
+// Filter returns an entql.Where implementation to apply filters on the SubscriptionsMutation builder.
+func (m *SubscriptionsMutation) Filter() *SubscriptionsFilter {
+	return &SubscriptionsFilter{config: m.config, predicateAdder: m}
 }
 
-// SubscriptionStatusFilter provides a generic filtering capability at runtime for SubscriptionStatusQuery.
-type SubscriptionStatusFilter struct {
+// SubscriptionsFilter provides a generic filtering capability at runtime for SubscriptionsQuery.
+type SubscriptionsFilter struct {
 	predicateAdder
 	config
 }
 
 // Where applies the entql predicate on the query filter.
-func (f *SubscriptionStatusFilter) Where(p entql.P) {
+func (f *SubscriptionsFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[5].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[4].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
 }
 
 // WhereID applies the entql int64 predicate on the id field.
-func (f *SubscriptionStatusFilter) WhereID(p entql.Int64P) {
-	f.Where(p.Field(subscriptionstatus.FieldID))
+func (f *SubscriptionsFilter) WhereID(p entql.Int64P) {
+	f.Where(p.Field(subscriptions.FieldID))
 }
 
-// WhereInvoiceID applies the entql int64 predicate on the invoice_id field.
-func (f *SubscriptionStatusFilter) WhereInvoiceID(p entql.Int64P) {
-	f.Where(p.Field(subscriptionstatus.FieldInvoiceID))
+// WhereUserID applies the entql int64 predicate on the user_id field.
+func (f *SubscriptionsFilter) WhereUserID(p entql.Int64P) {
+	f.Where(p.Field(subscriptions.FieldUserID))
 }
 
-// WhereItemID applies the entql int64 predicate on the item_id field.
-func (f *SubscriptionStatusFilter) WhereItemID(p entql.Int64P) {
-	f.Where(p.Field(subscriptionstatus.FieldItemID))
+// WhereTenantID applies the entql int64 predicate on the tenant_id field.
+func (f *SubscriptionsFilter) WhereTenantID(p entql.Int64P) {
+	f.Where(p.Field(subscriptions.FieldTenantID))
 }
 
-// WhereActiveTill applies the entql time.Time predicate on the active_till field.
-func (f *SubscriptionStatusFilter) WhereActiveTill(p entql.TimeP) {
-	f.Where(p.Field(subscriptionstatus.FieldActiveTill))
+// WhereAppID applies the entql string predicate on the app_id field.
+func (f *SubscriptionsFilter) WhereAppID(p entql.StringP) {
+	f.Where(p.Field(subscriptions.FieldAppID))
 }
 
-// WhereStartFrom applies the entql time.Time predicate on the start_from field.
-func (f *SubscriptionStatusFilter) WhereStartFrom(p entql.TimeP) {
-	f.Where(p.Field(subscriptionstatus.FieldStartFrom))
+// WhereProductID applies the entql int64 predicate on the product_id field.
+func (f *SubscriptionsFilter) WhereProductID(p entql.Int64P) {
+	f.Where(p.Field(subscriptions.FieldProductID))
 }
 
-// WhereHasInvoice applies a predicate to check if query has an edge invoice.
-func (f *SubscriptionStatusFilter) WhereHasInvoice() {
-	f.Where(entql.HasEdge("invoice"))
+// WhereRenewalRate applies the entql time.Time predicate on the renewal_rate field.
+func (f *SubscriptionsFilter) WhereRenewalRate(p entql.TimeP) {
+	f.Where(p.Field(subscriptions.FieldRenewalRate))
 }
 
-// WhereHasInvoiceWith applies a predicate to check if query has an edge invoice with a given conditions (other predicates).
-func (f *SubscriptionStatusFilter) WhereHasInvoiceWith(preds ...predicate.Invoice) {
-	f.Where(entql.HasEdgeWith("invoice", sqlgraph.WrapFunc(func(s *sql.Selector) {
+// WhereHasInvoices applies a predicate to check if query has an edge invoices.
+func (f *SubscriptionsFilter) WhereHasInvoices() {
+	f.Where(entql.HasEdge("invoices"))
+}
+
+// WhereHasInvoicesWith applies a predicate to check if query has an edge invoices with a given conditions (other predicates).
+func (f *SubscriptionsFilter) WhereHasInvoicesWith(preds ...predicate.Invoice) {
+	f.Where(entql.HasEdgeWith("invoices", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
 	})))
 }
 
-// WhereHasItem applies a predicate to check if query has an edge item.
-func (f *SubscriptionStatusFilter) WhereHasItem() {
-	f.Where(entql.HasEdge("item"))
+// WhereHasProduct applies a predicate to check if query has an edge product.
+func (f *SubscriptionsFilter) WhereHasProduct() {
+	f.Where(entql.HasEdge("product"))
 }
 
-// WhereHasItemWith applies a predicate to check if query has an edge item with a given conditions (other predicates).
-func (f *SubscriptionStatusFilter) WhereHasItemWith(preds ...predicate.Item) {
-	f.Where(entql.HasEdgeWith("item", sqlgraph.WrapFunc(func(s *sql.Selector) {
+// WhereHasProductWith applies a predicate to check if query has an edge product with a given conditions (other predicates).
+func (f *SubscriptionsFilter) WhereHasProductWith(preds ...predicate.Product) {
+	f.Where(entql.HasEdgeWith("product", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

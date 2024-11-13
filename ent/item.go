@@ -27,6 +27,8 @@ type Item struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// TopicName holds the value of the "topic_name" field.
+	TopicName *string `json:"topic_name,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ItemQuery when eager-loading is set.
 	Edges        ItemEdges `json:"edges"`
@@ -37,13 +39,9 @@ type Item struct {
 type ItemEdges struct {
 	// Bundles holds the value of the bundles edge.
 	Bundles []*Bundle `json:"bundles,omitempty"`
-	// ConsumedStatuses holds the value of the consumed_statuses edge.
-	ConsumedStatuses []*ConsumedStatus `json:"consumed_statuses,omitempty"`
-	// SubscriptionStatuses holds the value of the subscription_statuses edge.
-	SubscriptionStatuses []*SubscriptionStatus `json:"subscription_statuses,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [1]bool
 }
 
 // BundlesOrErr returns the Bundles value or an error if the edge
@@ -55,24 +53,6 @@ func (e ItemEdges) BundlesOrErr() ([]*Bundle, error) {
 	return nil, &NotLoadedError{edge: "bundles"}
 }
 
-// ConsumedStatusesOrErr returns the ConsumedStatuses value or an error if the edge
-// was not loaded in eager-loading.
-func (e ItemEdges) ConsumedStatusesOrErr() ([]*ConsumedStatus, error) {
-	if e.loadedTypes[1] {
-		return e.ConsumedStatuses, nil
-	}
-	return nil, &NotLoadedError{edge: "consumed_statuses"}
-}
-
-// SubscriptionStatusesOrErr returns the SubscriptionStatuses value or an error if the edge
-// was not loaded in eager-loading.
-func (e ItemEdges) SubscriptionStatusesOrErr() ([]*SubscriptionStatus, error) {
-	if e.loadedTypes[2] {
-		return e.SubscriptionStatuses, nil
-	}
-	return nil, &NotLoadedError{edge: "subscription_statuses"}
-}
-
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Item) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -80,7 +60,7 @@ func (*Item) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case item.FieldID:
 			values[i] = new(sql.NullInt64)
-		case item.FieldName, item.FieldDescription:
+		case item.FieldName, item.FieldDescription, item.FieldTopicName:
 			values[i] = new(sql.NullString)
 		case item.FieldCreatedAt, item.FieldUpdatedAt, item.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -136,6 +116,13 @@ func (i *Item) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.Description = value.String
 			}
+		case item.FieldTopicName:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field topic_name", values[j])
+			} else if value.Valid {
+				i.TopicName = new(string)
+				*i.TopicName = value.String
+			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
 		}
@@ -152,16 +139,6 @@ func (i *Item) Value(name string) (ent.Value, error) {
 // QueryBundles queries the "bundles" edge of the Item entity.
 func (i *Item) QueryBundles() *BundleQuery {
 	return NewItemClient(i.config).QueryBundles(i)
-}
-
-// QueryConsumedStatuses queries the "consumed_statuses" edge of the Item entity.
-func (i *Item) QueryConsumedStatuses() *ConsumedStatusQuery {
-	return NewItemClient(i.config).QueryConsumedStatuses(i)
-}
-
-// QuerySubscriptionStatuses queries the "subscription_statuses" edge of the Item entity.
-func (i *Item) QuerySubscriptionStatuses() *SubscriptionStatusQuery {
-	return NewItemClient(i.config).QuerySubscriptionStatuses(i)
 }
 
 // Update returns a builder for updating this Item.
@@ -203,6 +180,11 @@ func (i *Item) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(i.Description)
+	builder.WriteString(", ")
+	if v := i.TopicName; v != nil {
+		builder.WriteString("topic_name=")
+		builder.WriteString(*v)
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

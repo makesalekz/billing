@@ -15,6 +15,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "amount", Type: field.TypeFloat64, Default: 1},
+		{Name: "overusage_price", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric"}},
 		{Name: "item_id", Type: field.TypeInt64},
 		{Name: "product_id", Type: field.TypeInt64},
 	}
@@ -26,55 +27,22 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "bundles_items_bundles",
-				Columns:    []*schema.Column{BundlesColumns[5]},
+				Columns:    []*schema.Column{BundlesColumns[6]},
 				RefColumns: []*schema.Column{ItemsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "bundles_products_bundles",
-				Columns:    []*schema.Column{BundlesColumns[6]},
+				Columns:    []*schema.Column{BundlesColumns[7]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-	}
-	// ConsumedStatusColumns holds the columns for the "consumed_status" table.
-	ConsumedStatusColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "user_id", Type: field.TypeInt64},
-		{Name: "tenant_id", Type: field.TypeInt64},
-		{Name: "app_id", Type: field.TypeInt64},
-		{Name: "consumed", Type: field.TypeFloat64, Nullable: true, Default: 0},
-		{Name: "left", Type: field.TypeFloat64, Nullable: true, Default: 0},
-		{Name: "active_till", Type: field.TypeTime, Nullable: true},
-		{Name: "start_from", Type: field.TypeTime, Nullable: true},
-		{Name: "invoice_consumed_statuses", Type: field.TypeInt64, Nullable: true},
-		{Name: "item_id", Type: field.TypeInt64},
-	}
-	// ConsumedStatusTable holds the schema information for the "consumed_status" table.
-	ConsumedStatusTable = &schema.Table{
-		Name:       "consumed_status",
-		Columns:    ConsumedStatusColumns,
-		PrimaryKey: []*schema.Column{ConsumedStatusColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "consumed_status_invoices_consumed_statuses",
-				Columns:    []*schema.Column{ConsumedStatusColumns[8]},
-				RefColumns: []*schema.Column{InvoicesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "consumed_status_items_consumed_statuses",
-				Columns:    []*schema.Column{ConsumedStatusColumns[9]},
-				RefColumns: []*schema.Column{ItemsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "consumedstatus_user_id_app_id_item_id",
-				Unique:  false,
-				Columns: []*schema.Column{ConsumedStatusColumns[1], ConsumedStatusColumns[3], ConsumedStatusColumns[9]},
+				Name:    "bundle_product_id_item_id",
+				Unique:  true,
+				Columns: []*schema.Column{BundlesColumns[7], BundlesColumns[6]},
 			},
 		},
 	}
@@ -82,13 +50,18 @@ var (
 	InvoicesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "tenant_id", Type: field.TypeInt64},
 		{Name: "app_id", Type: field.TypeString},
 		{Name: "amount", Type: field.TypeInt64},
 		{Name: "price", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric"}},
 		{Name: "currency", Type: field.TypeString, Size: 3, Default: "KZT"},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"CREATED", "PAID", "CANCELED_BY_USER", "CANCELED_BY_VENDOR", "FAILED", "REJECTED", "REFUNDED"}, Default: "CREATED"},
 		{Name: "paid_at", Type: field.TypeTime, Nullable: true},
+		{Name: "paid_till", Type: field.TypeTime, Nullable: true},
+		{Name: "is_paid_at_processed", Type: field.TypeBool, Default: false},
+		{Name: "is_paid_till_processed", Type: field.TypeBool, Default: false},
 		{Name: "product_id", Type: field.TypeInt64},
+		{Name: "subscription_id", Type: field.TypeInt64, Nullable: true},
 	}
 	// InvoicesTable holds the schema information for the "invoices" table.
 	InvoicesTable = &schema.Table{
@@ -98,9 +71,15 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "invoices_products_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[8]},
+				Columns:    []*schema.Column{InvoicesColumns[12]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "invoices_subscriptions_invoices",
+				Columns:    []*schema.Column{InvoicesColumns[13]},
+				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -112,6 +91,7 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
+		{Name: "topic_name", Type: field.TypeString, Unique: true, Nullable: true},
 	}
 	// ItemsTable holds the schema information for the "items" table.
 	ItemsTable = &schema.Table{
@@ -122,6 +102,7 @@ var (
 	// ProductsColumns holds the columns for the "products" table.
 	ProductsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "app_id", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
 		{Name: "price", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric"}},
@@ -132,6 +113,9 @@ var (
 		{Name: "left", Type: field.TypeInt64, Default: 0},
 		{Name: "is_unique", Type: field.TypeBool, Nullable: true, Default: false},
 		{Name: "unique_limit", Type: field.TypeInt64, Default: 0},
+		{Name: "is_expiring", Type: field.TypeBool, Nullable: true, Default: false},
+		{Name: "recurrence_rule", Type: field.TypeString, Nullable: true, Size: 250},
+		{Name: "offer_in_apple_store", Type: field.TypeBool, Default: false},
 	}
 	// ProductsTable holds the schema information for the "products" table.
 	ProductsTable = &schema.Table{
@@ -139,30 +123,25 @@ var (
 		Columns:    ProductsColumns,
 		PrimaryKey: []*schema.Column{ProductsColumns[0]},
 	}
-	// SubscriptionStatusColumns holds the columns for the "subscription_status" table.
-	SubscriptionStatusColumns = []*schema.Column{
+	// SubscriptionsColumns holds the columns for the "subscriptions" table.
+	SubscriptionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "active_till", Type: field.TypeTime, Nullable: true},
-		{Name: "start_from", Type: field.TypeTime, Nullable: true},
-		{Name: "invoice_id", Type: field.TypeInt64},
-		{Name: "item_id", Type: field.TypeInt64},
+		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "tenant_id", Type: field.TypeInt64},
+		{Name: "app_id", Type: field.TypeString},
+		{Name: "renewal_rate", Type: field.TypeTime, Nullable: true},
+		{Name: "product_id", Type: field.TypeInt64},
 	}
-	// SubscriptionStatusTable holds the schema information for the "subscription_status" table.
-	SubscriptionStatusTable = &schema.Table{
-		Name:       "subscription_status",
-		Columns:    SubscriptionStatusColumns,
-		PrimaryKey: []*schema.Column{SubscriptionStatusColumns[0]},
+	// SubscriptionsTable holds the schema information for the "subscriptions" table.
+	SubscriptionsTable = &schema.Table{
+		Name:       "subscriptions",
+		Columns:    SubscriptionsColumns,
+		PrimaryKey: []*schema.Column{SubscriptionsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "subscription_status_invoices_subscription_statuses",
-				Columns:    []*schema.Column{SubscriptionStatusColumns[3]},
-				RefColumns: []*schema.Column{InvoicesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "subscription_status_items_subscription_statuses",
-				Columns:    []*schema.Column{SubscriptionStatusColumns[4]},
-				RefColumns: []*schema.Column{ItemsColumns[0]},
+				Symbol:     "subscriptions_products_subscriptions",
+				Columns:    []*schema.Column{SubscriptionsColumns[5]},
+				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
@@ -170,20 +149,17 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		BundlesTable,
-		ConsumedStatusTable,
 		InvoicesTable,
 		ItemsTable,
 		ProductsTable,
-		SubscriptionStatusTable,
+		SubscriptionsTable,
 	}
 )
 
 func init() {
 	BundlesTable.ForeignKeys[0].RefTable = ItemsTable
 	BundlesTable.ForeignKeys[1].RefTable = ProductsTable
-	ConsumedStatusTable.ForeignKeys[0].RefTable = InvoicesTable
-	ConsumedStatusTable.ForeignKeys[1].RefTable = ItemsTable
 	InvoicesTable.ForeignKeys[0].RefTable = ProductsTable
-	SubscriptionStatusTable.ForeignKeys[0].RefTable = InvoicesTable
-	SubscriptionStatusTable.ForeignKeys[1].RefTable = ItemsTable
+	InvoicesTable.ForeignKeys[1].RefTable = SubscriptionsTable
+	SubscriptionsTable.ForeignKeys[0].RefTable = ProductsTable
 }

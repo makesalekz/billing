@@ -12,11 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/enum"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
 )
 
 // InvoiceUpdate is the builder for updating Invoice entities.
@@ -102,81 +100,57 @@ func (iu *InvoiceUpdate) ClearPaidAt() *InvoiceUpdate {
 	return iu
 }
 
-// AddConsumedStatusIDs adds the "consumed_statuses" edge to the ConsumedStatus entity by IDs.
-func (iu *InvoiceUpdate) AddConsumedStatusIDs(ids ...int64) *InvoiceUpdate {
-	iu.mutation.AddConsumedStatusIDs(ids...)
+// SetPaidTill sets the "paid_till" field.
+func (iu *InvoiceUpdate) SetPaidTill(t time.Time) *InvoiceUpdate {
+	iu.mutation.SetPaidTill(t)
 	return iu
 }
 
-// AddConsumedStatuses adds the "consumed_statuses" edges to the ConsumedStatus entity.
-func (iu *InvoiceUpdate) AddConsumedStatuses(c ...*ConsumedStatus) *InvoiceUpdate {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+// SetNillablePaidTill sets the "paid_till" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillablePaidTill(t *time.Time) *InvoiceUpdate {
+	if t != nil {
+		iu.SetPaidTill(*t)
 	}
-	return iu.AddConsumedStatusIDs(ids...)
-}
-
-// AddSubscriptionStatusIDs adds the "subscription_statuses" edge to the SubscriptionStatus entity by IDs.
-func (iu *InvoiceUpdate) AddSubscriptionStatusIDs(ids ...int64) *InvoiceUpdate {
-	iu.mutation.AddSubscriptionStatusIDs(ids...)
 	return iu
 }
 
-// AddSubscriptionStatuses adds the "subscription_statuses" edges to the SubscriptionStatus entity.
-func (iu *InvoiceUpdate) AddSubscriptionStatuses(s ...*SubscriptionStatus) *InvoiceUpdate {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// ClearPaidTill clears the value of the "paid_till" field.
+func (iu *InvoiceUpdate) ClearPaidTill() *InvoiceUpdate {
+	iu.mutation.ClearPaidTill()
+	return iu
+}
+
+// SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
+func (iu *InvoiceUpdate) SetIsPaidAtProcessed(b bool) *InvoiceUpdate {
+	iu.mutation.SetIsPaidAtProcessed(b)
+	return iu
+}
+
+// SetNillableIsPaidAtProcessed sets the "is_paid_at_processed" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableIsPaidAtProcessed(b *bool) *InvoiceUpdate {
+	if b != nil {
+		iu.SetIsPaidAtProcessed(*b)
 	}
-	return iu.AddSubscriptionStatusIDs(ids...)
+	return iu
+}
+
+// SetIsPaidTillProcessed sets the "is_paid_till_processed" field.
+func (iu *InvoiceUpdate) SetIsPaidTillProcessed(b bool) *InvoiceUpdate {
+	iu.mutation.SetIsPaidTillProcessed(b)
+	return iu
+}
+
+// SetNillableIsPaidTillProcessed sets the "is_paid_till_processed" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpdate {
+	if b != nil {
+		iu.SetIsPaidTillProcessed(*b)
+	}
+	return iu
 }
 
 // Mutation returns the InvoiceMutation object of the builder.
 func (iu *InvoiceUpdate) Mutation() *InvoiceMutation {
 	return iu.mutation
-}
-
-// ClearConsumedStatuses clears all "consumed_statuses" edges to the ConsumedStatus entity.
-func (iu *InvoiceUpdate) ClearConsumedStatuses() *InvoiceUpdate {
-	iu.mutation.ClearConsumedStatuses()
-	return iu
-}
-
-// RemoveConsumedStatusIDs removes the "consumed_statuses" edge to ConsumedStatus entities by IDs.
-func (iu *InvoiceUpdate) RemoveConsumedStatusIDs(ids ...int64) *InvoiceUpdate {
-	iu.mutation.RemoveConsumedStatusIDs(ids...)
-	return iu
-}
-
-// RemoveConsumedStatuses removes "consumed_statuses" edges to ConsumedStatus entities.
-func (iu *InvoiceUpdate) RemoveConsumedStatuses(c ...*ConsumedStatus) *InvoiceUpdate {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iu.RemoveConsumedStatusIDs(ids...)
-}
-
-// ClearSubscriptionStatuses clears all "subscription_statuses" edges to the SubscriptionStatus entity.
-func (iu *InvoiceUpdate) ClearSubscriptionStatuses() *InvoiceUpdate {
-	iu.mutation.ClearSubscriptionStatuses()
-	return iu
-}
-
-// RemoveSubscriptionStatusIDs removes the "subscription_statuses" edge to SubscriptionStatus entities by IDs.
-func (iu *InvoiceUpdate) RemoveSubscriptionStatusIDs(ids ...int64) *InvoiceUpdate {
-	iu.mutation.RemoveSubscriptionStatusIDs(ids...)
-	return iu
-}
-
-// RemoveSubscriptionStatuses removes "subscription_statuses" edges to SubscriptionStatus entities.
-func (iu *InvoiceUpdate) RemoveSubscriptionStatuses(s ...*SubscriptionStatus) *InvoiceUpdate {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iu.RemoveSubscriptionStatusIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -260,95 +234,17 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if iu.mutation.PaidAtCleared() {
 		_spec.ClearField(invoice.FieldPaidAt, field.TypeTime)
 	}
-	if iu.mutation.ConsumedStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.ConsumedStatusesTable,
-			Columns: []string{invoice.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := iu.mutation.PaidTill(); ok {
+		_spec.SetField(invoice.FieldPaidTill, field.TypeTime, value)
 	}
-	if nodes := iu.mutation.RemovedConsumedStatusesIDs(); len(nodes) > 0 && !iu.mutation.ConsumedStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.ConsumedStatusesTable,
-			Columns: []string{invoice.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if iu.mutation.PaidTillCleared() {
+		_spec.ClearField(invoice.FieldPaidTill, field.TypeTime)
 	}
-	if nodes := iu.mutation.ConsumedStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.ConsumedStatusesTable,
-			Columns: []string{invoice.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if value, ok := iu.mutation.IsPaidAtProcessed(); ok {
+		_spec.SetField(invoice.FieldIsPaidAtProcessed, field.TypeBool, value)
 	}
-	if iu.mutation.SubscriptionStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.SubscriptionStatusesTable,
-			Columns: []string{invoice.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedSubscriptionStatusesIDs(); len(nodes) > 0 && !iu.mutation.SubscriptionStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.SubscriptionStatusesTable,
-			Columns: []string{invoice.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.SubscriptionStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.SubscriptionStatusesTable,
-			Columns: []string{invoice.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if value, ok := iu.mutation.IsPaidTillProcessed(); ok {
+		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
 	}
 	_spec.AddModifiers(iu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
@@ -441,81 +337,57 @@ func (iuo *InvoiceUpdateOne) ClearPaidAt() *InvoiceUpdateOne {
 	return iuo
 }
 
-// AddConsumedStatusIDs adds the "consumed_statuses" edge to the ConsumedStatus entity by IDs.
-func (iuo *InvoiceUpdateOne) AddConsumedStatusIDs(ids ...int64) *InvoiceUpdateOne {
-	iuo.mutation.AddConsumedStatusIDs(ids...)
+// SetPaidTill sets the "paid_till" field.
+func (iuo *InvoiceUpdateOne) SetPaidTill(t time.Time) *InvoiceUpdateOne {
+	iuo.mutation.SetPaidTill(t)
 	return iuo
 }
 
-// AddConsumedStatuses adds the "consumed_statuses" edges to the ConsumedStatus entity.
-func (iuo *InvoiceUpdateOne) AddConsumedStatuses(c ...*ConsumedStatus) *InvoiceUpdateOne {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+// SetNillablePaidTill sets the "paid_till" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillablePaidTill(t *time.Time) *InvoiceUpdateOne {
+	if t != nil {
+		iuo.SetPaidTill(*t)
 	}
-	return iuo.AddConsumedStatusIDs(ids...)
-}
-
-// AddSubscriptionStatusIDs adds the "subscription_statuses" edge to the SubscriptionStatus entity by IDs.
-func (iuo *InvoiceUpdateOne) AddSubscriptionStatusIDs(ids ...int64) *InvoiceUpdateOne {
-	iuo.mutation.AddSubscriptionStatusIDs(ids...)
 	return iuo
 }
 
-// AddSubscriptionStatuses adds the "subscription_statuses" edges to the SubscriptionStatus entity.
-func (iuo *InvoiceUpdateOne) AddSubscriptionStatuses(s ...*SubscriptionStatus) *InvoiceUpdateOne {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// ClearPaidTill clears the value of the "paid_till" field.
+func (iuo *InvoiceUpdateOne) ClearPaidTill() *InvoiceUpdateOne {
+	iuo.mutation.ClearPaidTill()
+	return iuo
+}
+
+// SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
+func (iuo *InvoiceUpdateOne) SetIsPaidAtProcessed(b bool) *InvoiceUpdateOne {
+	iuo.mutation.SetIsPaidAtProcessed(b)
+	return iuo
+}
+
+// SetNillableIsPaidAtProcessed sets the "is_paid_at_processed" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableIsPaidAtProcessed(b *bool) *InvoiceUpdateOne {
+	if b != nil {
+		iuo.SetIsPaidAtProcessed(*b)
 	}
-	return iuo.AddSubscriptionStatusIDs(ids...)
+	return iuo
+}
+
+// SetIsPaidTillProcessed sets the "is_paid_till_processed" field.
+func (iuo *InvoiceUpdateOne) SetIsPaidTillProcessed(b bool) *InvoiceUpdateOne {
+	iuo.mutation.SetIsPaidTillProcessed(b)
+	return iuo
+}
+
+// SetNillableIsPaidTillProcessed sets the "is_paid_till_processed" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpdateOne {
+	if b != nil {
+		iuo.SetIsPaidTillProcessed(*b)
+	}
+	return iuo
 }
 
 // Mutation returns the InvoiceMutation object of the builder.
 func (iuo *InvoiceUpdateOne) Mutation() *InvoiceMutation {
 	return iuo.mutation
-}
-
-// ClearConsumedStatuses clears all "consumed_statuses" edges to the ConsumedStatus entity.
-func (iuo *InvoiceUpdateOne) ClearConsumedStatuses() *InvoiceUpdateOne {
-	iuo.mutation.ClearConsumedStatuses()
-	return iuo
-}
-
-// RemoveConsumedStatusIDs removes the "consumed_statuses" edge to ConsumedStatus entities by IDs.
-func (iuo *InvoiceUpdateOne) RemoveConsumedStatusIDs(ids ...int64) *InvoiceUpdateOne {
-	iuo.mutation.RemoveConsumedStatusIDs(ids...)
-	return iuo
-}
-
-// RemoveConsumedStatuses removes "consumed_statuses" edges to ConsumedStatus entities.
-func (iuo *InvoiceUpdateOne) RemoveConsumedStatuses(c ...*ConsumedStatus) *InvoiceUpdateOne {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iuo.RemoveConsumedStatusIDs(ids...)
-}
-
-// ClearSubscriptionStatuses clears all "subscription_statuses" edges to the SubscriptionStatus entity.
-func (iuo *InvoiceUpdateOne) ClearSubscriptionStatuses() *InvoiceUpdateOne {
-	iuo.mutation.ClearSubscriptionStatuses()
-	return iuo
-}
-
-// RemoveSubscriptionStatusIDs removes the "subscription_statuses" edge to SubscriptionStatus entities by IDs.
-func (iuo *InvoiceUpdateOne) RemoveSubscriptionStatusIDs(ids ...int64) *InvoiceUpdateOne {
-	iuo.mutation.RemoveSubscriptionStatusIDs(ids...)
-	return iuo
-}
-
-// RemoveSubscriptionStatuses removes "subscription_statuses" edges to SubscriptionStatus entities.
-func (iuo *InvoiceUpdateOne) RemoveSubscriptionStatuses(s ...*SubscriptionStatus) *InvoiceUpdateOne {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iuo.RemoveSubscriptionStatusIDs(ids...)
 }
 
 // Where appends a list predicates to the InvoiceUpdate builder.
@@ -629,95 +501,17 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	if iuo.mutation.PaidAtCleared() {
 		_spec.ClearField(invoice.FieldPaidAt, field.TypeTime)
 	}
-	if iuo.mutation.ConsumedStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.ConsumedStatusesTable,
-			Columns: []string{invoice.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := iuo.mutation.PaidTill(); ok {
+		_spec.SetField(invoice.FieldPaidTill, field.TypeTime, value)
 	}
-	if nodes := iuo.mutation.RemovedConsumedStatusesIDs(); len(nodes) > 0 && !iuo.mutation.ConsumedStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.ConsumedStatusesTable,
-			Columns: []string{invoice.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if iuo.mutation.PaidTillCleared() {
+		_spec.ClearField(invoice.FieldPaidTill, field.TypeTime)
 	}
-	if nodes := iuo.mutation.ConsumedStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.ConsumedStatusesTable,
-			Columns: []string{invoice.ConsumedStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if value, ok := iuo.mutation.IsPaidAtProcessed(); ok {
+		_spec.SetField(invoice.FieldIsPaidAtProcessed, field.TypeBool, value)
 	}
-	if iuo.mutation.SubscriptionStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.SubscriptionStatusesTable,
-			Columns: []string{invoice.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedSubscriptionStatusesIDs(); len(nodes) > 0 && !iuo.mutation.SubscriptionStatusesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.SubscriptionStatusesTable,
-			Columns: []string{invoice.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.SubscriptionStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.SubscriptionStatusesTable,
-			Columns: []string{invoice.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if value, ok := iuo.mutation.IsPaidTillProcessed(); ok {
+		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
 	}
 	_spec.AddModifiers(iuo.modifiers...)
 	_node = &Invoice{config: iuo.config}

@@ -16,6 +16,7 @@ import (
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // ProductUpdate is the builder for updating Product entities.
@@ -29,6 +30,20 @@ type ProductUpdate struct {
 // Where appends a list predicates to the ProductUpdate builder.
 func (pu *ProductUpdate) Where(ps ...predicate.Product) *ProductUpdate {
 	pu.mutation.Where(ps...)
+	return pu
+}
+
+// SetAppID sets the "app_id" field.
+func (pu *ProductUpdate) SetAppID(s string) *ProductUpdate {
+	pu.mutation.SetAppID(s)
+	return pu
+}
+
+// SetNillableAppID sets the "app_id" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillableAppID(s *string) *ProductUpdate {
+	if s != nil {
+		pu.SetAppID(*s)
+	}
 	return pu
 }
 
@@ -205,6 +220,60 @@ func (pu *ProductUpdate) AddUniqueLimit(i int64) *ProductUpdate {
 	return pu
 }
 
+// SetIsExpiring sets the "is_expiring" field.
+func (pu *ProductUpdate) SetIsExpiring(b bool) *ProductUpdate {
+	pu.mutation.SetIsExpiring(b)
+	return pu
+}
+
+// SetNillableIsExpiring sets the "is_expiring" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillableIsExpiring(b *bool) *ProductUpdate {
+	if b != nil {
+		pu.SetIsExpiring(*b)
+	}
+	return pu
+}
+
+// ClearIsExpiring clears the value of the "is_expiring" field.
+func (pu *ProductUpdate) ClearIsExpiring() *ProductUpdate {
+	pu.mutation.ClearIsExpiring()
+	return pu
+}
+
+// SetRecurrenceRule sets the "recurrence_rule" field.
+func (pu *ProductUpdate) SetRecurrenceRule(s string) *ProductUpdate {
+	pu.mutation.SetRecurrenceRule(s)
+	return pu
+}
+
+// SetNillableRecurrenceRule sets the "recurrence_rule" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillableRecurrenceRule(s *string) *ProductUpdate {
+	if s != nil {
+		pu.SetRecurrenceRule(*s)
+	}
+	return pu
+}
+
+// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
+func (pu *ProductUpdate) ClearRecurrenceRule() *ProductUpdate {
+	pu.mutation.ClearRecurrenceRule()
+	return pu
+}
+
+// SetOfferInAppleStore sets the "offer_in_apple_store" field.
+func (pu *ProductUpdate) SetOfferInAppleStore(b bool) *ProductUpdate {
+	pu.mutation.SetOfferInAppleStore(b)
+	return pu
+}
+
+// SetNillableOfferInAppleStore sets the "offer_in_apple_store" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillableOfferInAppleStore(b *bool) *ProductUpdate {
+	if b != nil {
+		pu.SetOfferInAppleStore(*b)
+	}
+	return pu
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
 func (pu *ProductUpdate) AddInvoiceIDs(ids ...int64) *ProductUpdate {
 	pu.mutation.AddInvoiceIDs(ids...)
@@ -218,6 +287,21 @@ func (pu *ProductUpdate) AddInvoices(i ...*Invoice) *ProductUpdate {
 		ids[j] = i[j].ID
 	}
 	return pu.AddInvoiceIDs(ids...)
+}
+
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscriptions entity by IDs.
+func (pu *ProductUpdate) AddSubscriptionIDs(ids ...int64) *ProductUpdate {
+	pu.mutation.AddSubscriptionIDs(ids...)
+	return pu
+}
+
+// AddSubscriptions adds the "subscriptions" edges to the Subscriptions entity.
+func (pu *ProductUpdate) AddSubscriptions(s ...*Subscriptions) *ProductUpdate {
+	ids := make([]int64, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return pu.AddSubscriptionIDs(ids...)
 }
 
 // AddBundleIDs adds the "bundles" edge to the Bundle entity by IDs.
@@ -259,6 +343,27 @@ func (pu *ProductUpdate) RemoveInvoices(i ...*Invoice) *ProductUpdate {
 		ids[j] = i[j].ID
 	}
 	return pu.RemoveInvoiceIDs(ids...)
+}
+
+// ClearSubscriptions clears all "subscriptions" edges to the Subscriptions entity.
+func (pu *ProductUpdate) ClearSubscriptions() *ProductUpdate {
+	pu.mutation.ClearSubscriptions()
+	return pu
+}
+
+// RemoveSubscriptionIDs removes the "subscriptions" edge to Subscriptions entities by IDs.
+func (pu *ProductUpdate) RemoveSubscriptionIDs(ids ...int64) *ProductUpdate {
+	pu.mutation.RemoveSubscriptionIDs(ids...)
+	return pu
+}
+
+// RemoveSubscriptions removes "subscriptions" edges to Subscriptions entities.
+func (pu *ProductUpdate) RemoveSubscriptions(s ...*Subscriptions) *ProductUpdate {
+	ids := make([]int64, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return pu.RemoveSubscriptionIDs(ids...)
 }
 
 // ClearBundles clears all "bundles" edges to the Bundle entity.
@@ -316,6 +421,16 @@ func (pu *ProductUpdate) check() error {
 			return &ValidationError{Name: "currency", err: fmt.Errorf(`ent: validator failed for field "Product.currency": %w`, err)}
 		}
 	}
+	if v, ok := pu.mutation.UniqueLimit(); ok {
+		if err := product.UniqueLimitValidator(v); err != nil {
+			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
+		}
+	}
+	if v, ok := pu.mutation.RecurrenceRule(); ok {
+		if err := product.RecurrenceRuleValidator(v); err != nil {
+			return &ValidationError{Name: "recurrence_rule", err: fmt.Errorf(`ent: validator failed for field "Product.recurrence_rule": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -336,6 +451,9 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := pu.mutation.AppID(); ok {
+		_spec.SetField(product.FieldAppID, field.TypeString, value)
 	}
 	if value, ok := pu.mutation.Name(); ok {
 		_spec.SetField(product.FieldName, field.TypeString, value)
@@ -382,6 +500,21 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.AddedUniqueLimit(); ok {
 		_spec.AddField(product.FieldUniqueLimit, field.TypeInt64, value)
 	}
+	if value, ok := pu.mutation.IsExpiring(); ok {
+		_spec.SetField(product.FieldIsExpiring, field.TypeBool, value)
+	}
+	if pu.mutation.IsExpiringCleared() {
+		_spec.ClearField(product.FieldIsExpiring, field.TypeBool)
+	}
+	if value, ok := pu.mutation.RecurrenceRule(); ok {
+		_spec.SetField(product.FieldRecurrenceRule, field.TypeString, value)
+	}
+	if pu.mutation.RecurrenceRuleCleared() {
+		_spec.ClearField(product.FieldRecurrenceRule, field.TypeString)
+	}
+	if value, ok := pu.mutation.OfferInAppleStore(); ok {
+		_spec.SetField(product.FieldOfferInAppleStore, field.TypeBool, value)
+	}
 	if pu.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -420,6 +553,51 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(invoice.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if pu.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.SubscriptionsTable,
+			Columns: []string{product.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RemovedSubscriptionsIDs(); len(nodes) > 0 && !pu.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.SubscriptionsTable,
+			Columns: []string{product.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.SubscriptionsTable,
+			Columns: []string{product.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -492,6 +670,20 @@ type ProductUpdateOne struct {
 	hooks     []Hook
 	mutation  *ProductMutation
 	modifiers []func(*sql.UpdateBuilder)
+}
+
+// SetAppID sets the "app_id" field.
+func (puo *ProductUpdateOne) SetAppID(s string) *ProductUpdateOne {
+	puo.mutation.SetAppID(s)
+	return puo
+}
+
+// SetNillableAppID sets the "app_id" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillableAppID(s *string) *ProductUpdateOne {
+	if s != nil {
+		puo.SetAppID(*s)
+	}
+	return puo
 }
 
 // SetName sets the "name" field.
@@ -667,6 +859,60 @@ func (puo *ProductUpdateOne) AddUniqueLimit(i int64) *ProductUpdateOne {
 	return puo
 }
 
+// SetIsExpiring sets the "is_expiring" field.
+func (puo *ProductUpdateOne) SetIsExpiring(b bool) *ProductUpdateOne {
+	puo.mutation.SetIsExpiring(b)
+	return puo
+}
+
+// SetNillableIsExpiring sets the "is_expiring" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillableIsExpiring(b *bool) *ProductUpdateOne {
+	if b != nil {
+		puo.SetIsExpiring(*b)
+	}
+	return puo
+}
+
+// ClearIsExpiring clears the value of the "is_expiring" field.
+func (puo *ProductUpdateOne) ClearIsExpiring() *ProductUpdateOne {
+	puo.mutation.ClearIsExpiring()
+	return puo
+}
+
+// SetRecurrenceRule sets the "recurrence_rule" field.
+func (puo *ProductUpdateOne) SetRecurrenceRule(s string) *ProductUpdateOne {
+	puo.mutation.SetRecurrenceRule(s)
+	return puo
+}
+
+// SetNillableRecurrenceRule sets the "recurrence_rule" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillableRecurrenceRule(s *string) *ProductUpdateOne {
+	if s != nil {
+		puo.SetRecurrenceRule(*s)
+	}
+	return puo
+}
+
+// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
+func (puo *ProductUpdateOne) ClearRecurrenceRule() *ProductUpdateOne {
+	puo.mutation.ClearRecurrenceRule()
+	return puo
+}
+
+// SetOfferInAppleStore sets the "offer_in_apple_store" field.
+func (puo *ProductUpdateOne) SetOfferInAppleStore(b bool) *ProductUpdateOne {
+	puo.mutation.SetOfferInAppleStore(b)
+	return puo
+}
+
+// SetNillableOfferInAppleStore sets the "offer_in_apple_store" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillableOfferInAppleStore(b *bool) *ProductUpdateOne {
+	if b != nil {
+		puo.SetOfferInAppleStore(*b)
+	}
+	return puo
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
 func (puo *ProductUpdateOne) AddInvoiceIDs(ids ...int64) *ProductUpdateOne {
 	puo.mutation.AddInvoiceIDs(ids...)
@@ -680,6 +926,21 @@ func (puo *ProductUpdateOne) AddInvoices(i ...*Invoice) *ProductUpdateOne {
 		ids[j] = i[j].ID
 	}
 	return puo.AddInvoiceIDs(ids...)
+}
+
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscriptions entity by IDs.
+func (puo *ProductUpdateOne) AddSubscriptionIDs(ids ...int64) *ProductUpdateOne {
+	puo.mutation.AddSubscriptionIDs(ids...)
+	return puo
+}
+
+// AddSubscriptions adds the "subscriptions" edges to the Subscriptions entity.
+func (puo *ProductUpdateOne) AddSubscriptions(s ...*Subscriptions) *ProductUpdateOne {
+	ids := make([]int64, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return puo.AddSubscriptionIDs(ids...)
 }
 
 // AddBundleIDs adds the "bundles" edge to the Bundle entity by IDs.
@@ -721,6 +982,27 @@ func (puo *ProductUpdateOne) RemoveInvoices(i ...*Invoice) *ProductUpdateOne {
 		ids[j] = i[j].ID
 	}
 	return puo.RemoveInvoiceIDs(ids...)
+}
+
+// ClearSubscriptions clears all "subscriptions" edges to the Subscriptions entity.
+func (puo *ProductUpdateOne) ClearSubscriptions() *ProductUpdateOne {
+	puo.mutation.ClearSubscriptions()
+	return puo
+}
+
+// RemoveSubscriptionIDs removes the "subscriptions" edge to Subscriptions entities by IDs.
+func (puo *ProductUpdateOne) RemoveSubscriptionIDs(ids ...int64) *ProductUpdateOne {
+	puo.mutation.RemoveSubscriptionIDs(ids...)
+	return puo
+}
+
+// RemoveSubscriptions removes "subscriptions" edges to Subscriptions entities.
+func (puo *ProductUpdateOne) RemoveSubscriptions(s ...*Subscriptions) *ProductUpdateOne {
+	ids := make([]int64, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return puo.RemoveSubscriptionIDs(ids...)
 }
 
 // ClearBundles clears all "bundles" edges to the Bundle entity.
@@ -791,6 +1073,16 @@ func (puo *ProductUpdateOne) check() error {
 			return &ValidationError{Name: "currency", err: fmt.Errorf(`ent: validator failed for field "Product.currency": %w`, err)}
 		}
 	}
+	if v, ok := puo.mutation.UniqueLimit(); ok {
+		if err := product.UniqueLimitValidator(v); err != nil {
+			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
+		}
+	}
+	if v, ok := puo.mutation.RecurrenceRule(); ok {
+		if err := product.RecurrenceRuleValidator(v); err != nil {
+			return &ValidationError{Name: "recurrence_rule", err: fmt.Errorf(`ent: validator failed for field "Product.recurrence_rule": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -828,6 +1120,9 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := puo.mutation.AppID(); ok {
+		_spec.SetField(product.FieldAppID, field.TypeString, value)
 	}
 	if value, ok := puo.mutation.Name(); ok {
 		_spec.SetField(product.FieldName, field.TypeString, value)
@@ -874,6 +1169,21 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 	if value, ok := puo.mutation.AddedUniqueLimit(); ok {
 		_spec.AddField(product.FieldUniqueLimit, field.TypeInt64, value)
 	}
+	if value, ok := puo.mutation.IsExpiring(); ok {
+		_spec.SetField(product.FieldIsExpiring, field.TypeBool, value)
+	}
+	if puo.mutation.IsExpiringCleared() {
+		_spec.ClearField(product.FieldIsExpiring, field.TypeBool)
+	}
+	if value, ok := puo.mutation.RecurrenceRule(); ok {
+		_spec.SetField(product.FieldRecurrenceRule, field.TypeString, value)
+	}
+	if puo.mutation.RecurrenceRuleCleared() {
+		_spec.ClearField(product.FieldRecurrenceRule, field.TypeString)
+	}
+	if value, ok := puo.mutation.OfferInAppleStore(); ok {
+		_spec.SetField(product.FieldOfferInAppleStore, field.TypeBool, value)
+	}
 	if puo.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -912,6 +1222,51 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(invoice.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if puo.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.SubscriptionsTable,
+			Columns: []string{product.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RemovedSubscriptionsIDs(); len(nodes) > 0 && !puo.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.SubscriptionsTable,
+			Columns: []string{product.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.SubscriptionsTable,
+			Columns: []string{product.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

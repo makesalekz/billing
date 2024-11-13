@@ -9,7 +9,7 @@ option java_multiple_files = true;
 option java_package = "invoices.v1";
 
 service Invoices {
-  rpc GenerateInvoice(GenerateInvoiceRequest) returns (GenerateInvoiceResponse);
+  rpc CreateInvoice(GenerateInvoiceRequest) returns (GenerateInvoiceResponse);
 }
 
 message GenerateInvoiceRequest {

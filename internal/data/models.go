@@ -10,32 +10,56 @@ import (
 type ItemDto struct {
 	Name        string
 	Description string
+	TopicName   *string
 }
 
 type ProductDto struct {
-	Name        string
-	Description string
-	Price       decimal.Decimal
-	Currency    string
-	IsActive    bool
-	IsLimited   bool
-	LimitedTill *time.Time
-	Left        int64
-	IsUnique    bool
-	UniqueLimit int64
+	Name              string
+	Description       string
+	Price             decimal.Decimal
+	Currency          string
+	IsActive          bool
+	IsLimited         bool
+	LimitedTill       *time.Time
+	Left              int64
+	IsUnique          bool
+	UniqueLimit       int64
+	OfferInAppleStore bool
+	Bundles           []BundleDto
+}
+
+type BundleDto struct {
+	ItemID int64
+	Amount float64
 }
 
 type InvoiceDto struct {
-	ActorID   int64
-	AppID     string
-	ProductID int64
-	Amount    int64
-	Price     decimal.Decimal
-	Status    enum.InvoiceStatus
-	PaidAt    *time.Time
+	UserID         int64
+	TenantID       int64
+	AppID          string
+	ProductID      int64
+	Amount         int64
+	Price          decimal.Decimal
+	Status         enum.InvoiceStatus
+	SubscriptionID int64
+
+	PaidAt              *time.Time
+	PaidTill            *time.Time
+	IsPaidAtProcessed   *bool
+	IsPaidTillProcessed *bool
 }
 
 type InvoiceFilter struct {
-	ProductID int64
-	Status    enum.InvoiceStatus
+	ProductID      int64
+	Status         enum.InvoiceStatus
+	Paid           bool
+	SubscriptionID int64
+}
+
+type SubscriptionDto struct {
+	UserID      int64
+	TenantID    int64
+	AppID       string
+	ProductID   int64
+	RenewalRate time.Time
 }

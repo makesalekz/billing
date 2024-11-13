@@ -25,12 +25,10 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldTopicName holds the string denoting the topic_name field in the database.
+	FieldTopicName = "topic_name"
 	// EdgeBundles holds the string denoting the bundles edge name in mutations.
 	EdgeBundles = "bundles"
-	// EdgeConsumedStatuses holds the string denoting the consumed_statuses edge name in mutations.
-	EdgeConsumedStatuses = "consumed_statuses"
-	// EdgeSubscriptionStatuses holds the string denoting the subscription_statuses edge name in mutations.
-	EdgeSubscriptionStatuses = "subscription_statuses"
 	// Table holds the table name of the item in the database.
 	Table = "items"
 	// BundlesTable is the table that holds the bundles relation/edge.
@@ -40,20 +38,6 @@ const (
 	BundlesInverseTable = "bundles"
 	// BundlesColumn is the table column denoting the bundles relation/edge.
 	BundlesColumn = "item_id"
-	// ConsumedStatusesTable is the table that holds the consumed_statuses relation/edge.
-	ConsumedStatusesTable = "consumed_status"
-	// ConsumedStatusesInverseTable is the table name for the ConsumedStatus entity.
-	// It exists in this package in order to avoid circular dependency with the "consumedstatus" package.
-	ConsumedStatusesInverseTable = "consumed_status"
-	// ConsumedStatusesColumn is the table column denoting the consumed_statuses relation/edge.
-	ConsumedStatusesColumn = "item_id"
-	// SubscriptionStatusesTable is the table that holds the subscription_statuses relation/edge.
-	SubscriptionStatusesTable = "subscription_status"
-	// SubscriptionStatusesInverseTable is the table name for the SubscriptionStatus entity.
-	// It exists in this package in order to avoid circular dependency with the "subscriptionstatus" package.
-	SubscriptionStatusesInverseTable = "subscription_status"
-	// SubscriptionStatusesColumn is the table column denoting the subscription_statuses relation/edge.
-	SubscriptionStatusesColumn = "item_id"
 )
 
 // Columns holds all SQL columns for item fields.
@@ -64,6 +48,7 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldName,
 	FieldDescription,
+	FieldTopicName,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -125,6 +110,11 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
+// ByTopicName orders the results by the topic_name field.
+func ByTopicName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTopicName, opts...).ToFunc()
+}
+
 // ByBundlesCount orders the results by bundles count.
 func ByBundlesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -138,52 +128,10 @@ func ByBundles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newBundlesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
-// ByConsumedStatusesCount orders the results by consumed_statuses count.
-func ByConsumedStatusesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newConsumedStatusesStep(), opts...)
-	}
-}
-
-// ByConsumedStatuses orders the results by consumed_statuses terms.
-func ByConsumedStatuses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newConsumedStatusesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// BySubscriptionStatusesCount orders the results by subscription_statuses count.
-func BySubscriptionStatusesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSubscriptionStatusesStep(), opts...)
-	}
-}
-
-// BySubscriptionStatuses orders the results by subscription_statuses terms.
-func BySubscriptionStatuses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSubscriptionStatusesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
 func newBundlesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(BundlesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, BundlesTable, BundlesColumn),
-	)
-}
-func newConsumedStatusesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ConsumedStatusesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ConsumedStatusesTable, ConsumedStatusesColumn),
-	)
-}
-func newSubscriptionStatusesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SubscriptionStatusesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionStatusesTable, SubscriptionStatusesColumn),
 	)
 }

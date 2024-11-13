@@ -11,6 +11,7 @@ require (
 	github.com/nats-io/nats.go v1.37.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/shopspring/decimal v1.4.0
+	github.com/teambition/rrule-go v1.8.2
 	gitlab.calendaria.team/services/utils v0.3.13
 	go.uber.org/automaxprocs v1.6.0
 	google.golang.org/grpc v1.65.0
@@ -39,7 +40,6 @@ require (
 	github.com/go-playground/form/v4 v4.2.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.1.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/subcommands v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 // indirect
@@ -69,7 +69,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.46.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
@@ -93,7 +92,6 @@ require (
 	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
-	golang.org/x/tools v0.24.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

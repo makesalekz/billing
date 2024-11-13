@@ -17,6 +17,7 @@ type Product struct {
 func (Product) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("id"),
+		field.String("app_id"),
 		field.String("name"),
 		field.String("description"),
 		field.Float("price").
@@ -30,7 +31,10 @@ func (Product) Fields() []ent.Field {
 		field.Time("limited_till").Optional().Nillable().Comment("End of limited period."),
 		field.Int64("left").Default(0).Comment("Number of items left in stock."),
 		field.Bool("is_unique").Optional().Default(false).Comment("Indicates that this product can only be limited amount of times."),
-		field.Int64("unique_limit").Default(0).Comment("Number of times this product can be purchased."),
+		field.Int64("unique_limit").Default(0).Max(100).Comment("Number of times this product can be purchased."),
+		field.Bool("is_expiring").Optional().Default(false).Comment("Indicates that this product requires renewal."),
+		field.String("recurrence_rule").Nillable().Optional().MaxLen(250).Comment("Recurrence rule for renewal."),
+		field.Bool("offer_in_apple_store").Default(false).Comment("Indicates that this product is available in Apple Store."),
 	}
 }
 
@@ -38,6 +42,7 @@ func (Product) Fields() []ent.Field {
 func (Product) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("invoices", Invoice.Type),
+		edge.To("subscriptions", Subscriptions.Type),
 		edge.To("bundles", Bundle.Type),
 	}
 }

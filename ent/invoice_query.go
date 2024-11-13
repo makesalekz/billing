@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,24 +11,22 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // InvoiceQuery is the builder for querying Invoice entities.
 type InvoiceQuery struct {
 	config
-	ctx                      *QueryContext
-	order                    []invoice.OrderOption
-	inters                   []Interceptor
-	predicates               []predicate.Invoice
-	withProduct              *ProductQuery
-	withConsumedStatuses     *ConsumedStatusQuery
-	withSubscriptionStatuses *SubscriptionStatusQuery
-	modifiers                []func(*sql.Selector)
+	ctx               *QueryContext
+	order             []invoice.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.Invoice
+	withProduct       *ProductQuery
+	withSubscriptions *SubscriptionsQuery
+	modifiers         []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -88,9 +85,9 @@ func (iq *InvoiceQuery) QueryProduct() *ProductQuery {
 	return query
 }
 
-// QueryConsumedStatuses chains the current query on the "consumed_statuses" edge.
-func (iq *InvoiceQuery) QueryConsumedStatuses() *ConsumedStatusQuery {
-	query := (&ConsumedStatusClient{config: iq.config}).Query()
+// QuerySubscriptions chains the current query on the "subscriptions" edge.
+func (iq *InvoiceQuery) QuerySubscriptions() *SubscriptionsQuery {
+	query := (&SubscriptionsClient{config: iq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := iq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -101,30 +98,8 @@ func (iq *InvoiceQuery) QueryConsumedStatuses() *ConsumedStatusQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(invoice.Table, invoice.FieldID, selector),
-			sqlgraph.To(consumedstatus.Table, consumedstatus.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, invoice.ConsumedStatusesTable, invoice.ConsumedStatusesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QuerySubscriptionStatuses chains the current query on the "subscription_statuses" edge.
-func (iq *InvoiceQuery) QuerySubscriptionStatuses() *SubscriptionStatusQuery {
-	query := (&SubscriptionStatusClient{config: iq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := iq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := iq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(invoice.Table, invoice.FieldID, selector),
-			sqlgraph.To(subscriptionstatus.Table, subscriptionstatus.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, invoice.SubscriptionStatusesTable, invoice.SubscriptionStatusesColumn),
+			sqlgraph.To(subscriptions.Table, subscriptions.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invoice.SubscriptionsTable, invoice.SubscriptionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
 		return fromU, nil
@@ -319,14 +294,13 @@ func (iq *InvoiceQuery) Clone() *InvoiceQuery {
 		return nil
 	}
 	return &InvoiceQuery{
-		config:                   iq.config,
-		ctx:                      iq.ctx.Clone(),
-		order:                    append([]invoice.OrderOption{}, iq.order...),
-		inters:                   append([]Interceptor{}, iq.inters...),
-		predicates:               append([]predicate.Invoice{}, iq.predicates...),
-		withProduct:              iq.withProduct.Clone(),
-		withConsumedStatuses:     iq.withConsumedStatuses.Clone(),
-		withSubscriptionStatuses: iq.withSubscriptionStatuses.Clone(),
+		config:            iq.config,
+		ctx:               iq.ctx.Clone(),
+		order:             append([]invoice.OrderOption{}, iq.order...),
+		inters:            append([]Interceptor{}, iq.inters...),
+		predicates:        append([]predicate.Invoice{}, iq.predicates...),
+		withProduct:       iq.withProduct.Clone(),
+		withSubscriptions: iq.withSubscriptions.Clone(),
 		// clone intermediate query.
 		sql:       iq.sql.Clone(),
 		path:      iq.path,
@@ -345,25 +319,14 @@ func (iq *InvoiceQuery) WithProduct(opts ...func(*ProductQuery)) *InvoiceQuery {
 	return iq
 }
 
-// WithConsumedStatuses tells the query-builder to eager-load the nodes that are connected to
-// the "consumed_statuses" edge. The optional arguments are used to configure the query builder of the edge.
-func (iq *InvoiceQuery) WithConsumedStatuses(opts ...func(*ConsumedStatusQuery)) *InvoiceQuery {
-	query := (&ConsumedStatusClient{config: iq.config}).Query()
+// WithSubscriptions tells the query-builder to eager-load the nodes that are connected to
+// the "subscriptions" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InvoiceQuery) WithSubscriptions(opts ...func(*SubscriptionsQuery)) *InvoiceQuery {
+	query := (&SubscriptionsClient{config: iq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	iq.withConsumedStatuses = query
-	return iq
-}
-
-// WithSubscriptionStatuses tells the query-builder to eager-load the nodes that are connected to
-// the "subscription_statuses" edge. The optional arguments are used to configure the query builder of the edge.
-func (iq *InvoiceQuery) WithSubscriptionStatuses(opts ...func(*SubscriptionStatusQuery)) *InvoiceQuery {
-	query := (&SubscriptionStatusClient{config: iq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	iq.withSubscriptionStatuses = query
+	iq.withSubscriptions = query
 	return iq
 }
 
@@ -445,10 +408,9 @@ func (iq *InvoiceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Invo
 	var (
 		nodes       = []*Invoice{}
 		_spec       = iq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [2]bool{
 			iq.withProduct != nil,
-			iq.withConsumedStatuses != nil,
-			iq.withSubscriptionStatuses != nil,
+			iq.withSubscriptions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -478,19 +440,9 @@ func (iq *InvoiceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Invo
 			return nil, err
 		}
 	}
-	if query := iq.withConsumedStatuses; query != nil {
-		if err := iq.loadConsumedStatuses(ctx, query, nodes,
-			func(n *Invoice) { n.Edges.ConsumedStatuses = []*ConsumedStatus{} },
-			func(n *Invoice, e *ConsumedStatus) { n.Edges.ConsumedStatuses = append(n.Edges.ConsumedStatuses, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := iq.withSubscriptionStatuses; query != nil {
-		if err := iq.loadSubscriptionStatuses(ctx, query, nodes,
-			func(n *Invoice) { n.Edges.SubscriptionStatuses = []*SubscriptionStatus{} },
-			func(n *Invoice, e *SubscriptionStatus) {
-				n.Edges.SubscriptionStatuses = append(n.Edges.SubscriptionStatuses, e)
-			}); err != nil {
+	if query := iq.withSubscriptions; query != nil {
+		if err := iq.loadSubscriptions(ctx, query, nodes, nil,
+			func(n *Invoice, e *Subscriptions) { n.Edges.Subscriptions = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -526,64 +478,35 @@ func (iq *InvoiceQuery) loadProduct(ctx context.Context, query *ProductQuery, no
 	}
 	return nil
 }
-func (iq *InvoiceQuery) loadConsumedStatuses(ctx context.Context, query *ConsumedStatusQuery, nodes []*Invoice, init func(*Invoice), assign func(*Invoice, *ConsumedStatus)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*Invoice)
+func (iq *InvoiceQuery) loadSubscriptions(ctx context.Context, query *SubscriptionsQuery, nodes []*Invoice, init func(*Invoice), assign func(*Invoice, *Subscriptions)) error {
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*Invoice)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		if nodes[i].SubscriptionID == nil {
+			continue
 		}
+		fk := *nodes[i].SubscriptionID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.ConsumedStatus(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(invoice.ConsumedStatusesColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(subscriptions.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.invoice_consumed_statuses
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "invoice_consumed_statuses" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "invoice_consumed_statuses" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "subscription_id" returned %v`, n.ID)
 		}
-		assign(node, n)
-	}
-	return nil
-}
-func (iq *InvoiceQuery) loadSubscriptionStatuses(ctx context.Context, query *SubscriptionStatusQuery, nodes []*Invoice, init func(*Invoice), assign func(*Invoice, *SubscriptionStatus)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*Invoice)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(subscriptionstatus.FieldInvoiceID)
-	}
-	query.Where(predicate.SubscriptionStatus(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(invoice.SubscriptionStatusesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.InvoiceID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "invoice_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
 	}
 	return nil
 }
@@ -618,6 +541,9 @@ func (iq *InvoiceQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if iq.withProduct != nil {
 			_spec.Node.AddColumnOnce(invoice.FieldProductID)
+		}
+		if iq.withSubscriptions != nil {
+			_spec.Node.AddColumnOnce(invoice.FieldSubscriptionID)
 		}
 	}
 	if ps := iq.predicates; len(ps) > 0 {

@@ -15,6 +15,7 @@ import (
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // ProductCreate is the builder for creating a Product entity.
@@ -23,6 +24,12 @@ type ProductCreate struct {
 	mutation *ProductMutation
 	hooks    []Hook
 	conflict []sql.ConflictOption
+}
+
+// SetAppID sets the "app_id" field.
+func (pc *ProductCreate) SetAppID(s string) *ProductCreate {
+	pc.mutation.SetAppID(s)
+	return pc
 }
 
 // SetName sets the "name" field.
@@ -141,6 +148,48 @@ func (pc *ProductCreate) SetNillableUniqueLimit(i *int64) *ProductCreate {
 	return pc
 }
 
+// SetIsExpiring sets the "is_expiring" field.
+func (pc *ProductCreate) SetIsExpiring(b bool) *ProductCreate {
+	pc.mutation.SetIsExpiring(b)
+	return pc
+}
+
+// SetNillableIsExpiring sets the "is_expiring" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableIsExpiring(b *bool) *ProductCreate {
+	if b != nil {
+		pc.SetIsExpiring(*b)
+	}
+	return pc
+}
+
+// SetRecurrenceRule sets the "recurrence_rule" field.
+func (pc *ProductCreate) SetRecurrenceRule(s string) *ProductCreate {
+	pc.mutation.SetRecurrenceRule(s)
+	return pc
+}
+
+// SetNillableRecurrenceRule sets the "recurrence_rule" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableRecurrenceRule(s *string) *ProductCreate {
+	if s != nil {
+		pc.SetRecurrenceRule(*s)
+	}
+	return pc
+}
+
+// SetOfferInAppleStore sets the "offer_in_apple_store" field.
+func (pc *ProductCreate) SetOfferInAppleStore(b bool) *ProductCreate {
+	pc.mutation.SetOfferInAppleStore(b)
+	return pc
+}
+
+// SetNillableOfferInAppleStore sets the "offer_in_apple_store" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableOfferInAppleStore(b *bool) *ProductCreate {
+	if b != nil {
+		pc.SetOfferInAppleStore(*b)
+	}
+	return pc
+}
+
 // SetID sets the "id" field.
 func (pc *ProductCreate) SetID(i int64) *ProductCreate {
 	pc.mutation.SetID(i)
@@ -160,6 +209,21 @@ func (pc *ProductCreate) AddInvoices(i ...*Invoice) *ProductCreate {
 		ids[j] = i[j].ID
 	}
 	return pc.AddInvoiceIDs(ids...)
+}
+
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscriptions entity by IDs.
+func (pc *ProductCreate) AddSubscriptionIDs(ids ...int64) *ProductCreate {
+	pc.mutation.AddSubscriptionIDs(ids...)
+	return pc
+}
+
+// AddSubscriptions adds the "subscriptions" edges to the Subscriptions entity.
+func (pc *ProductCreate) AddSubscriptions(s ...*Subscriptions) *ProductCreate {
+	ids := make([]int64, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return pc.AddSubscriptionIDs(ids...)
 }
 
 // AddBundleIDs adds the "bundles" edge to the Bundle entity by IDs.
@@ -236,10 +300,21 @@ func (pc *ProductCreate) defaults() {
 		v := product.DefaultUniqueLimit
 		pc.mutation.SetUniqueLimit(v)
 	}
+	if _, ok := pc.mutation.IsExpiring(); !ok {
+		v := product.DefaultIsExpiring
+		pc.mutation.SetIsExpiring(v)
+	}
+	if _, ok := pc.mutation.OfferInAppleStore(); !ok {
+		v := product.DefaultOfferInAppleStore
+		pc.mutation.SetOfferInAppleStore(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (pc *ProductCreate) check() error {
+	if _, ok := pc.mutation.AppID(); !ok {
+		return &ValidationError{Name: "app_id", err: errors.New(`ent: missing required field "Product.app_id"`)}
+	}
 	if _, ok := pc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Product.name"`)}
 	}
@@ -268,6 +343,19 @@ func (pc *ProductCreate) check() error {
 	}
 	if _, ok := pc.mutation.UniqueLimit(); !ok {
 		return &ValidationError{Name: "unique_limit", err: errors.New(`ent: missing required field "Product.unique_limit"`)}
+	}
+	if v, ok := pc.mutation.UniqueLimit(); ok {
+		if err := product.UniqueLimitValidator(v); err != nil {
+			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
+		}
+	}
+	if v, ok := pc.mutation.RecurrenceRule(); ok {
+		if err := product.RecurrenceRuleValidator(v); err != nil {
+			return &ValidationError{Name: "recurrence_rule", err: fmt.Errorf(`ent: validator failed for field "Product.recurrence_rule": %w`, err)}
+		}
+	}
+	if _, ok := pc.mutation.OfferInAppleStore(); !ok {
+		return &ValidationError{Name: "offer_in_apple_store", err: errors.New(`ent: missing required field "Product.offer_in_apple_store"`)}
 	}
 	return nil
 }
@@ -301,6 +389,10 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 	if id, ok := pc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
+	}
+	if value, ok := pc.mutation.AppID(); ok {
+		_spec.SetField(product.FieldAppID, field.TypeString, value)
+		_node.AppID = value
 	}
 	if value, ok := pc.mutation.Name(); ok {
 		_spec.SetField(product.FieldName, field.TypeString, value)
@@ -342,6 +434,18 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 		_spec.SetField(product.FieldUniqueLimit, field.TypeInt64, value)
 		_node.UniqueLimit = value
 	}
+	if value, ok := pc.mutation.IsExpiring(); ok {
+		_spec.SetField(product.FieldIsExpiring, field.TypeBool, value)
+		_node.IsExpiring = value
+	}
+	if value, ok := pc.mutation.RecurrenceRule(); ok {
+		_spec.SetField(product.FieldRecurrenceRule, field.TypeString, value)
+		_node.RecurrenceRule = &value
+	}
+	if value, ok := pc.mutation.OfferInAppleStore(); ok {
+		_spec.SetField(product.FieldOfferInAppleStore, field.TypeBool, value)
+		_node.OfferInAppleStore = value
+	}
 	if nodes := pc.mutation.InvoicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -351,6 +455,22 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(invoice.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.SubscriptionsTable,
+			Columns: []string{product.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -381,7 +501,7 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 // of the `INSERT` statement. For example:
 //
 //	client.Product.Create().
-//		SetName(v).
+//		SetAppID(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -390,7 +510,7 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.ProductUpsert) {
-//			SetName(v+v).
+//			SetAppID(v+v).
 //		}).
 //		Exec(ctx)
 func (pc *ProductCreate) OnConflict(opts ...sql.ConflictOption) *ProductUpsertOne {
@@ -425,6 +545,18 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetAppID sets the "app_id" field.
+func (u *ProductUpsert) SetAppID(v string) *ProductUpsert {
+	u.Set(product.FieldAppID, v)
+	return u
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateAppID() *ProductUpsert {
+	u.SetExcluded(product.FieldAppID)
+	return u
+}
 
 // SetName sets the "name" field.
 func (u *ProductUpsert) SetName(v string) *ProductUpsert {
@@ -576,6 +708,54 @@ func (u *ProductUpsert) AddUniqueLimit(v int64) *ProductUpsert {
 	return u
 }
 
+// SetIsExpiring sets the "is_expiring" field.
+func (u *ProductUpsert) SetIsExpiring(v bool) *ProductUpsert {
+	u.Set(product.FieldIsExpiring, v)
+	return u
+}
+
+// UpdateIsExpiring sets the "is_expiring" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateIsExpiring() *ProductUpsert {
+	u.SetExcluded(product.FieldIsExpiring)
+	return u
+}
+
+// ClearIsExpiring clears the value of the "is_expiring" field.
+func (u *ProductUpsert) ClearIsExpiring() *ProductUpsert {
+	u.SetNull(product.FieldIsExpiring)
+	return u
+}
+
+// SetRecurrenceRule sets the "recurrence_rule" field.
+func (u *ProductUpsert) SetRecurrenceRule(v string) *ProductUpsert {
+	u.Set(product.FieldRecurrenceRule, v)
+	return u
+}
+
+// UpdateRecurrenceRule sets the "recurrence_rule" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateRecurrenceRule() *ProductUpsert {
+	u.SetExcluded(product.FieldRecurrenceRule)
+	return u
+}
+
+// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
+func (u *ProductUpsert) ClearRecurrenceRule() *ProductUpsert {
+	u.SetNull(product.FieldRecurrenceRule)
+	return u
+}
+
+// SetOfferInAppleStore sets the "offer_in_apple_store" field.
+func (u *ProductUpsert) SetOfferInAppleStore(v bool) *ProductUpsert {
+	u.Set(product.FieldOfferInAppleStore, v)
+	return u
+}
+
+// UpdateOfferInAppleStore sets the "offer_in_apple_store" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateOfferInAppleStore() *ProductUpsert {
+	u.SetExcluded(product.FieldOfferInAppleStore)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -622,6 +802,20 @@ func (u *ProductUpsertOne) Update(set func(*ProductUpsert)) *ProductUpsertOne {
 		set(&ProductUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetAppID sets the "app_id" field.
+func (u *ProductUpsertOne) SetAppID(v string) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetAppID(v)
+	})
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateAppID() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateAppID()
+	})
 }
 
 // SetName sets the "name" field.
@@ -799,6 +993,62 @@ func (u *ProductUpsertOne) UpdateUniqueLimit() *ProductUpsertOne {
 	})
 }
 
+// SetIsExpiring sets the "is_expiring" field.
+func (u *ProductUpsertOne) SetIsExpiring(v bool) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetIsExpiring(v)
+	})
+}
+
+// UpdateIsExpiring sets the "is_expiring" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateIsExpiring() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateIsExpiring()
+	})
+}
+
+// ClearIsExpiring clears the value of the "is_expiring" field.
+func (u *ProductUpsertOne) ClearIsExpiring() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.ClearIsExpiring()
+	})
+}
+
+// SetRecurrenceRule sets the "recurrence_rule" field.
+func (u *ProductUpsertOne) SetRecurrenceRule(v string) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetRecurrenceRule(v)
+	})
+}
+
+// UpdateRecurrenceRule sets the "recurrence_rule" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateRecurrenceRule() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateRecurrenceRule()
+	})
+}
+
+// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
+func (u *ProductUpsertOne) ClearRecurrenceRule() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.ClearRecurrenceRule()
+	})
+}
+
+// SetOfferInAppleStore sets the "offer_in_apple_store" field.
+func (u *ProductUpsertOne) SetOfferInAppleStore(v bool) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetOfferInAppleStore(v)
+	})
+}
+
+// UpdateOfferInAppleStore sets the "offer_in_apple_store" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateOfferInAppleStore() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateOfferInAppleStore()
+	})
+}
+
 // Exec executes the query.
 func (u *ProductUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -934,7 +1184,7 @@ func (pcb *ProductCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.ProductUpsert) {
-//			SetName(v+v).
+//			SetAppID(v+v).
 //		}).
 //		Exec(ctx)
 func (pcb *ProductCreateBulk) OnConflict(opts ...sql.ConflictOption) *ProductUpsertBulk {
@@ -1011,6 +1261,20 @@ func (u *ProductUpsertBulk) Update(set func(*ProductUpsert)) *ProductUpsertBulk 
 		set(&ProductUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetAppID sets the "app_id" field.
+func (u *ProductUpsertBulk) SetAppID(v string) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetAppID(v)
+	})
+}
+
+// UpdateAppID sets the "app_id" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateAppID() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateAppID()
+	})
 }
 
 // SetName sets the "name" field.
@@ -1185,6 +1449,62 @@ func (u *ProductUpsertBulk) AddUniqueLimit(v int64) *ProductUpsertBulk {
 func (u *ProductUpsertBulk) UpdateUniqueLimit() *ProductUpsertBulk {
 	return u.Update(func(s *ProductUpsert) {
 		s.UpdateUniqueLimit()
+	})
+}
+
+// SetIsExpiring sets the "is_expiring" field.
+func (u *ProductUpsertBulk) SetIsExpiring(v bool) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetIsExpiring(v)
+	})
+}
+
+// UpdateIsExpiring sets the "is_expiring" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateIsExpiring() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateIsExpiring()
+	})
+}
+
+// ClearIsExpiring clears the value of the "is_expiring" field.
+func (u *ProductUpsertBulk) ClearIsExpiring() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.ClearIsExpiring()
+	})
+}
+
+// SetRecurrenceRule sets the "recurrence_rule" field.
+func (u *ProductUpsertBulk) SetRecurrenceRule(v string) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetRecurrenceRule(v)
+	})
+}
+
+// UpdateRecurrenceRule sets the "recurrence_rule" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateRecurrenceRule() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateRecurrenceRule()
+	})
+}
+
+// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
+func (u *ProductUpsertBulk) ClearRecurrenceRule() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.ClearRecurrenceRule()
+	})
+}
+
+// SetOfferInAppleStore sets the "offer_in_apple_store" field.
+func (u *ProductUpsertBulk) SetOfferInAppleStore(v bool) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetOfferInAppleStore(v)
+	})
+}
+
+// UpdateOfferInAppleStore sets the "offer_in_apple_store" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateOfferInAppleStore() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateOfferInAppleStore()
 	})
 }
 

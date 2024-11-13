@@ -13,6 +13,7 @@ type ItemsRepo interface {
 	UpdateItem(ctx context.Context, itemID int64, item *ItemDto) (*ent.Item, error)
 	DeleteItem(ctx context.Context, itemID int64) error
 	GetItem(ctx context.Context, itemID int64) (*ent.Item, error)
+	GetItems(ctx context.Context, itemIDs []int64) ([]*ent.Item, error)
 	CountItems(ctx context.Context) (int64, error)
 	ListItems(ctx context.Context, paginate *utils_v1.PaginateRequest) ([]*ent.Item, error)
 }
@@ -31,6 +32,7 @@ func (r *itemsRepo) CreateItem(ctx context.Context, item *ItemDto) (*ent.Item, e
 	return r.db.Item.Create().
 		SetName(item.Name).
 		SetDescription(item.Description).
+		SetNillableTopicName(item.TopicName).
 		Save(ctx)
 }
 
@@ -38,6 +40,7 @@ func (r *itemsRepo) UpdateItem(ctx context.Context, itemID int64, item *ItemDto)
 	return r.db.Item.UpdateOneID(itemID).
 		SetName(item.Name).
 		SetDescription(item.Description).
+		SetNillableTopicName(item.TopicName).
 		Save(ctx)
 }
 
@@ -50,6 +53,12 @@ func (r *itemsRepo) GetItem(ctx context.Context, itemID int64) (*ent.Item, error
 	return r.db.Item.Query().
 		Where(item.ID(itemID)).
 		Only(ctx)
+}
+
+func (r *itemsRepo) GetItems(ctx context.Context, itemIDs []int64) ([]*ent.Item, error) {
+	return r.db.Item.Query().
+		Where(item.IDIn(itemIDs...)).
+		All(ctx)
 }
 
 func (r *itemsRepo) CountItems(ctx context.Context) (int64, error) {

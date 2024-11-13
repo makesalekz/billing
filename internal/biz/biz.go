@@ -10,3 +10,7 @@ var ProviderSet = wire.NewSet(
 	nats.NewQueueManager,
 	NewItemsUsecase,
 )
+
+const (
+	QueueRefreshItems = "refresh/items"
+)

@@ -17,6 +17,8 @@ const (
 	FieldID = "id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
+	// FieldTenantID holds the string denoting the tenant_id field in the database.
+	FieldTenantID = "tenant_id"
 	// FieldAppID holds the string denoting the app_id field in the database.
 	FieldAppID = "app_id"
 	// FieldProductID holds the string denoting the product_id field in the database.
@@ -31,12 +33,18 @@ const (
 	FieldStatus = "status"
 	// FieldPaidAt holds the string denoting the paid_at field in the database.
 	FieldPaidAt = "paid_at"
+	// FieldPaidTill holds the string denoting the paid_till field in the database.
+	FieldPaidTill = "paid_till"
+	// FieldIsPaidAtProcessed holds the string denoting the is_paid_at_processed field in the database.
+	FieldIsPaidAtProcessed = "is_paid_at_processed"
+	// FieldIsPaidTillProcessed holds the string denoting the is_paid_till_processed field in the database.
+	FieldIsPaidTillProcessed = "is_paid_till_processed"
+	// FieldSubscriptionID holds the string denoting the subscription_id field in the database.
+	FieldSubscriptionID = "subscription_id"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
 	EdgeProduct = "product"
-	// EdgeConsumedStatuses holds the string denoting the consumed_statuses edge name in mutations.
-	EdgeConsumedStatuses = "consumed_statuses"
-	// EdgeSubscriptionStatuses holds the string denoting the subscription_statuses edge name in mutations.
-	EdgeSubscriptionStatuses = "subscription_statuses"
+	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
+	EdgeSubscriptions = "subscriptions"
 	// Table holds the table name of the invoice in the database.
 	Table = "invoices"
 	// ProductTable is the table that holds the product relation/edge.
@@ -46,26 +54,20 @@ const (
 	ProductInverseTable = "products"
 	// ProductColumn is the table column denoting the product relation/edge.
 	ProductColumn = "product_id"
-	// ConsumedStatusesTable is the table that holds the consumed_statuses relation/edge.
-	ConsumedStatusesTable = "consumed_status"
-	// ConsumedStatusesInverseTable is the table name for the ConsumedStatus entity.
-	// It exists in this package in order to avoid circular dependency with the "consumedstatus" package.
-	ConsumedStatusesInverseTable = "consumed_status"
-	// ConsumedStatusesColumn is the table column denoting the consumed_statuses relation/edge.
-	ConsumedStatusesColumn = "invoice_consumed_statuses"
-	// SubscriptionStatusesTable is the table that holds the subscription_statuses relation/edge.
-	SubscriptionStatusesTable = "subscription_status"
-	// SubscriptionStatusesInverseTable is the table name for the SubscriptionStatus entity.
-	// It exists in this package in order to avoid circular dependency with the "subscriptionstatus" package.
-	SubscriptionStatusesInverseTable = "subscription_status"
-	// SubscriptionStatusesColumn is the table column denoting the subscription_statuses relation/edge.
-	SubscriptionStatusesColumn = "invoice_id"
+	// SubscriptionsTable is the table that holds the subscriptions relation/edge.
+	SubscriptionsTable = "invoices"
+	// SubscriptionsInverseTable is the table name for the Subscriptions entity.
+	// It exists in this package in order to avoid circular dependency with the "subscriptions" package.
+	SubscriptionsInverseTable = "subscriptions"
+	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
+	SubscriptionsColumn = "subscription_id"
 )
 
 // Columns holds all SQL columns for invoice fields.
 var Columns = []string{
 	FieldID,
 	FieldUserID,
+	FieldTenantID,
 	FieldAppID,
 	FieldProductID,
 	FieldAmount,
@@ -73,6 +75,10 @@ var Columns = []string{
 	FieldCurrency,
 	FieldStatus,
 	FieldPaidAt,
+	FieldPaidTill,
+	FieldIsPaidAtProcessed,
+	FieldIsPaidTillProcessed,
+	FieldSubscriptionID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -90,6 +96,10 @@ var (
 	DefaultCurrency string
 	// CurrencyValidator is a validator for the "currency" field. It is called by the builders before save.
 	CurrencyValidator func(string) error
+	// DefaultIsPaidAtProcessed holds the default value on creation for the "is_paid_at_processed" field.
+	DefaultIsPaidAtProcessed bool
+	// DefaultIsPaidTillProcessed holds the default value on creation for the "is_paid_till_processed" field.
+	DefaultIsPaidTillProcessed bool
 )
 
 const DefaultStatus enum.InvoiceStatus = "CREATED"
@@ -115,6 +125,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByUserID orders the results by the user_id field.
 func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
+}
+
+// ByTenantID orders the results by the tenant_id field.
+func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }
 
 // ByAppID orders the results by the app_id field.
@@ -152,6 +167,26 @@ func ByPaidAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPaidAt, opts...).ToFunc()
 }
 
+// ByPaidTill orders the results by the paid_till field.
+func ByPaidTill(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPaidTill, opts...).ToFunc()
+}
+
+// ByIsPaidAtProcessed orders the results by the is_paid_at_processed field.
+func ByIsPaidAtProcessed(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsPaidAtProcessed, opts...).ToFunc()
+}
+
+// ByIsPaidTillProcessed orders the results by the is_paid_till_processed field.
+func ByIsPaidTillProcessed(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsPaidTillProcessed, opts...).ToFunc()
+}
+
+// BySubscriptionID orders the results by the subscription_id field.
+func BySubscriptionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionID, opts...).ToFunc()
+}
+
 // ByProductField orders the results by product field.
 func ByProductField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -159,31 +194,10 @@ func ByProductField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByConsumedStatusesCount orders the results by consumed_statuses count.
-func ByConsumedStatusesCount(opts ...sql.OrderTermOption) OrderOption {
+// BySubscriptionsField orders the results by subscriptions field.
+func BySubscriptionsField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newConsumedStatusesStep(), opts...)
-	}
-}
-
-// ByConsumedStatuses orders the results by consumed_statuses terms.
-func ByConsumedStatuses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newConsumedStatusesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// BySubscriptionStatusesCount orders the results by subscription_statuses count.
-func BySubscriptionStatusesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSubscriptionStatusesStep(), opts...)
-	}
-}
-
-// BySubscriptionStatuses orders the results by subscription_statuses terms.
-func BySubscriptionStatuses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSubscriptionStatusesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newSubscriptionsStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newProductStep() *sqlgraph.Step {
@@ -193,17 +207,10 @@ func newProductStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, ProductTable, ProductColumn),
 	)
 }
-func newConsumedStatusesStep() *sqlgraph.Step {
+func newSubscriptionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ConsumedStatusesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ConsumedStatusesTable, ConsumedStatusesColumn),
-	)
-}
-func newSubscriptionStatusesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SubscriptionStatusesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionStatusesTable, SubscriptionStatusesColumn),
+		sqlgraph.To(SubscriptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, SubscriptionsTable, SubscriptionsColumn),
 	)
 }

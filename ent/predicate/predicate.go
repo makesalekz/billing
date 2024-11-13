@@ -9,9 +9,6 @@ import (
 // Bundle is the predicate function for bundle builders.
 type Bundle func(*sql.Selector)
 
-// ConsumedStatus is the predicate function for consumedstatus builders.
-type ConsumedStatus func(*sql.Selector)
-
 // Invoice is the predicate function for invoice builders.
 type Invoice func(*sql.Selector)
 
@@ -21,5 +18,5 @@ type Item func(*sql.Selector)
 // Product is the predicate function for product builders.
 type Product func(*sql.Selector)
 
-// SubscriptionStatus is the predicate function for subscriptionstatus builders.
-type SubscriptionStatus func(*sql.Selector)
+// Subscriptions is the predicate function for subscriptions builders.
+type Subscriptions func(*sql.Selector)

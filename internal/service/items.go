@@ -71,8 +71,8 @@ func (s *ItemService) GetItem(ctx context.Context, req *v1.ItemRequest) (*v1.Ite
 	}, nil
 }
 
-func (s *ItemService) ListItems(ctx context.Context, req *utils_v1.PaginateRequest) (*v1.ListItemsReply, error) {
-	itemList, err := s.uc.ListItems(ctx, req)
+func (s *ItemService) ListItems(ctx context.Context, req *v1.ListItemsRequest) (*v1.ListItemsReply, error) {
+	itemList, err := s.uc.ListItems(ctx, req.Pagination)
 	if err != nil {
 		return nil, err
 	}

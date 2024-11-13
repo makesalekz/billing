@@ -56,6 +56,11 @@ func IDLTE(id int64) predicate.Product {
 	return predicate.Product(sql.FieldLTE(FieldID, id))
 }
 
+// AppID applies equality check predicate on the "app_id" field. It's identical to AppIDEQ.
+func AppID(v string) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldAppID, v))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Product {
 	return predicate.Product(sql.FieldEQ(FieldName, v))
@@ -104,6 +109,86 @@ func IsUnique(v bool) predicate.Product {
 // UniqueLimit applies equality check predicate on the "unique_limit" field. It's identical to UniqueLimitEQ.
 func UniqueLimit(v int64) predicate.Product {
 	return predicate.Product(sql.FieldEQ(FieldUniqueLimit, v))
+}
+
+// IsExpiring applies equality check predicate on the "is_expiring" field. It's identical to IsExpiringEQ.
+func IsExpiring(v bool) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldIsExpiring, v))
+}
+
+// RecurrenceRule applies equality check predicate on the "recurrence_rule" field. It's identical to RecurrenceRuleEQ.
+func RecurrenceRule(v string) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldRecurrenceRule, v))
+}
+
+// OfferInAppleStore applies equality check predicate on the "offer_in_apple_store" field. It's identical to OfferInAppleStoreEQ.
+func OfferInAppleStore(v bool) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldOfferInAppleStore, v))
+}
+
+// AppIDEQ applies the EQ predicate on the "app_id" field.
+func AppIDEQ(v string) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldAppID, v))
+}
+
+// AppIDNEQ applies the NEQ predicate on the "app_id" field.
+func AppIDNEQ(v string) predicate.Product {
+	return predicate.Product(sql.FieldNEQ(FieldAppID, v))
+}
+
+// AppIDIn applies the In predicate on the "app_id" field.
+func AppIDIn(vs ...string) predicate.Product {
+	return predicate.Product(sql.FieldIn(FieldAppID, vs...))
+}
+
+// AppIDNotIn applies the NotIn predicate on the "app_id" field.
+func AppIDNotIn(vs ...string) predicate.Product {
+	return predicate.Product(sql.FieldNotIn(FieldAppID, vs...))
+}
+
+// AppIDGT applies the GT predicate on the "app_id" field.
+func AppIDGT(v string) predicate.Product {
+	return predicate.Product(sql.FieldGT(FieldAppID, v))
+}
+
+// AppIDGTE applies the GTE predicate on the "app_id" field.
+func AppIDGTE(v string) predicate.Product {
+	return predicate.Product(sql.FieldGTE(FieldAppID, v))
+}
+
+// AppIDLT applies the LT predicate on the "app_id" field.
+func AppIDLT(v string) predicate.Product {
+	return predicate.Product(sql.FieldLT(FieldAppID, v))
+}
+
+// AppIDLTE applies the LTE predicate on the "app_id" field.
+func AppIDLTE(v string) predicate.Product {
+	return predicate.Product(sql.FieldLTE(FieldAppID, v))
+}
+
+// AppIDContains applies the Contains predicate on the "app_id" field.
+func AppIDContains(v string) predicate.Product {
+	return predicate.Product(sql.FieldContains(FieldAppID, v))
+}
+
+// AppIDHasPrefix applies the HasPrefix predicate on the "app_id" field.
+func AppIDHasPrefix(v string) predicate.Product {
+	return predicate.Product(sql.FieldHasPrefix(FieldAppID, v))
+}
+
+// AppIDHasSuffix applies the HasSuffix predicate on the "app_id" field.
+func AppIDHasSuffix(v string) predicate.Product {
+	return predicate.Product(sql.FieldHasSuffix(FieldAppID, v))
+}
+
+// AppIDEqualFold applies the EqualFold predicate on the "app_id" field.
+func AppIDEqualFold(v string) predicate.Product {
+	return predicate.Product(sql.FieldEqualFold(FieldAppID, v))
+}
+
+// AppIDContainsFold applies the ContainsFold predicate on the "app_id" field.
+func AppIDContainsFold(v string) predicate.Product {
+	return predicate.Product(sql.FieldContainsFold(FieldAppID, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -511,6 +596,111 @@ func UniqueLimitLTE(v int64) predicate.Product {
 	return predicate.Product(sql.FieldLTE(FieldUniqueLimit, v))
 }
 
+// IsExpiringEQ applies the EQ predicate on the "is_expiring" field.
+func IsExpiringEQ(v bool) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldIsExpiring, v))
+}
+
+// IsExpiringNEQ applies the NEQ predicate on the "is_expiring" field.
+func IsExpiringNEQ(v bool) predicate.Product {
+	return predicate.Product(sql.FieldNEQ(FieldIsExpiring, v))
+}
+
+// IsExpiringIsNil applies the IsNil predicate on the "is_expiring" field.
+func IsExpiringIsNil() predicate.Product {
+	return predicate.Product(sql.FieldIsNull(FieldIsExpiring))
+}
+
+// IsExpiringNotNil applies the NotNil predicate on the "is_expiring" field.
+func IsExpiringNotNil() predicate.Product {
+	return predicate.Product(sql.FieldNotNull(FieldIsExpiring))
+}
+
+// RecurrenceRuleEQ applies the EQ predicate on the "recurrence_rule" field.
+func RecurrenceRuleEQ(v string) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleNEQ applies the NEQ predicate on the "recurrence_rule" field.
+func RecurrenceRuleNEQ(v string) predicate.Product {
+	return predicate.Product(sql.FieldNEQ(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleIn applies the In predicate on the "recurrence_rule" field.
+func RecurrenceRuleIn(vs ...string) predicate.Product {
+	return predicate.Product(sql.FieldIn(FieldRecurrenceRule, vs...))
+}
+
+// RecurrenceRuleNotIn applies the NotIn predicate on the "recurrence_rule" field.
+func RecurrenceRuleNotIn(vs ...string) predicate.Product {
+	return predicate.Product(sql.FieldNotIn(FieldRecurrenceRule, vs...))
+}
+
+// RecurrenceRuleGT applies the GT predicate on the "recurrence_rule" field.
+func RecurrenceRuleGT(v string) predicate.Product {
+	return predicate.Product(sql.FieldGT(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleGTE applies the GTE predicate on the "recurrence_rule" field.
+func RecurrenceRuleGTE(v string) predicate.Product {
+	return predicate.Product(sql.FieldGTE(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleLT applies the LT predicate on the "recurrence_rule" field.
+func RecurrenceRuleLT(v string) predicate.Product {
+	return predicate.Product(sql.FieldLT(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleLTE applies the LTE predicate on the "recurrence_rule" field.
+func RecurrenceRuleLTE(v string) predicate.Product {
+	return predicate.Product(sql.FieldLTE(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleContains applies the Contains predicate on the "recurrence_rule" field.
+func RecurrenceRuleContains(v string) predicate.Product {
+	return predicate.Product(sql.FieldContains(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleHasPrefix applies the HasPrefix predicate on the "recurrence_rule" field.
+func RecurrenceRuleHasPrefix(v string) predicate.Product {
+	return predicate.Product(sql.FieldHasPrefix(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleHasSuffix applies the HasSuffix predicate on the "recurrence_rule" field.
+func RecurrenceRuleHasSuffix(v string) predicate.Product {
+	return predicate.Product(sql.FieldHasSuffix(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleIsNil applies the IsNil predicate on the "recurrence_rule" field.
+func RecurrenceRuleIsNil() predicate.Product {
+	return predicate.Product(sql.FieldIsNull(FieldRecurrenceRule))
+}
+
+// RecurrenceRuleNotNil applies the NotNil predicate on the "recurrence_rule" field.
+func RecurrenceRuleNotNil() predicate.Product {
+	return predicate.Product(sql.FieldNotNull(FieldRecurrenceRule))
+}
+
+// RecurrenceRuleEqualFold applies the EqualFold predicate on the "recurrence_rule" field.
+func RecurrenceRuleEqualFold(v string) predicate.Product {
+	return predicate.Product(sql.FieldEqualFold(FieldRecurrenceRule, v))
+}
+
+// RecurrenceRuleContainsFold applies the ContainsFold predicate on the "recurrence_rule" field.
+func RecurrenceRuleContainsFold(v string) predicate.Product {
+	return predicate.Product(sql.FieldContainsFold(FieldRecurrenceRule, v))
+}
+
+// OfferInAppleStoreEQ applies the EQ predicate on the "offer_in_apple_store" field.
+func OfferInAppleStoreEQ(v bool) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldOfferInAppleStore, v))
+}
+
+// OfferInAppleStoreNEQ applies the NEQ predicate on the "offer_in_apple_store" field.
+func OfferInAppleStoreNEQ(v bool) predicate.Product {
+	return predicate.Product(sql.FieldNEQ(FieldOfferInAppleStore, v))
+}
+
 // HasInvoices applies the HasEdge predicate on the "invoices" edge.
 func HasInvoices() predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
@@ -526,6 +716,29 @@ func HasInvoices() predicate.Product {
 func HasInvoicesWith(preds ...predicate.Invoice) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		step := newInvoicesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSubscriptions applies the HasEdge predicate on the "subscriptions" edge.
+func HasSubscriptions() predicate.Product {
+	return predicate.Product(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionsTable, SubscriptionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSubscriptionsWith applies the HasEdge predicate on the "subscriptions" edge with a given conditions (other predicates).
+func HasSubscriptionsWith(preds ...predicate.Subscriptions) predicate.Product {
+	return predicate.Product(func(s *sql.Selector) {
+		step := newSubscriptionsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

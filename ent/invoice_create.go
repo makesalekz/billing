@@ -12,11 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/enum"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // InvoiceCreate is the builder for creating a Invoice entity.
@@ -30,6 +29,12 @@ type InvoiceCreate struct {
 // SetUserID sets the "user_id" field.
 func (ic *InvoiceCreate) SetUserID(i int64) *InvoiceCreate {
 	ic.mutation.SetUserID(i)
+	return ic
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (ic *InvoiceCreate) SetTenantID(i int64) *InvoiceCreate {
+	ic.mutation.SetTenantID(i)
 	return ic
 }
 
@@ -99,6 +104,62 @@ func (ic *InvoiceCreate) SetNillablePaidAt(t *time.Time) *InvoiceCreate {
 	return ic
 }
 
+// SetPaidTill sets the "paid_till" field.
+func (ic *InvoiceCreate) SetPaidTill(t time.Time) *InvoiceCreate {
+	ic.mutation.SetPaidTill(t)
+	return ic
+}
+
+// SetNillablePaidTill sets the "paid_till" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillablePaidTill(t *time.Time) *InvoiceCreate {
+	if t != nil {
+		ic.SetPaidTill(*t)
+	}
+	return ic
+}
+
+// SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
+func (ic *InvoiceCreate) SetIsPaidAtProcessed(b bool) *InvoiceCreate {
+	ic.mutation.SetIsPaidAtProcessed(b)
+	return ic
+}
+
+// SetNillableIsPaidAtProcessed sets the "is_paid_at_processed" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableIsPaidAtProcessed(b *bool) *InvoiceCreate {
+	if b != nil {
+		ic.SetIsPaidAtProcessed(*b)
+	}
+	return ic
+}
+
+// SetIsPaidTillProcessed sets the "is_paid_till_processed" field.
+func (ic *InvoiceCreate) SetIsPaidTillProcessed(b bool) *InvoiceCreate {
+	ic.mutation.SetIsPaidTillProcessed(b)
+	return ic
+}
+
+// SetNillableIsPaidTillProcessed sets the "is_paid_till_processed" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableIsPaidTillProcessed(b *bool) *InvoiceCreate {
+	if b != nil {
+		ic.SetIsPaidTillProcessed(*b)
+	}
+	return ic
+}
+
+// SetSubscriptionID sets the "subscription_id" field.
+func (ic *InvoiceCreate) SetSubscriptionID(i int64) *InvoiceCreate {
+	ic.mutation.SetSubscriptionID(i)
+	return ic
+}
+
+// SetNillableSubscriptionID sets the "subscription_id" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableSubscriptionID(i *int64) *InvoiceCreate {
+	if i != nil {
+		ic.SetSubscriptionID(*i)
+	}
+	return ic
+}
+
 // SetID sets the "id" field.
 func (ic *InvoiceCreate) SetID(i int64) *InvoiceCreate {
 	ic.mutation.SetID(i)
@@ -110,34 +171,23 @@ func (ic *InvoiceCreate) SetProduct(p *Product) *InvoiceCreate {
 	return ic.SetProductID(p.ID)
 }
 
-// AddConsumedStatusIDs adds the "consumed_statuses" edge to the ConsumedStatus entity by IDs.
-func (ic *InvoiceCreate) AddConsumedStatusIDs(ids ...int64) *InvoiceCreate {
-	ic.mutation.AddConsumedStatusIDs(ids...)
+// SetSubscriptionsID sets the "subscriptions" edge to the Subscriptions entity by ID.
+func (ic *InvoiceCreate) SetSubscriptionsID(id int64) *InvoiceCreate {
+	ic.mutation.SetSubscriptionsID(id)
 	return ic
 }
 
-// AddConsumedStatuses adds the "consumed_statuses" edges to the ConsumedStatus entity.
-func (ic *InvoiceCreate) AddConsumedStatuses(c ...*ConsumedStatus) *InvoiceCreate {
-	ids := make([]int64, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+// SetNillableSubscriptionsID sets the "subscriptions" edge to the Subscriptions entity by ID if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableSubscriptionsID(id *int64) *InvoiceCreate {
+	if id != nil {
+		ic = ic.SetSubscriptionsID(*id)
 	}
-	return ic.AddConsumedStatusIDs(ids...)
-}
-
-// AddSubscriptionStatusIDs adds the "subscription_statuses" edge to the SubscriptionStatus entity by IDs.
-func (ic *InvoiceCreate) AddSubscriptionStatusIDs(ids ...int64) *InvoiceCreate {
-	ic.mutation.AddSubscriptionStatusIDs(ids...)
 	return ic
 }
 
-// AddSubscriptionStatuses adds the "subscription_statuses" edges to the SubscriptionStatus entity.
-func (ic *InvoiceCreate) AddSubscriptionStatuses(s ...*SubscriptionStatus) *InvoiceCreate {
-	ids := make([]int64, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return ic.AddSubscriptionStatusIDs(ids...)
+// SetSubscriptions sets the "subscriptions" edge to the Subscriptions entity.
+func (ic *InvoiceCreate) SetSubscriptions(s *Subscriptions) *InvoiceCreate {
+	return ic.SetSubscriptionsID(s.ID)
 }
 
 // Mutation returns the InvoiceMutation object of the builder.
@@ -183,12 +233,23 @@ func (ic *InvoiceCreate) defaults() {
 		v := invoice.DefaultStatus
 		ic.mutation.SetStatus(v)
 	}
+	if _, ok := ic.mutation.IsPaidAtProcessed(); !ok {
+		v := invoice.DefaultIsPaidAtProcessed
+		ic.mutation.SetIsPaidAtProcessed(v)
+	}
+	if _, ok := ic.mutation.IsPaidTillProcessed(); !ok {
+		v := invoice.DefaultIsPaidTillProcessed
+		ic.mutation.SetIsPaidTillProcessed(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (ic *InvoiceCreate) check() error {
 	if _, ok := ic.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "Invoice.user_id"`)}
+	}
+	if _, ok := ic.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Invoice.tenant_id"`)}
 	}
 	if _, ok := ic.mutation.AppID(); !ok {
 		return &ValidationError{Name: "app_id", err: errors.New(`ent: missing required field "Invoice.app_id"`)}
@@ -217,6 +278,12 @@ func (ic *InvoiceCreate) check() error {
 		if err := invoice.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Invoice.status": %w`, err)}
 		}
+	}
+	if _, ok := ic.mutation.IsPaidAtProcessed(); !ok {
+		return &ValidationError{Name: "is_paid_at_processed", err: errors.New(`ent: missing required field "Invoice.is_paid_at_processed"`)}
+	}
+	if _, ok := ic.mutation.IsPaidTillProcessed(); !ok {
+		return &ValidationError{Name: "is_paid_till_processed", err: errors.New(`ent: missing required field "Invoice.is_paid_till_processed"`)}
 	}
 	if len(ic.mutation.ProductIDs()) == 0 {
 		return &ValidationError{Name: "product", err: errors.New(`ent: missing required edge "Invoice.product"`)}
@@ -258,6 +325,10 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 		_spec.SetField(invoice.FieldUserID, field.TypeInt64, value)
 		_node.UserID = value
 	}
+	if value, ok := ic.mutation.TenantID(); ok {
+		_spec.SetField(invoice.FieldTenantID, field.TypeInt64, value)
+		_node.TenantID = value
+	}
 	if value, ok := ic.mutation.AppID(); ok {
 		_spec.SetField(invoice.FieldAppID, field.TypeString, value)
 		_node.AppID = value
@@ -282,6 +353,18 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 		_spec.SetField(invoice.FieldPaidAt, field.TypeTime, value)
 		_node.PaidAt = value
 	}
+	if value, ok := ic.mutation.PaidTill(); ok {
+		_spec.SetField(invoice.FieldPaidTill, field.TypeTime, value)
+		_node.PaidTill = value
+	}
+	if value, ok := ic.mutation.IsPaidAtProcessed(); ok {
+		_spec.SetField(invoice.FieldIsPaidAtProcessed, field.TypeBool, value)
+		_node.IsPaidAtProcessed = value
+	}
+	if value, ok := ic.mutation.IsPaidTillProcessed(); ok {
+		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
+		_node.IsPaidTillProcessed = value
+	}
 	if nodes := ic.mutation.ProductIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -299,36 +382,21 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 		_node.ProductID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ic.mutation.ConsumedStatusesIDs(); len(nodes) > 0 {
+	if nodes := ic.mutation.SubscriptionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.ConsumedStatusesTable,
-			Columns: []string{invoice.ConsumedStatusesColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.SubscriptionsTable,
+			Columns: []string{invoice.SubscriptionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(consumedstatus.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.SubscriptionStatusesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   invoice.SubscriptionStatusesTable,
-			Columns: []string{invoice.SubscriptionStatusesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscriptionstatus.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
+		_node.SubscriptionID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -443,6 +511,48 @@ func (u *InvoiceUpsert) ClearPaidAt() *InvoiceUpsert {
 	return u
 }
 
+// SetPaidTill sets the "paid_till" field.
+func (u *InvoiceUpsert) SetPaidTill(v time.Time) *InvoiceUpsert {
+	u.Set(invoice.FieldPaidTill, v)
+	return u
+}
+
+// UpdatePaidTill sets the "paid_till" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdatePaidTill() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldPaidTill)
+	return u
+}
+
+// ClearPaidTill clears the value of the "paid_till" field.
+func (u *InvoiceUpsert) ClearPaidTill() *InvoiceUpsert {
+	u.SetNull(invoice.FieldPaidTill)
+	return u
+}
+
+// SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
+func (u *InvoiceUpsert) SetIsPaidAtProcessed(v bool) *InvoiceUpsert {
+	u.Set(invoice.FieldIsPaidAtProcessed, v)
+	return u
+}
+
+// UpdateIsPaidAtProcessed sets the "is_paid_at_processed" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateIsPaidAtProcessed() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldIsPaidAtProcessed)
+	return u
+}
+
+// SetIsPaidTillProcessed sets the "is_paid_till_processed" field.
+func (u *InvoiceUpsert) SetIsPaidTillProcessed(v bool) *InvoiceUpsert {
+	u.Set(invoice.FieldIsPaidTillProcessed, v)
+	return u
+}
+
+// UpdateIsPaidTillProcessed sets the "is_paid_till_processed" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateIsPaidTillProcessed() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldIsPaidTillProcessed)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -463,6 +573,9 @@ func (u *InvoiceUpsertOne) UpdateNewValues() *InvoiceUpsertOne {
 		if _, exists := u.create.mutation.UserID(); exists {
 			s.SetIgnore(invoice.FieldUserID)
 		}
+		if _, exists := u.create.mutation.TenantID(); exists {
+			s.SetIgnore(invoice.FieldTenantID)
+		}
 		if _, exists := u.create.mutation.AppID(); exists {
 			s.SetIgnore(invoice.FieldAppID)
 		}
@@ -471,6 +584,9 @@ func (u *InvoiceUpsertOne) UpdateNewValues() *InvoiceUpsertOne {
 		}
 		if _, exists := u.create.mutation.Amount(); exists {
 			s.SetIgnore(invoice.FieldAmount)
+		}
+		if _, exists := u.create.mutation.SubscriptionID(); exists {
+			s.SetIgnore(invoice.FieldSubscriptionID)
 		}
 	}))
 	return u
@@ -570,6 +686,55 @@ func (u *InvoiceUpsertOne) UpdatePaidAt() *InvoiceUpsertOne {
 func (u *InvoiceUpsertOne) ClearPaidAt() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearPaidAt()
+	})
+}
+
+// SetPaidTill sets the "paid_till" field.
+func (u *InvoiceUpsertOne) SetPaidTill(v time.Time) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetPaidTill(v)
+	})
+}
+
+// UpdatePaidTill sets the "paid_till" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdatePaidTill() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdatePaidTill()
+	})
+}
+
+// ClearPaidTill clears the value of the "paid_till" field.
+func (u *InvoiceUpsertOne) ClearPaidTill() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearPaidTill()
+	})
+}
+
+// SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
+func (u *InvoiceUpsertOne) SetIsPaidAtProcessed(v bool) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsPaidAtProcessed(v)
+	})
+}
+
+// UpdateIsPaidAtProcessed sets the "is_paid_at_processed" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateIsPaidAtProcessed() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsPaidAtProcessed()
+	})
+}
+
+// SetIsPaidTillProcessed sets the "is_paid_till_processed" field.
+func (u *InvoiceUpsertOne) SetIsPaidTillProcessed(v bool) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsPaidTillProcessed(v)
+	})
+}
+
+// UpdateIsPaidTillProcessed sets the "is_paid_till_processed" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateIsPaidTillProcessed() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsPaidTillProcessed()
 	})
 }
 
@@ -758,6 +923,9 @@ func (u *InvoiceUpsertBulk) UpdateNewValues() *InvoiceUpsertBulk {
 			if _, exists := b.mutation.UserID(); exists {
 				s.SetIgnore(invoice.FieldUserID)
 			}
+			if _, exists := b.mutation.TenantID(); exists {
+				s.SetIgnore(invoice.FieldTenantID)
+			}
 			if _, exists := b.mutation.AppID(); exists {
 				s.SetIgnore(invoice.FieldAppID)
 			}
@@ -766,6 +934,9 @@ func (u *InvoiceUpsertBulk) UpdateNewValues() *InvoiceUpsertBulk {
 			}
 			if _, exists := b.mutation.Amount(); exists {
 				s.SetIgnore(invoice.FieldAmount)
+			}
+			if _, exists := b.mutation.SubscriptionID(); exists {
+				s.SetIgnore(invoice.FieldSubscriptionID)
 			}
 		}
 	}))
@@ -866,6 +1037,55 @@ func (u *InvoiceUpsertBulk) UpdatePaidAt() *InvoiceUpsertBulk {
 func (u *InvoiceUpsertBulk) ClearPaidAt() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearPaidAt()
+	})
+}
+
+// SetPaidTill sets the "paid_till" field.
+func (u *InvoiceUpsertBulk) SetPaidTill(v time.Time) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetPaidTill(v)
+	})
+}
+
+// UpdatePaidTill sets the "paid_till" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdatePaidTill() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdatePaidTill()
+	})
+}
+
+// ClearPaidTill clears the value of the "paid_till" field.
+func (u *InvoiceUpsertBulk) ClearPaidTill() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearPaidTill()
+	})
+}
+
+// SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
+func (u *InvoiceUpsertBulk) SetIsPaidAtProcessed(v bool) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsPaidAtProcessed(v)
+	})
+}
+
+// UpdateIsPaidAtProcessed sets the "is_paid_at_processed" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateIsPaidAtProcessed() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsPaidAtProcessed()
+	})
+}
+
+// SetIsPaidTillProcessed sets the "is_paid_till_processed" field.
+func (u *InvoiceUpsertBulk) SetIsPaidTillProcessed(v bool) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsPaidTillProcessed(v)
+	})
+}
+
+// UpdateIsPaidTillProcessed sets the "is_paid_till_processed" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateIsPaidTillProcessed() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsPaidTillProcessed()
 	})
 }
 

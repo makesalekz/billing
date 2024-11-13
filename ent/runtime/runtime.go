@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
@@ -40,24 +39,22 @@ func init() {
 	bundleDescAmount := bundleFields[3].Descriptor()
 	// bundle.DefaultAmount holds the default value on creation for the amount field.
 	bundle.DefaultAmount = bundleDescAmount.Default.(float64)
-	consumedstatusFields := schema.ConsumedStatus{}.Fields()
-	_ = consumedstatusFields
-	// consumedstatusDescConsumed is the schema descriptor for consumed field.
-	consumedstatusDescConsumed := consumedstatusFields[5].Descriptor()
-	// consumedstatus.DefaultConsumed holds the default value on creation for the consumed field.
-	consumedstatus.DefaultConsumed = consumedstatusDescConsumed.Default.(float64)
-	// consumedstatusDescLeft is the schema descriptor for left field.
-	consumedstatusDescLeft := consumedstatusFields[6].Descriptor()
-	// consumedstatus.DefaultLeft holds the default value on creation for the left field.
-	consumedstatus.DefaultLeft = consumedstatusDescLeft.Default.(float64)
 	invoiceFields := schema.Invoice{}.Fields()
 	_ = invoiceFields
 	// invoiceDescCurrency is the schema descriptor for currency field.
-	invoiceDescCurrency := invoiceFields[6].Descriptor()
+	invoiceDescCurrency := invoiceFields[7].Descriptor()
 	// invoice.DefaultCurrency holds the default value on creation for the currency field.
 	invoice.DefaultCurrency = invoiceDescCurrency.Default.(string)
 	// invoice.CurrencyValidator is a validator for the "currency" field. It is called by the builders before save.
 	invoice.CurrencyValidator = invoiceDescCurrency.Validators[0].(func(string) error)
+	// invoiceDescIsPaidAtProcessed is the schema descriptor for is_paid_at_processed field.
+	invoiceDescIsPaidAtProcessed := invoiceFields[11].Descriptor()
+	// invoice.DefaultIsPaidAtProcessed holds the default value on creation for the is_paid_at_processed field.
+	invoice.DefaultIsPaidAtProcessed = invoiceDescIsPaidAtProcessed.Default.(bool)
+	// invoiceDescIsPaidTillProcessed is the schema descriptor for is_paid_till_processed field.
+	invoiceDescIsPaidTillProcessed := invoiceFields[12].Descriptor()
+	// invoice.DefaultIsPaidTillProcessed holds the default value on creation for the is_paid_till_processed field.
+	invoice.DefaultIsPaidTillProcessed = invoiceDescIsPaidTillProcessed.Default.(bool)
 	itemMixin := schema.Item{}.Mixin()
 	itemMixinHooks1 := itemMixin[1].Hooks()
 	item.Hooks[0] = itemMixinHooks1[0]
@@ -80,31 +77,45 @@ func init() {
 	productFields := schema.Product{}.Fields()
 	_ = productFields
 	// productDescCurrency is the schema descriptor for currency field.
-	productDescCurrency := productFields[4].Descriptor()
+	productDescCurrency := productFields[5].Descriptor()
 	// product.DefaultCurrency holds the default value on creation for the currency field.
 	product.DefaultCurrency = productDescCurrency.Default.(string)
 	// product.CurrencyValidator is a validator for the "currency" field. It is called by the builders before save.
 	product.CurrencyValidator = productDescCurrency.Validators[0].(func(string) error)
 	// productDescIsActive is the schema descriptor for is_active field.
-	productDescIsActive := productFields[5].Descriptor()
+	productDescIsActive := productFields[6].Descriptor()
 	// product.DefaultIsActive holds the default value on creation for the is_active field.
 	product.DefaultIsActive = productDescIsActive.Default.(bool)
 	// productDescIsLimited is the schema descriptor for is_limited field.
-	productDescIsLimited := productFields[6].Descriptor()
+	productDescIsLimited := productFields[7].Descriptor()
 	// product.DefaultIsLimited holds the default value on creation for the is_limited field.
 	product.DefaultIsLimited = productDescIsLimited.Default.(bool)
 	// productDescLeft is the schema descriptor for left field.
-	productDescLeft := productFields[8].Descriptor()
+	productDescLeft := productFields[9].Descriptor()
 	// product.DefaultLeft holds the default value on creation for the left field.
 	product.DefaultLeft = productDescLeft.Default.(int64)
 	// productDescIsUnique is the schema descriptor for is_unique field.
-	productDescIsUnique := productFields[9].Descriptor()
+	productDescIsUnique := productFields[10].Descriptor()
 	// product.DefaultIsUnique holds the default value on creation for the is_unique field.
 	product.DefaultIsUnique = productDescIsUnique.Default.(bool)
 	// productDescUniqueLimit is the schema descriptor for unique_limit field.
-	productDescUniqueLimit := productFields[10].Descriptor()
+	productDescUniqueLimit := productFields[11].Descriptor()
 	// product.DefaultUniqueLimit holds the default value on creation for the unique_limit field.
 	product.DefaultUniqueLimit = productDescUniqueLimit.Default.(int64)
+	// product.UniqueLimitValidator is a validator for the "unique_limit" field. It is called by the builders before save.
+	product.UniqueLimitValidator = productDescUniqueLimit.Validators[0].(func(int64) error)
+	// productDescIsExpiring is the schema descriptor for is_expiring field.
+	productDescIsExpiring := productFields[12].Descriptor()
+	// product.DefaultIsExpiring holds the default value on creation for the is_expiring field.
+	product.DefaultIsExpiring = productDescIsExpiring.Default.(bool)
+	// productDescRecurrenceRule is the schema descriptor for recurrence_rule field.
+	productDescRecurrenceRule := productFields[13].Descriptor()
+	// product.RecurrenceRuleValidator is a validator for the "recurrence_rule" field. It is called by the builders before save.
+	product.RecurrenceRuleValidator = productDescRecurrenceRule.Validators[0].(func(string) error)
+	// productDescOfferInAppleStore is the schema descriptor for offer_in_apple_store field.
+	productDescOfferInAppleStore := productFields[14].Descriptor()
+	// product.DefaultOfferInAppleStore holds the default value on creation for the offer_in_apple_store field.
+	product.DefaultOfferInAppleStore = productDescOfferInAppleStore.Default.(bool)
 }
 
 const (

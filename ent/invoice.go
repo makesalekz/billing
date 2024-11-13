@@ -13,6 +13,7 @@ import (
 	"gitlab.calendaria.team/services/finance/invoices/ent/enum"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // Invoice is the model entity for the Invoice schema.
@@ -22,6 +23,8 @@ type Invoice struct {
 	ID int64 `json:"id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID int64 `json:"user_id,omitempty"`
+	// TenantID holds the value of the "tenant_id" field.
+	TenantID int64 `json:"tenant_id,omitempty"`
 	// AppID holds the value of the "app_id" field.
 	AppID string `json:"app_id,omitempty"`
 	// ProductID holds the value of the "product_id" field.
@@ -36,6 +39,14 @@ type Invoice struct {
 	Status enum.InvoiceStatus `json:"status,omitempty"`
 	// PaidAt holds the value of the "paid_at" field.
 	PaidAt time.Time `json:"paid_at,omitempty"`
+	// PaidTill holds the value of the "paid_till" field.
+	PaidTill time.Time `json:"paid_till,omitempty"`
+	// IsPaidAtProcessed holds the value of the "is_paid_at_processed" field.
+	IsPaidAtProcessed bool `json:"is_paid_at_processed,omitempty"`
+	// IsPaidTillProcessed holds the value of the "is_paid_till_processed" field.
+	IsPaidTillProcessed bool `json:"is_paid_till_processed,omitempty"`
+	// SubscriptionID holds the value of the "subscription_id" field.
+	SubscriptionID *int64 `json:"subscription_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InvoiceQuery when eager-loading is set.
 	Edges        InvoiceEdges `json:"edges"`
@@ -46,13 +57,11 @@ type Invoice struct {
 type InvoiceEdges struct {
 	// Product holds the value of the product edge.
 	Product *Product `json:"product,omitempty"`
-	// ConsumedStatuses holds the value of the consumed_statuses edge.
-	ConsumedStatuses []*ConsumedStatus `json:"consumed_statuses,omitempty"`
-	// SubscriptionStatuses holds the value of the subscription_statuses edge.
-	SubscriptionStatuses []*SubscriptionStatus `json:"subscription_statuses,omitempty"`
+	// Subscriptions holds the value of the subscriptions edge.
+	Subscriptions *Subscriptions `json:"subscriptions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [2]bool
 }
 
 // ProductOrErr returns the Product value or an error if the edge
@@ -66,22 +75,15 @@ func (e InvoiceEdges) ProductOrErr() (*Product, error) {
 	return nil, &NotLoadedError{edge: "product"}
 }
 
-// ConsumedStatusesOrErr returns the ConsumedStatuses value or an error if the edge
-// was not loaded in eager-loading.
-func (e InvoiceEdges) ConsumedStatusesOrErr() ([]*ConsumedStatus, error) {
-	if e.loadedTypes[1] {
-		return e.ConsumedStatuses, nil
+// SubscriptionsOrErr returns the Subscriptions value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e InvoiceEdges) SubscriptionsOrErr() (*Subscriptions, error) {
+	if e.Subscriptions != nil {
+		return e.Subscriptions, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: subscriptions.Label}
 	}
-	return nil, &NotLoadedError{edge: "consumed_statuses"}
-}
-
-// SubscriptionStatusesOrErr returns the SubscriptionStatuses value or an error if the edge
-// was not loaded in eager-loading.
-func (e InvoiceEdges) SubscriptionStatusesOrErr() ([]*SubscriptionStatus, error) {
-	if e.loadedTypes[2] {
-		return e.SubscriptionStatuses, nil
-	}
-	return nil, &NotLoadedError{edge: "subscription_statuses"}
+	return nil, &NotLoadedError{edge: "subscriptions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -91,11 +93,13 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case invoice.FieldPrice:
 			values[i] = new(decimal.Decimal)
-		case invoice.FieldID, invoice.FieldUserID, invoice.FieldProductID, invoice.FieldAmount:
+		case invoice.FieldIsPaidAtProcessed, invoice.FieldIsPaidTillProcessed:
+			values[i] = new(sql.NullBool)
+		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID:
 			values[i] = new(sql.NullInt64)
 		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus:
 			values[i] = new(sql.NullString)
-		case invoice.FieldPaidAt:
+		case invoice.FieldPaidAt, invoice.FieldPaidTill:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -123,6 +127,12 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field user_id", values[j])
 			} else if value.Valid {
 				i.UserID = value.Int64
+			}
+		case invoice.FieldTenantID:
+			if value, ok := values[j].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_id", values[j])
+			} else if value.Valid {
+				i.TenantID = value.Int64
 			}
 		case invoice.FieldAppID:
 			if value, ok := values[j].(*sql.NullString); !ok {
@@ -166,6 +176,31 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.PaidAt = value.Time
 			}
+		case invoice.FieldPaidTill:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field paid_till", values[j])
+			} else if value.Valid {
+				i.PaidTill = value.Time
+			}
+		case invoice.FieldIsPaidAtProcessed:
+			if value, ok := values[j].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_paid_at_processed", values[j])
+			} else if value.Valid {
+				i.IsPaidAtProcessed = value.Bool
+			}
+		case invoice.FieldIsPaidTillProcessed:
+			if value, ok := values[j].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_paid_till_processed", values[j])
+			} else if value.Valid {
+				i.IsPaidTillProcessed = value.Bool
+			}
+		case invoice.FieldSubscriptionID:
+			if value, ok := values[j].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_id", values[j])
+			} else if value.Valid {
+				i.SubscriptionID = new(int64)
+				*i.SubscriptionID = value.Int64
+			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
 		}
@@ -184,14 +219,9 @@ func (i *Invoice) QueryProduct() *ProductQuery {
 	return NewInvoiceClient(i.config).QueryProduct(i)
 }
 
-// QueryConsumedStatuses queries the "consumed_statuses" edge of the Invoice entity.
-func (i *Invoice) QueryConsumedStatuses() *ConsumedStatusQuery {
-	return NewInvoiceClient(i.config).QueryConsumedStatuses(i)
-}
-
-// QuerySubscriptionStatuses queries the "subscription_statuses" edge of the Invoice entity.
-func (i *Invoice) QuerySubscriptionStatuses() *SubscriptionStatusQuery {
-	return NewInvoiceClient(i.config).QuerySubscriptionStatuses(i)
+// QuerySubscriptions queries the "subscriptions" edge of the Invoice entity.
+func (i *Invoice) QuerySubscriptions() *SubscriptionsQuery {
+	return NewInvoiceClient(i.config).QuerySubscriptions(i)
 }
 
 // Update returns a builder for updating this Invoice.
@@ -220,6 +250,9 @@ func (i *Invoice) String() string {
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", i.UserID))
 	builder.WriteString(", ")
+	builder.WriteString("tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", i.TenantID))
+	builder.WriteString(", ")
 	builder.WriteString("app_id=")
 	builder.WriteString(i.AppID)
 	builder.WriteString(", ")
@@ -240,6 +273,20 @@ func (i *Invoice) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("paid_at=")
 	builder.WriteString(i.PaidAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("paid_till=")
+	builder.WriteString(i.PaidTill.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("is_paid_at_processed=")
+	builder.WriteString(fmt.Sprintf("%v", i.IsPaidAtProcessed))
+	builder.WriteString(", ")
+	builder.WriteString("is_paid_till_processed=")
+	builder.WriteString(fmt.Sprintf("%v", i.IsPaidTillProcessed))
+	builder.WriteString(", ")
+	if v := i.SubscriptionID; v != nil {
+		builder.WriteString("subscription_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

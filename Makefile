@@ -40,7 +40,7 @@ doc:
 .PHONY: run
 # run locally
 run:	
-	GOFLAGS='-mod=readonly' kratos run -w ./configs
+	GOFLAGS='-mod=readonly' kratos run -w ./
 
 .PHONY: db
 # run docker db container

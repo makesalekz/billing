@@ -9,12 +9,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"gitlab.calendaria.team/services/finance/invoices/ent"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // The Query interface represents an operation that queries a graph.
@@ -100,33 +99,6 @@ func (f TraverseBundle) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.BundleQuery", q)
 }
 
-// The ConsumedStatusFunc type is an adapter to allow the use of ordinary function as a Querier.
-type ConsumedStatusFunc func(context.Context, *ent.ConsumedStatusQuery) (ent.Value, error)
-
-// Query calls f(ctx, q).
-func (f ConsumedStatusFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
-	if q, ok := q.(*ent.ConsumedStatusQuery); ok {
-		return f(ctx, q)
-	}
-	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ConsumedStatusQuery", q)
-}
-
-// The TraverseConsumedStatus type is an adapter to allow the use of ordinary function as Traverser.
-type TraverseConsumedStatus func(context.Context, *ent.ConsumedStatusQuery) error
-
-// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
-func (f TraverseConsumedStatus) Intercept(next ent.Querier) ent.Querier {
-	return next
-}
-
-// Traverse calls f(ctx, q).
-func (f TraverseConsumedStatus) Traverse(ctx context.Context, q ent.Query) error {
-	if q, ok := q.(*ent.ConsumedStatusQuery); ok {
-		return f(ctx, q)
-	}
-	return fmt.Errorf("unexpected query type %T. expect *ent.ConsumedStatusQuery", q)
-}
-
 // The InvoiceFunc type is an adapter to allow the use of ordinary function as a Querier.
 type InvoiceFunc func(context.Context, *ent.InvoiceQuery) (ent.Value, error)
 
@@ -208,31 +180,31 @@ func (f TraverseProduct) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.ProductQuery", q)
 }
 
-// The SubscriptionStatusFunc type is an adapter to allow the use of ordinary function as a Querier.
-type SubscriptionStatusFunc func(context.Context, *ent.SubscriptionStatusQuery) (ent.Value, error)
+// The SubscriptionsFunc type is an adapter to allow the use of ordinary function as a Querier.
+type SubscriptionsFunc func(context.Context, *ent.SubscriptionsQuery) (ent.Value, error)
 
 // Query calls f(ctx, q).
-func (f SubscriptionStatusFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
-	if q, ok := q.(*ent.SubscriptionStatusQuery); ok {
+func (f SubscriptionsFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.SubscriptionsQuery); ok {
 		return f(ctx, q)
 	}
-	return nil, fmt.Errorf("unexpected query type %T. expect *ent.SubscriptionStatusQuery", q)
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.SubscriptionsQuery", q)
 }
 
-// The TraverseSubscriptionStatus type is an adapter to allow the use of ordinary function as Traverser.
-type TraverseSubscriptionStatus func(context.Context, *ent.SubscriptionStatusQuery) error
+// The TraverseSubscriptions type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseSubscriptions func(context.Context, *ent.SubscriptionsQuery) error
 
 // Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
-func (f TraverseSubscriptionStatus) Intercept(next ent.Querier) ent.Querier {
+func (f TraverseSubscriptions) Intercept(next ent.Querier) ent.Querier {
 	return next
 }
 
 // Traverse calls f(ctx, q).
-func (f TraverseSubscriptionStatus) Traverse(ctx context.Context, q ent.Query) error {
-	if q, ok := q.(*ent.SubscriptionStatusQuery); ok {
+func (f TraverseSubscriptions) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.SubscriptionsQuery); ok {
 		return f(ctx, q)
 	}
-	return fmt.Errorf("unexpected query type %T. expect *ent.SubscriptionStatusQuery", q)
+	return fmt.Errorf("unexpected query type %T. expect *ent.SubscriptionsQuery", q)
 }
 
 // NewQuery returns the generic Query interface for the given typed query.
@@ -240,16 +212,14 @@ func NewQuery(q ent.Query) (Query, error) {
 	switch q := q.(type) {
 	case *ent.BundleQuery:
 		return &query[*ent.BundleQuery, predicate.Bundle, bundle.OrderOption]{typ: ent.TypeBundle, tq: q}, nil
-	case *ent.ConsumedStatusQuery:
-		return &query[*ent.ConsumedStatusQuery, predicate.ConsumedStatus, consumedstatus.OrderOption]{typ: ent.TypeConsumedStatus, tq: q}, nil
 	case *ent.InvoiceQuery:
 		return &query[*ent.InvoiceQuery, predicate.Invoice, invoice.OrderOption]{typ: ent.TypeInvoice, tq: q}, nil
 	case *ent.ItemQuery:
 		return &query[*ent.ItemQuery, predicate.Item, item.OrderOption]{typ: ent.TypeItem, tq: q}, nil
 	case *ent.ProductQuery:
 		return &query[*ent.ProductQuery, predicate.Product, product.OrderOption]{typ: ent.TypeProduct, tq: q}, nil
-	case *ent.SubscriptionStatusQuery:
-		return &query[*ent.SubscriptionStatusQuery, predicate.SubscriptionStatus, subscriptionstatus.OrderOption]{typ: ent.TypeSubscriptionStatus, tq: q}, nil
+	case *ent.SubscriptionsQuery:
+		return &query[*ent.SubscriptionsQuery, predicate.Subscriptions, subscriptions.OrderOption]{typ: ent.TypeSubscriptions, tq: q}, nil
 	default:
 		return nil, fmt.Errorf("unknown query type %T", q)
 	}

@@ -27,6 +27,8 @@ const (
 	FieldItemID = "item_id"
 	// FieldAmount holds the string denoting the amount field in the database.
 	FieldAmount = "amount"
+	// FieldOverusagePrice holds the string denoting the overusage_price field in the database.
+	FieldOverusagePrice = "overusage_price"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
 	EdgeProduct = "product"
 	// EdgeItem holds the string denoting the item edge name in mutations.
@@ -58,6 +60,7 @@ var Columns = []string{
 	FieldProductID,
 	FieldItemID,
 	FieldAmount,
+	FieldOverusagePrice,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -124,6 +127,11 @@ func ByItemID(opts ...sql.OrderTermOption) OrderOption {
 // ByAmount orders the results by the amount field.
 func ByAmount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAmount, opts...).ToFunc()
+}
+
+// ByOverusagePrice orders the results by the overusage_price field.
+func ByOverusagePrice(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOverusagePrice, opts...).ToFunc()
 }
 
 // ByProductField orders the results by product field.

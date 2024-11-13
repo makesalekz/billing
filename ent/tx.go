@@ -14,16 +14,14 @@ type Tx struct {
 	config
 	// Bundle is the client for interacting with the Bundle builders.
 	Bundle *BundleClient
-	// ConsumedStatus is the client for interacting with the ConsumedStatus builders.
-	ConsumedStatus *ConsumedStatusClient
 	// Invoice is the client for interacting with the Invoice builders.
 	Invoice *InvoiceClient
 	// Item is the client for interacting with the Item builders.
 	Item *ItemClient
 	// Product is the client for interacting with the Product builders.
 	Product *ProductClient
-	// SubscriptionStatus is the client for interacting with the SubscriptionStatus builders.
-	SubscriptionStatus *SubscriptionStatusClient
+	// Subscriptions is the client for interacting with the Subscriptions builders.
+	Subscriptions *SubscriptionsClient
 
 	// lazily loaded.
 	client     *Client
@@ -156,11 +154,10 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Bundle = NewBundleClient(tx.config)
-	tx.ConsumedStatus = NewConsumedStatusClient(tx.config)
 	tx.Invoice = NewInvoiceClient(tx.config)
 	tx.Item = NewItemClient(tx.config)
 	tx.Product = NewProductClient(tx.config)
-	tx.SubscriptionStatus = NewSubscriptionStatusClient(tx.config)
+	tx.Subscriptions = NewSubscriptionsClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

@@ -13,11 +13,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/consumedstatus"
 	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptionstatus"
+	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -78,12 +77,11 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			bundle.Table:             bundle.ValidColumn,
-			consumedstatus.Table:     consumedstatus.ValidColumn,
-			invoice.Table:            invoice.ValidColumn,
-			item.Table:               item.ValidColumn,
-			product.Table:            product.ValidColumn,
-			subscriptionstatus.Table: subscriptionstatus.ValidColumn,
+			bundle.Table:        bundle.ValidColumn,
+			invoice.Table:       invoice.ValidColumn,
+			item.Table:          item.ValidColumn,
+			product.Table:       product.ValidColumn,
+			subscriptions.Table: subscriptions.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)
