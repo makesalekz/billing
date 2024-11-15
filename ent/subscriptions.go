@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -26,8 +25,6 @@ type Subscriptions struct {
 	AppID string `json:"app_id,omitempty"`
 	// ProductID holds the value of the "product_id" field.
 	ProductID int64 `json:"product_id,omitempty"`
-	// RenewalRate holds the value of the "renewal_rate" field.
-	RenewalRate time.Time `json:"renewal_rate,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SubscriptionsQuery when eager-loading is set.
 	Edges        SubscriptionsEdges `json:"edges"`
@@ -74,8 +71,6 @@ func (*Subscriptions) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case subscriptions.FieldAppID:
 			values[i] = new(sql.NullString)
-		case subscriptions.FieldRenewalRate:
-			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -120,12 +115,6 @@ func (s *Subscriptions) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field product_id", values[i])
 			} else if value.Valid {
 				s.ProductID = value.Int64
-			}
-		case subscriptions.FieldRenewalRate:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field renewal_rate", values[i])
-			} else if value.Valid {
-				s.RenewalRate = value.Time
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
@@ -184,9 +173,6 @@ func (s *Subscriptions) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("product_id=")
 	builder.WriteString(fmt.Sprintf("%v", s.ProductID))
-	builder.WriteString(", ")
-	builder.WriteString("renewal_rate=")
-	builder.WriteString(s.RenewalRate.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

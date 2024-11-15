@@ -17,6 +17,8 @@ enum ErrorReason {
   DATABASE_QUERY = 3;
   FORBIDDEN = 4 [(errors.code) = 403];
   EMPTY_ACTOR_ID = 5;
+  EMPTY_TENANT_ID = 6;
+  EMPTY_APP_ID = 7;
 
   INVALID_REQUEST = 10 [(errors.code) = 400];
   UNAUTHORIZED = 11 [(errors.code) = 401];

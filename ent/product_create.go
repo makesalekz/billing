@@ -162,30 +162,16 @@ func (pc *ProductCreate) SetNillableIsExpiring(b *bool) *ProductCreate {
 	return pc
 }
 
-// SetRecurrenceRule sets the "recurrence_rule" field.
-func (pc *ProductCreate) SetRecurrenceRule(s string) *ProductCreate {
-	pc.mutation.SetRecurrenceRule(s)
+// SetExpiringTime sets the "expiring_time" field.
+func (pc *ProductCreate) SetExpiringTime(t time.Time) *ProductCreate {
+	pc.mutation.SetExpiringTime(t)
 	return pc
 }
 
-// SetNillableRecurrenceRule sets the "recurrence_rule" field if the given value is not nil.
-func (pc *ProductCreate) SetNillableRecurrenceRule(s *string) *ProductCreate {
-	if s != nil {
-		pc.SetRecurrenceRule(*s)
-	}
-	return pc
-}
-
-// SetOfferInAppleStore sets the "offer_in_apple_store" field.
-func (pc *ProductCreate) SetOfferInAppleStore(b bool) *ProductCreate {
-	pc.mutation.SetOfferInAppleStore(b)
-	return pc
-}
-
-// SetNillableOfferInAppleStore sets the "offer_in_apple_store" field if the given value is not nil.
-func (pc *ProductCreate) SetNillableOfferInAppleStore(b *bool) *ProductCreate {
-	if b != nil {
-		pc.SetOfferInAppleStore(*b)
+// SetNillableExpiringTime sets the "expiring_time" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableExpiringTime(t *time.Time) *ProductCreate {
+	if t != nil {
+		pc.SetExpiringTime(*t)
 	}
 	return pc
 }
@@ -304,10 +290,6 @@ func (pc *ProductCreate) defaults() {
 		v := product.DefaultIsExpiring
 		pc.mutation.SetIsExpiring(v)
 	}
-	if _, ok := pc.mutation.OfferInAppleStore(); !ok {
-		v := product.DefaultOfferInAppleStore
-		pc.mutation.SetOfferInAppleStore(v)
-	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -348,14 +330,6 @@ func (pc *ProductCreate) check() error {
 		if err := product.UniqueLimitValidator(v); err != nil {
 			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
 		}
-	}
-	if v, ok := pc.mutation.RecurrenceRule(); ok {
-		if err := product.RecurrenceRuleValidator(v); err != nil {
-			return &ValidationError{Name: "recurrence_rule", err: fmt.Errorf(`ent: validator failed for field "Product.recurrence_rule": %w`, err)}
-		}
-	}
-	if _, ok := pc.mutation.OfferInAppleStore(); !ok {
-		return &ValidationError{Name: "offer_in_apple_store", err: errors.New(`ent: missing required field "Product.offer_in_apple_store"`)}
 	}
 	return nil
 }
@@ -438,13 +412,9 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 		_spec.SetField(product.FieldIsExpiring, field.TypeBool, value)
 		_node.IsExpiring = value
 	}
-	if value, ok := pc.mutation.RecurrenceRule(); ok {
-		_spec.SetField(product.FieldRecurrenceRule, field.TypeString, value)
-		_node.RecurrenceRule = &value
-	}
-	if value, ok := pc.mutation.OfferInAppleStore(); ok {
-		_spec.SetField(product.FieldOfferInAppleStore, field.TypeBool, value)
-		_node.OfferInAppleStore = value
+	if value, ok := pc.mutation.ExpiringTime(); ok {
+		_spec.SetField(product.FieldExpiringTime, field.TypeTime, value)
+		_node.ExpiringTime = &value
 	}
 	if nodes := pc.mutation.InvoicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -726,33 +696,21 @@ func (u *ProductUpsert) ClearIsExpiring() *ProductUpsert {
 	return u
 }
 
-// SetRecurrenceRule sets the "recurrence_rule" field.
-func (u *ProductUpsert) SetRecurrenceRule(v string) *ProductUpsert {
-	u.Set(product.FieldRecurrenceRule, v)
+// SetExpiringTime sets the "expiring_time" field.
+func (u *ProductUpsert) SetExpiringTime(v time.Time) *ProductUpsert {
+	u.Set(product.FieldExpiringTime, v)
 	return u
 }
 
-// UpdateRecurrenceRule sets the "recurrence_rule" field to the value that was provided on create.
-func (u *ProductUpsert) UpdateRecurrenceRule() *ProductUpsert {
-	u.SetExcluded(product.FieldRecurrenceRule)
+// UpdateExpiringTime sets the "expiring_time" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateExpiringTime() *ProductUpsert {
+	u.SetExcluded(product.FieldExpiringTime)
 	return u
 }
 
-// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
-func (u *ProductUpsert) ClearRecurrenceRule() *ProductUpsert {
-	u.SetNull(product.FieldRecurrenceRule)
-	return u
-}
-
-// SetOfferInAppleStore sets the "offer_in_apple_store" field.
-func (u *ProductUpsert) SetOfferInAppleStore(v bool) *ProductUpsert {
-	u.Set(product.FieldOfferInAppleStore, v)
-	return u
-}
-
-// UpdateOfferInAppleStore sets the "offer_in_apple_store" field to the value that was provided on create.
-func (u *ProductUpsert) UpdateOfferInAppleStore() *ProductUpsert {
-	u.SetExcluded(product.FieldOfferInAppleStore)
+// ClearExpiringTime clears the value of the "expiring_time" field.
+func (u *ProductUpsert) ClearExpiringTime() *ProductUpsert {
+	u.SetNull(product.FieldExpiringTime)
 	return u
 }
 
@@ -1014,38 +972,24 @@ func (u *ProductUpsertOne) ClearIsExpiring() *ProductUpsertOne {
 	})
 }
 
-// SetRecurrenceRule sets the "recurrence_rule" field.
-func (u *ProductUpsertOne) SetRecurrenceRule(v string) *ProductUpsertOne {
+// SetExpiringTime sets the "expiring_time" field.
+func (u *ProductUpsertOne) SetExpiringTime(v time.Time) *ProductUpsertOne {
 	return u.Update(func(s *ProductUpsert) {
-		s.SetRecurrenceRule(v)
+		s.SetExpiringTime(v)
 	})
 }
 
-// UpdateRecurrenceRule sets the "recurrence_rule" field to the value that was provided on create.
-func (u *ProductUpsertOne) UpdateRecurrenceRule() *ProductUpsertOne {
+// UpdateExpiringTime sets the "expiring_time" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateExpiringTime() *ProductUpsertOne {
 	return u.Update(func(s *ProductUpsert) {
-		s.UpdateRecurrenceRule()
+		s.UpdateExpiringTime()
 	})
 }
 
-// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
-func (u *ProductUpsertOne) ClearRecurrenceRule() *ProductUpsertOne {
+// ClearExpiringTime clears the value of the "expiring_time" field.
+func (u *ProductUpsertOne) ClearExpiringTime() *ProductUpsertOne {
 	return u.Update(func(s *ProductUpsert) {
-		s.ClearRecurrenceRule()
-	})
-}
-
-// SetOfferInAppleStore sets the "offer_in_apple_store" field.
-func (u *ProductUpsertOne) SetOfferInAppleStore(v bool) *ProductUpsertOne {
-	return u.Update(func(s *ProductUpsert) {
-		s.SetOfferInAppleStore(v)
-	})
-}
-
-// UpdateOfferInAppleStore sets the "offer_in_apple_store" field to the value that was provided on create.
-func (u *ProductUpsertOne) UpdateOfferInAppleStore() *ProductUpsertOne {
-	return u.Update(func(s *ProductUpsert) {
-		s.UpdateOfferInAppleStore()
+		s.ClearExpiringTime()
 	})
 }
 
@@ -1473,38 +1417,24 @@ func (u *ProductUpsertBulk) ClearIsExpiring() *ProductUpsertBulk {
 	})
 }
 
-// SetRecurrenceRule sets the "recurrence_rule" field.
-func (u *ProductUpsertBulk) SetRecurrenceRule(v string) *ProductUpsertBulk {
+// SetExpiringTime sets the "expiring_time" field.
+func (u *ProductUpsertBulk) SetExpiringTime(v time.Time) *ProductUpsertBulk {
 	return u.Update(func(s *ProductUpsert) {
-		s.SetRecurrenceRule(v)
+		s.SetExpiringTime(v)
 	})
 }
 
-// UpdateRecurrenceRule sets the "recurrence_rule" field to the value that was provided on create.
-func (u *ProductUpsertBulk) UpdateRecurrenceRule() *ProductUpsertBulk {
+// UpdateExpiringTime sets the "expiring_time" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateExpiringTime() *ProductUpsertBulk {
 	return u.Update(func(s *ProductUpsert) {
-		s.UpdateRecurrenceRule()
+		s.UpdateExpiringTime()
 	})
 }
 
-// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
-func (u *ProductUpsertBulk) ClearRecurrenceRule() *ProductUpsertBulk {
+// ClearExpiringTime clears the value of the "expiring_time" field.
+func (u *ProductUpsertBulk) ClearExpiringTime() *ProductUpsertBulk {
 	return u.Update(func(s *ProductUpsert) {
-		s.ClearRecurrenceRule()
-	})
-}
-
-// SetOfferInAppleStore sets the "offer_in_apple_store" field.
-func (u *ProductUpsertBulk) SetOfferInAppleStore(v bool) *ProductUpsertBulk {
-	return u.Update(func(s *ProductUpsert) {
-		s.SetOfferInAppleStore(v)
-	})
-}
-
-// UpdateOfferInAppleStore sets the "offer_in_apple_store" field to the value that was provided on create.
-func (u *ProductUpsertBulk) UpdateOfferInAppleStore() *ProductUpsertBulk {
-	return u.Update(func(s *ProductUpsert) {
-		s.UpdateOfferInAppleStore()
+		s.ClearExpiringTime()
 	})
 }
 

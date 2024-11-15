@@ -14,18 +14,19 @@ type ItemDto struct {
 }
 
 type ProductDto struct {
-	Name              string
-	Description       string
-	Price             decimal.Decimal
-	Currency          string
-	IsActive          bool
-	IsLimited         bool
-	LimitedTill       *time.Time
-	Left              int64
-	IsUnique          bool
-	UniqueLimit       int64
-	OfferInAppleStore bool
-	Bundles           []BundleDto
+	Name         string
+	Description  string
+	Price        decimal.Decimal
+	Currency     string
+	IsActive     bool
+	IsLimited    bool
+	LimitedTill  *time.Time
+	Left         int64
+	IsUnique     bool
+	UniqueLimit  int64
+	IsExpiring   bool
+	ExpiringTime *time.Time
+	Bundles      []BundleDto
 }
 
 type BundleDto struct {
@@ -57,9 +58,8 @@ type InvoiceFilter struct {
 }
 
 type SubscriptionDto struct {
-	UserID      int64
-	TenantID    int64
-	AppID       string
-	ProductID   int64
-	RenewalRate time.Time
+	UserID    int64
+	TenantID  int64
+	AppID     string
+	ProductID int64
 }

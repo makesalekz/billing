@@ -108,14 +108,6 @@ func init() {
 	productDescIsExpiring := productFields[12].Descriptor()
 	// product.DefaultIsExpiring holds the default value on creation for the is_expiring field.
 	product.DefaultIsExpiring = productDescIsExpiring.Default.(bool)
-	// productDescRecurrenceRule is the schema descriptor for recurrence_rule field.
-	productDescRecurrenceRule := productFields[13].Descriptor()
-	// product.RecurrenceRuleValidator is a validator for the "recurrence_rule" field. It is called by the builders before save.
-	product.RecurrenceRuleValidator = productDescRecurrenceRule.Validators[0].(func(string) error)
-	// productDescOfferInAppleStore is the schema descriptor for offer_in_apple_store field.
-	productDescOfferInAppleStore := productFields[14].Descriptor()
-	// product.DefaultOfferInAppleStore holds the default value on creation for the offer_in_apple_store field.
-	product.DefaultOfferInAppleStore = productDescOfferInAppleStore.Default.(bool)
 }
 
 const (

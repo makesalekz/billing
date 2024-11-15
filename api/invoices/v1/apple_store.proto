@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package invoices.v1;
+
+import "api/utils/v1/models.proto";
+
+option go_package = "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1;invoices_v1";
+option java_multiple_files = true;
+option java_package = "invoices.v1";
+
+
+service AppleStore {
+  rpc ProcessServerMessage(ProcessServerMessageRequest) returns (utils.v1.EmptyReply);
+}
+
+message ProcessServerMessageRequest {
+  string signedPayload = 1;
+}

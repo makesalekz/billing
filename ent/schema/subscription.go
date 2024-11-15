@@ -19,7 +19,6 @@ func (Subscriptions) Fields() []ent.Field {
 		field.Int64("tenant_id").Immutable(),
 		field.String("app_id").Immutable(),
 		field.Int64("product_id").Immutable(),
-		field.Time("renewal_rate").Optional(),
 	}
 }
 

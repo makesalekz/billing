@@ -114,8 +114,7 @@ var (
 		{Name: "is_unique", Type: field.TypeBool, Nullable: true, Default: false},
 		{Name: "unique_limit", Type: field.TypeInt64, Default: 0},
 		{Name: "is_expiring", Type: field.TypeBool, Nullable: true, Default: false},
-		{Name: "recurrence_rule", Type: field.TypeString, Nullable: true, Size: 250},
-		{Name: "offer_in_apple_store", Type: field.TypeBool, Default: false},
+		{Name: "expiring_time", Type: field.TypeTime, Nullable: true},
 	}
 	// ProductsTable holds the schema information for the "products" table.
 	ProductsTable = &schema.Table{
@@ -129,7 +128,6 @@ var (
 		{Name: "user_id", Type: field.TypeInt64},
 		{Name: "tenant_id", Type: field.TypeInt64},
 		{Name: "app_id", Type: field.TypeString},
-		{Name: "renewal_rate", Type: field.TypeTime, Nullable: true},
 		{Name: "product_id", Type: field.TypeInt64},
 	}
 	// SubscriptionsTable holds the schema information for the "subscriptions" table.
@@ -140,7 +138,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "subscriptions_products_subscriptions",
-				Columns:    []*schema.Column{SubscriptionsColumns[5]},
+				Columns:    []*schema.Column{SubscriptionsColumns[4]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

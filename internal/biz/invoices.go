@@ -227,3 +227,42 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 		uc.queryManager.GetRemote(*item.TopicName).Pub(refreshedItem)
 	}
 }
+
+func ReplyInvoice(invoice *ent.Invoice) *v1.Invoice {
+	reply := &v1.Invoice{
+		Id:                  invoice.ID,
+		UserId:              invoice.UserID,
+		TenantId:            invoice.TenantID,
+		AppId:               invoice.AppID,
+		ProductId:           invoice.ProductID,
+		Amount:              invoice.Amount,
+		Price:               invoice.Price.String(),
+		Currency:            invoice.Currency,
+		IsPaidAtProcessed:   invoice.IsPaidAtProcessed,
+		IsPaidTillProcessed: invoice.IsPaidTillProcessed,
+	}
+
+	if invoice.PaidAt != nil {
+		reply.PaidAt = invoice.PaidAt.Format(time.RFC3339)
+	}
+
+	if invoice.PaidTill != nil {
+		reply.PaidTill = invoice.PaidTill.Format(time.RFC3339)
+	}
+
+	if invoice.SubscriptionID != nil {
+		reply.SubscriptionId = *invoice.SubscriptionID
+	}
+
+	return reply
+}
+
+func ReplyInvoices(invoices []*ent.Invoice) []*v1.Invoice {
+	reply := make([]*v1.Invoice, len(invoices))
+
+	for i, invoice := range invoices {
+		reply[i] = ReplyInvoice(invoice)
+	}
+
+	return reply
+}

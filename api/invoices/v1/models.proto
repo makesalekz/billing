@@ -16,3 +16,71 @@ message ItemDto{
   string name = 1;
   string description = 2;
 }
+
+message Product{
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string price = 4;
+  string currency = 5;
+  bool isActive = 6;
+  bool isLimited = 7;
+  optional string limitedTill = 8;
+  optional int64 left = 9;
+  bool isUnique = 10;
+  optional int64 uniqueLimit = 11;
+  bool isExpiring = 12;
+  optional string expiringTime = 13;
+  repeated Bundle bundles = 14;
+}
+
+message Bundle {
+  int64 id = 1;
+  int64 itemId = 2;
+  double amount = 3;
+}
+
+message ProductDto{
+  string name = 1;
+  string description = 2;
+  string price = 3;
+  string currency = 4;
+  bool isActive = 5;
+  bool isLimited = 6;
+  optional string limitedTill = 7 ;
+  optional int64 left = 8 ;
+  bool isUnique = 9;
+  optional int64 uniqueLimit = 10;
+  bool isExpiring = 11;
+  optional string expiringTime = 12;
+  repeated BundleDto bundles = 13;
+}
+
+message BundleDto {
+  int64 itemId = 1;
+  double amount = 2;
+}
+
+message Invoice {
+  int64 id = 1;
+  int64 userId = 2;
+  int64 tenantId = 3;
+  string appId = 4;
+  int64 productId = 5;
+  int64 amount = 6;
+  string price = 7;
+  string currency = 8;
+  string paidAt = 9;
+  string paidTill = 10;
+  bool isPaidAtProcessed = 11;
+  bool isPaidTillProcessed = 12;
+  int64 subscriptionId = 13;
+}
+
+message Subscription {
+  int64 id = 1;
+  int64 userId = 2;
+  int64 tenantId = 3;
+  string appId = 4;
+  int64 productId = 5;
+}

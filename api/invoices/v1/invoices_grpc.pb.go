@@ -19,14 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Invoices_GenerateInvoice_FullMethodName = "/invoices.v1.Invoices/GenerateInvoice"
+	Invoices_GetInvoice_FullMethodName   = "/invoices.v1.Invoices/GetInvoice"
+	Invoices_ListInvoices_FullMethodName = "/invoices.v1.Invoices/ListInvoices"
 )
 
 // InvoicesClient is the client API for Invoices service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InvoicesClient interface {
-	GenerateInvoice(ctx context.Context, in *GenerateInvoiceRequest, opts ...grpc.CallOption) (*GenerateInvoiceResponse, error)
+	GetInvoice(ctx context.Context, in *GetInvoiceRequest, opts ...grpc.CallOption) (*InvoiceReply, error)
+	ListInvoices(ctx context.Context, in *ListInvoicesRequest, opts ...grpc.CallOption) (*ListInvoicesReply, error)
 }
 
 type invoicesClient struct {
@@ -37,10 +39,20 @@ func NewInvoicesClient(cc grpc.ClientConnInterface) InvoicesClient {
 	return &invoicesClient{cc}
 }
 
-func (c *invoicesClient) GenerateInvoice(ctx context.Context, in *GenerateInvoiceRequest, opts ...grpc.CallOption) (*GenerateInvoiceResponse, error) {
+func (c *invoicesClient) GetInvoice(ctx context.Context, in *GetInvoiceRequest, opts ...grpc.CallOption) (*InvoiceReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GenerateInvoiceResponse)
-	err := c.cc.Invoke(ctx, Invoices_GenerateInvoice_FullMethodName, in, out, cOpts...)
+	out := new(InvoiceReply)
+	err := c.cc.Invoke(ctx, Invoices_GetInvoice_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *invoicesClient) ListInvoices(ctx context.Context, in *ListInvoicesRequest, opts ...grpc.CallOption) (*ListInvoicesReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListInvoicesReply)
+	err := c.cc.Invoke(ctx, Invoices_ListInvoices_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +63,8 @@ func (c *invoicesClient) GenerateInvoice(ctx context.Context, in *GenerateInvoic
 // All implementations must embed UnimplementedInvoicesServer
 // for forward compatibility.
 type InvoicesServer interface {
-	GenerateInvoice(context.Context, *GenerateInvoiceRequest) (*GenerateInvoiceResponse, error)
+	GetInvoice(context.Context, *GetInvoiceRequest) (*InvoiceReply, error)
+	ListInvoices(context.Context, *ListInvoicesRequest) (*ListInvoicesReply, error)
 	mustEmbedUnimplementedInvoicesServer()
 }
 
@@ -62,8 +75,11 @@ type InvoicesServer interface {
 // pointer dereference when methods are called.
 type UnimplementedInvoicesServer struct{}
 
-func (UnimplementedInvoicesServer) GenerateInvoice(context.Context, *GenerateInvoiceRequest) (*GenerateInvoiceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GenerateInvoice not implemented")
+func (UnimplementedInvoicesServer) GetInvoice(context.Context, *GetInvoiceRequest) (*InvoiceReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInvoice not implemented")
+}
+func (UnimplementedInvoicesServer) ListInvoices(context.Context, *ListInvoicesRequest) (*ListInvoicesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListInvoices not implemented")
 }
 func (UnimplementedInvoicesServer) mustEmbedUnimplementedInvoicesServer() {}
 func (UnimplementedInvoicesServer) testEmbeddedByValue()                  {}
@@ -86,20 +102,38 @@ func RegisterInvoicesServer(s grpc.ServiceRegistrar, srv InvoicesServer) {
 	s.RegisterService(&Invoices_ServiceDesc, srv)
 }
 
-func _Invoices_GenerateInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GenerateInvoiceRequest)
+func _Invoices_GetInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInvoiceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InvoicesServer).GenerateInvoice(ctx, in)
+		return srv.(InvoicesServer).GetInvoice(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Invoices_GenerateInvoice_FullMethodName,
+		FullMethod: Invoices_GetInvoice_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoicesServer).GenerateInvoice(ctx, req.(*GenerateInvoiceRequest))
+		return srv.(InvoicesServer).GetInvoice(ctx, req.(*GetInvoiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Invoices_ListInvoices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListInvoicesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoicesServer).ListInvoices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Invoices_ListInvoices_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoicesServer).ListInvoices(ctx, req.(*ListInvoicesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +146,12 @@ var Invoices_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*InvoicesServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GenerateInvoice",
-			Handler:    _Invoices_GenerateInvoice_Handler,
+			MethodName: "GetInvoice",
+			Handler:    _Invoices_GetInvoice_Handler,
+		},
+		{
+			MethodName: "ListInvoices",
+			Handler:    _Invoices_ListInvoices_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

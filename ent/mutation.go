@@ -1404,7 +1404,7 @@ func (m *InvoiceMutation) PaidAt() (r time.Time, exists bool) {
 // OldPaidAt returns the old "paid_at" field's value of the Invoice entity.
 // If the Invoice object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvoiceMutation) OldPaidAt(ctx context.Context) (v time.Time, err error) {
+func (m *InvoiceMutation) OldPaidAt(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPaidAt is only allowed on UpdateOne operations")
 	}
@@ -1453,7 +1453,7 @@ func (m *InvoiceMutation) PaidTill() (r time.Time, exists bool) {
 // OldPaidTill returns the old "paid_till" field's value of the Invoice entity.
 // If the Invoice object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvoiceMutation) OldPaidTill(ctx context.Context) (v time.Time, err error) {
+func (m *InvoiceMutation) OldPaidTill(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPaidTill is only allowed on UpdateOne operations")
 	}
@@ -2929,8 +2929,7 @@ type ProductMutation struct {
 	unique_limit         *int64
 	addunique_limit      *int64
 	is_expiring          *bool
-	recurrence_rule      *string
-	offer_in_apple_store *bool
+	expiring_time        *time.Time
 	clearedFields        map[string]struct{}
 	invoices             map[int64]struct{}
 	removedinvoices      map[int64]struct{}
@@ -3581,89 +3580,53 @@ func (m *ProductMutation) ResetIsExpiring() {
 	delete(m.clearedFields, product.FieldIsExpiring)
 }
 
-// SetRecurrenceRule sets the "recurrence_rule" field.
-func (m *ProductMutation) SetRecurrenceRule(s string) {
-	m.recurrence_rule = &s
+// SetExpiringTime sets the "expiring_time" field.
+func (m *ProductMutation) SetExpiringTime(t time.Time) {
+	m.expiring_time = &t
 }
 
-// RecurrenceRule returns the value of the "recurrence_rule" field in the mutation.
-func (m *ProductMutation) RecurrenceRule() (r string, exists bool) {
-	v := m.recurrence_rule
+// ExpiringTime returns the value of the "expiring_time" field in the mutation.
+func (m *ProductMutation) ExpiringTime() (r time.Time, exists bool) {
+	v := m.expiring_time
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldRecurrenceRule returns the old "recurrence_rule" field's value of the Product entity.
+// OldExpiringTime returns the old "expiring_time" field's value of the Product entity.
 // If the Product object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProductMutation) OldRecurrenceRule(ctx context.Context) (v *string, err error) {
+func (m *ProductMutation) OldExpiringTime(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldRecurrenceRule is only allowed on UpdateOne operations")
+		return v, errors.New("OldExpiringTime is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldRecurrenceRule requires an ID field in the mutation")
+		return v, errors.New("OldExpiringTime requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldRecurrenceRule: %w", err)
+		return v, fmt.Errorf("querying old value for OldExpiringTime: %w", err)
 	}
-	return oldValue.RecurrenceRule, nil
+	return oldValue.ExpiringTime, nil
 }
 
-// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
-func (m *ProductMutation) ClearRecurrenceRule() {
-	m.recurrence_rule = nil
-	m.clearedFields[product.FieldRecurrenceRule] = struct{}{}
+// ClearExpiringTime clears the value of the "expiring_time" field.
+func (m *ProductMutation) ClearExpiringTime() {
+	m.expiring_time = nil
+	m.clearedFields[product.FieldExpiringTime] = struct{}{}
 }
 
-// RecurrenceRuleCleared returns if the "recurrence_rule" field was cleared in this mutation.
-func (m *ProductMutation) RecurrenceRuleCleared() bool {
-	_, ok := m.clearedFields[product.FieldRecurrenceRule]
+// ExpiringTimeCleared returns if the "expiring_time" field was cleared in this mutation.
+func (m *ProductMutation) ExpiringTimeCleared() bool {
+	_, ok := m.clearedFields[product.FieldExpiringTime]
 	return ok
 }
 
-// ResetRecurrenceRule resets all changes to the "recurrence_rule" field.
-func (m *ProductMutation) ResetRecurrenceRule() {
-	m.recurrence_rule = nil
-	delete(m.clearedFields, product.FieldRecurrenceRule)
-}
-
-// SetOfferInAppleStore sets the "offer_in_apple_store" field.
-func (m *ProductMutation) SetOfferInAppleStore(b bool) {
-	m.offer_in_apple_store = &b
-}
-
-// OfferInAppleStore returns the value of the "offer_in_apple_store" field in the mutation.
-func (m *ProductMutation) OfferInAppleStore() (r bool, exists bool) {
-	v := m.offer_in_apple_store
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldOfferInAppleStore returns the old "offer_in_apple_store" field's value of the Product entity.
-// If the Product object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProductMutation) OldOfferInAppleStore(ctx context.Context) (v bool, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldOfferInAppleStore is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldOfferInAppleStore requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldOfferInAppleStore: %w", err)
-	}
-	return oldValue.OfferInAppleStore, nil
-}
-
-// ResetOfferInAppleStore resets all changes to the "offer_in_apple_store" field.
-func (m *ProductMutation) ResetOfferInAppleStore() {
-	m.offer_in_apple_store = nil
+// ResetExpiringTime resets all changes to the "expiring_time" field.
+func (m *ProductMutation) ResetExpiringTime() {
+	m.expiring_time = nil
+	delete(m.clearedFields, product.FieldExpiringTime)
 }
 
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by ids.
@@ -3862,7 +3825,7 @@ func (m *ProductMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProductMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 13)
 	if m.app_id != nil {
 		fields = append(fields, product.FieldAppID)
 	}
@@ -3899,11 +3862,8 @@ func (m *ProductMutation) Fields() []string {
 	if m.is_expiring != nil {
 		fields = append(fields, product.FieldIsExpiring)
 	}
-	if m.recurrence_rule != nil {
-		fields = append(fields, product.FieldRecurrenceRule)
-	}
-	if m.offer_in_apple_store != nil {
-		fields = append(fields, product.FieldOfferInAppleStore)
+	if m.expiring_time != nil {
+		fields = append(fields, product.FieldExpiringTime)
 	}
 	return fields
 }
@@ -3937,10 +3897,8 @@ func (m *ProductMutation) Field(name string) (ent.Value, bool) {
 		return m.UniqueLimit()
 	case product.FieldIsExpiring:
 		return m.IsExpiring()
-	case product.FieldRecurrenceRule:
-		return m.RecurrenceRule()
-	case product.FieldOfferInAppleStore:
-		return m.OfferInAppleStore()
+	case product.FieldExpiringTime:
+		return m.ExpiringTime()
 	}
 	return nil, false
 }
@@ -3974,10 +3932,8 @@ func (m *ProductMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldUniqueLimit(ctx)
 	case product.FieldIsExpiring:
 		return m.OldIsExpiring(ctx)
-	case product.FieldRecurrenceRule:
-		return m.OldRecurrenceRule(ctx)
-	case product.FieldOfferInAppleStore:
-		return m.OldOfferInAppleStore(ctx)
+	case product.FieldExpiringTime:
+		return m.OldExpiringTime(ctx)
 	}
 	return nil, fmt.Errorf("unknown Product field %s", name)
 }
@@ -4071,19 +4027,12 @@ func (m *ProductMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetIsExpiring(v)
 		return nil
-	case product.FieldRecurrenceRule:
-		v, ok := value.(string)
+	case product.FieldExpiringTime:
+		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetRecurrenceRule(v)
-		return nil
-	case product.FieldOfferInAppleStore:
-		v, ok := value.(bool)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetOfferInAppleStore(v)
+		m.SetExpiringTime(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Product field %s", name)
@@ -4163,8 +4112,8 @@ func (m *ProductMutation) ClearedFields() []string {
 	if m.FieldCleared(product.FieldIsExpiring) {
 		fields = append(fields, product.FieldIsExpiring)
 	}
-	if m.FieldCleared(product.FieldRecurrenceRule) {
-		fields = append(fields, product.FieldRecurrenceRule)
+	if m.FieldCleared(product.FieldExpiringTime) {
+		fields = append(fields, product.FieldExpiringTime)
 	}
 	return fields
 }
@@ -4189,8 +4138,8 @@ func (m *ProductMutation) ClearField(name string) error {
 	case product.FieldIsExpiring:
 		m.ClearIsExpiring()
 		return nil
-	case product.FieldRecurrenceRule:
-		m.ClearRecurrenceRule()
+	case product.FieldExpiringTime:
+		m.ClearExpiringTime()
 		return nil
 	}
 	return fmt.Errorf("unknown Product nullable field %s", name)
@@ -4236,11 +4185,8 @@ func (m *ProductMutation) ResetField(name string) error {
 	case product.FieldIsExpiring:
 		m.ResetIsExpiring()
 		return nil
-	case product.FieldRecurrenceRule:
-		m.ResetRecurrenceRule()
-		return nil
-	case product.FieldOfferInAppleStore:
-		m.ResetOfferInAppleStore()
+	case product.FieldExpiringTime:
+		m.ResetExpiringTime()
 		return nil
 	}
 	return fmt.Errorf("unknown Product field %s", name)
@@ -4393,7 +4339,6 @@ type SubscriptionsMutation struct {
 	tenant_id       *int64
 	addtenant_id    *int64
 	app_id          *string
-	renewal_rate    *time.Time
 	clearedFields   map[string]struct{}
 	invoices        map[int64]struct{}
 	removedinvoices map[int64]struct{}
@@ -4693,55 +4638,6 @@ func (m *SubscriptionsMutation) ResetProductID() {
 	m.product = nil
 }
 
-// SetRenewalRate sets the "renewal_rate" field.
-func (m *SubscriptionsMutation) SetRenewalRate(t time.Time) {
-	m.renewal_rate = &t
-}
-
-// RenewalRate returns the value of the "renewal_rate" field in the mutation.
-func (m *SubscriptionsMutation) RenewalRate() (r time.Time, exists bool) {
-	v := m.renewal_rate
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldRenewalRate returns the old "renewal_rate" field's value of the Subscriptions entity.
-// If the Subscriptions object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SubscriptionsMutation) OldRenewalRate(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldRenewalRate is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldRenewalRate requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldRenewalRate: %w", err)
-	}
-	return oldValue.RenewalRate, nil
-}
-
-// ClearRenewalRate clears the value of the "renewal_rate" field.
-func (m *SubscriptionsMutation) ClearRenewalRate() {
-	m.renewal_rate = nil
-	m.clearedFields[subscriptions.FieldRenewalRate] = struct{}{}
-}
-
-// RenewalRateCleared returns if the "renewal_rate" field was cleared in this mutation.
-func (m *SubscriptionsMutation) RenewalRateCleared() bool {
-	_, ok := m.clearedFields[subscriptions.FieldRenewalRate]
-	return ok
-}
-
-// ResetRenewalRate resets all changes to the "renewal_rate" field.
-func (m *SubscriptionsMutation) ResetRenewalRate() {
-	m.renewal_rate = nil
-	delete(m.clearedFields, subscriptions.FieldRenewalRate)
-}
-
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by ids.
 func (m *SubscriptionsMutation) AddInvoiceIDs(ids ...int64) {
 	if m.invoices == nil {
@@ -4857,7 +4753,7 @@ func (m *SubscriptionsMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SubscriptionsMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 4)
 	if m.user_id != nil {
 		fields = append(fields, subscriptions.FieldUserID)
 	}
@@ -4869,9 +4765,6 @@ func (m *SubscriptionsMutation) Fields() []string {
 	}
 	if m.product != nil {
 		fields = append(fields, subscriptions.FieldProductID)
-	}
-	if m.renewal_rate != nil {
-		fields = append(fields, subscriptions.FieldRenewalRate)
 	}
 	return fields
 }
@@ -4889,8 +4782,6 @@ func (m *SubscriptionsMutation) Field(name string) (ent.Value, bool) {
 		return m.AppID()
 	case subscriptions.FieldProductID:
 		return m.ProductID()
-	case subscriptions.FieldRenewalRate:
-		return m.RenewalRate()
 	}
 	return nil, false
 }
@@ -4908,8 +4799,6 @@ func (m *SubscriptionsMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldAppID(ctx)
 	case subscriptions.FieldProductID:
 		return m.OldProductID(ctx)
-	case subscriptions.FieldRenewalRate:
-		return m.OldRenewalRate(ctx)
 	}
 	return nil, fmt.Errorf("unknown Subscriptions field %s", name)
 }
@@ -4946,13 +4835,6 @@ func (m *SubscriptionsMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProductID(v)
-		return nil
-	case subscriptions.FieldRenewalRate:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetRenewalRate(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Subscriptions field %s", name)
@@ -5010,11 +4892,7 @@ func (m *SubscriptionsMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *SubscriptionsMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(subscriptions.FieldRenewalRate) {
-		fields = append(fields, subscriptions.FieldRenewalRate)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -5027,11 +4905,6 @@ func (m *SubscriptionsMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *SubscriptionsMutation) ClearField(name string) error {
-	switch name {
-	case subscriptions.FieldRenewalRate:
-		m.ClearRenewalRate()
-		return nil
-	}
 	return fmt.Errorf("unknown Subscriptions nullable field %s", name)
 }
 
@@ -5050,9 +4923,6 @@ func (m *SubscriptionsMutation) ResetField(name string) error {
 		return nil
 	case subscriptions.FieldProductID:
 		m.ResetProductID()
-		return nil
-	case subscriptions.FieldRenewalRate:
-		m.ResetRenewalRate()
 		return nil
 	}
 	return fmt.Errorf("unknown Subscriptions field %s", name)

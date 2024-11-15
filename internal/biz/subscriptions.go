@@ -18,7 +18,7 @@ type SubscriptionsUseCase struct {
 	subscriptionRepo data.SubscriptionsRepo
 }
 
-func NewSubscriptionRepo(
+func NewSubscriptionUsecase(
 	subscriptionRepo data.SubscriptionsRepo,
 ) *SubscriptionsUseCase {
 	return &SubscriptionsUseCase{
@@ -38,9 +38,10 @@ func (uc *SubscriptionsUseCase) CreateSubscription(
 }
 
 func (uc *SubscriptionsUseCase) GetSubscription(
-	ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64,
+	ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64, withInvoices bool,
 ) (*ent.Subscriptions, error) {
-	subscription, err := uc.subscriptionRepo.GetSubscription(ctx, actorID, tenantID, appID, subscriptionID)
+	subscription, err := uc.subscriptionRepo.GetSubscription(ctx, actorID, tenantID, appID, subscriptionID,
+		withInvoices)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to get subscription, err %s", err.Error())
 	}
@@ -58,9 +59,9 @@ func (uc *SubscriptionsUseCase) DeleteSubscription(ctx context.Context, actorID,
 }
 
 func (uc *SubscriptionsUseCase) ListSubscriptions(
-	ctx context.Context, actorID int64, paginate *utils_v1.PaginateRequest,
+	ctx context.Context, actorID int64, withInvoices bool, paginate *utils_v1.PaginateRequest,
 ) (*SubscriptionList, error) {
-	subscriptions, err := uc.subscriptionRepo.ListSubscriptions(ctx, actorID, paginate)
+	subscriptions, err := uc.subscriptionRepo.ListSubscriptions(ctx, actorID, withInvoices, paginate)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to list subscriptions, err %s", err.Error())
 	}
@@ -82,4 +83,24 @@ func (uc *SubscriptionsUseCase) ListSubscriptions(
 		Subscriptions: subscriptions,
 		PaginateReply: paginateReply,
 	}, nil
+}
+
+func ReplySubscription(sub *ent.Subscriptions) *v1.Subscription {
+	return &v1.Subscription{
+		Id:        sub.ID,
+		UserId:    sub.UserID,
+		TenantId:  sub.TenantID,
+		AppId:     sub.AppID,
+		ProductId: sub.ProductID,
+	}
+}
+
+func ReplySubscriptions(subs []*ent.Subscriptions) []*v1.Subscription {
+	reply := make([]*v1.Subscription, len(subs))
+
+	for i, sub := range subs {
+		reply[i] = ReplySubscription(sub)
+	}
+
+	return reply
 }

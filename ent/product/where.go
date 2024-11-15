@@ -116,14 +116,9 @@ func IsExpiring(v bool) predicate.Product {
 	return predicate.Product(sql.FieldEQ(FieldIsExpiring, v))
 }
 
-// RecurrenceRule applies equality check predicate on the "recurrence_rule" field. It's identical to RecurrenceRuleEQ.
-func RecurrenceRule(v string) predicate.Product {
-	return predicate.Product(sql.FieldEQ(FieldRecurrenceRule, v))
-}
-
-// OfferInAppleStore applies equality check predicate on the "offer_in_apple_store" field. It's identical to OfferInAppleStoreEQ.
-func OfferInAppleStore(v bool) predicate.Product {
-	return predicate.Product(sql.FieldEQ(FieldOfferInAppleStore, v))
+// ExpiringTime applies equality check predicate on the "expiring_time" field. It's identical to ExpiringTimeEQ.
+func ExpiringTime(v time.Time) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldExpiringTime, v))
 }
 
 // AppIDEQ applies the EQ predicate on the "app_id" field.
@@ -616,89 +611,54 @@ func IsExpiringNotNil() predicate.Product {
 	return predicate.Product(sql.FieldNotNull(FieldIsExpiring))
 }
 
-// RecurrenceRuleEQ applies the EQ predicate on the "recurrence_rule" field.
-func RecurrenceRuleEQ(v string) predicate.Product {
-	return predicate.Product(sql.FieldEQ(FieldRecurrenceRule, v))
+// ExpiringTimeEQ applies the EQ predicate on the "expiring_time" field.
+func ExpiringTimeEQ(v time.Time) predicate.Product {
+	return predicate.Product(sql.FieldEQ(FieldExpiringTime, v))
 }
 
-// RecurrenceRuleNEQ applies the NEQ predicate on the "recurrence_rule" field.
-func RecurrenceRuleNEQ(v string) predicate.Product {
-	return predicate.Product(sql.FieldNEQ(FieldRecurrenceRule, v))
+// ExpiringTimeNEQ applies the NEQ predicate on the "expiring_time" field.
+func ExpiringTimeNEQ(v time.Time) predicate.Product {
+	return predicate.Product(sql.FieldNEQ(FieldExpiringTime, v))
 }
 
-// RecurrenceRuleIn applies the In predicate on the "recurrence_rule" field.
-func RecurrenceRuleIn(vs ...string) predicate.Product {
-	return predicate.Product(sql.FieldIn(FieldRecurrenceRule, vs...))
+// ExpiringTimeIn applies the In predicate on the "expiring_time" field.
+func ExpiringTimeIn(vs ...time.Time) predicate.Product {
+	return predicate.Product(sql.FieldIn(FieldExpiringTime, vs...))
 }
 
-// RecurrenceRuleNotIn applies the NotIn predicate on the "recurrence_rule" field.
-func RecurrenceRuleNotIn(vs ...string) predicate.Product {
-	return predicate.Product(sql.FieldNotIn(FieldRecurrenceRule, vs...))
+// ExpiringTimeNotIn applies the NotIn predicate on the "expiring_time" field.
+func ExpiringTimeNotIn(vs ...time.Time) predicate.Product {
+	return predicate.Product(sql.FieldNotIn(FieldExpiringTime, vs...))
 }
 
-// RecurrenceRuleGT applies the GT predicate on the "recurrence_rule" field.
-func RecurrenceRuleGT(v string) predicate.Product {
-	return predicate.Product(sql.FieldGT(FieldRecurrenceRule, v))
+// ExpiringTimeGT applies the GT predicate on the "expiring_time" field.
+func ExpiringTimeGT(v time.Time) predicate.Product {
+	return predicate.Product(sql.FieldGT(FieldExpiringTime, v))
 }
 
-// RecurrenceRuleGTE applies the GTE predicate on the "recurrence_rule" field.
-func RecurrenceRuleGTE(v string) predicate.Product {
-	return predicate.Product(sql.FieldGTE(FieldRecurrenceRule, v))
+// ExpiringTimeGTE applies the GTE predicate on the "expiring_time" field.
+func ExpiringTimeGTE(v time.Time) predicate.Product {
+	return predicate.Product(sql.FieldGTE(FieldExpiringTime, v))
 }
 
-// RecurrenceRuleLT applies the LT predicate on the "recurrence_rule" field.
-func RecurrenceRuleLT(v string) predicate.Product {
-	return predicate.Product(sql.FieldLT(FieldRecurrenceRule, v))
+// ExpiringTimeLT applies the LT predicate on the "expiring_time" field.
+func ExpiringTimeLT(v time.Time) predicate.Product {
+	return predicate.Product(sql.FieldLT(FieldExpiringTime, v))
 }
 
-// RecurrenceRuleLTE applies the LTE predicate on the "recurrence_rule" field.
-func RecurrenceRuleLTE(v string) predicate.Product {
-	return predicate.Product(sql.FieldLTE(FieldRecurrenceRule, v))
+// ExpiringTimeLTE applies the LTE predicate on the "expiring_time" field.
+func ExpiringTimeLTE(v time.Time) predicate.Product {
+	return predicate.Product(sql.FieldLTE(FieldExpiringTime, v))
 }
 
-// RecurrenceRuleContains applies the Contains predicate on the "recurrence_rule" field.
-func RecurrenceRuleContains(v string) predicate.Product {
-	return predicate.Product(sql.FieldContains(FieldRecurrenceRule, v))
+// ExpiringTimeIsNil applies the IsNil predicate on the "expiring_time" field.
+func ExpiringTimeIsNil() predicate.Product {
+	return predicate.Product(sql.FieldIsNull(FieldExpiringTime))
 }
 
-// RecurrenceRuleHasPrefix applies the HasPrefix predicate on the "recurrence_rule" field.
-func RecurrenceRuleHasPrefix(v string) predicate.Product {
-	return predicate.Product(sql.FieldHasPrefix(FieldRecurrenceRule, v))
-}
-
-// RecurrenceRuleHasSuffix applies the HasSuffix predicate on the "recurrence_rule" field.
-func RecurrenceRuleHasSuffix(v string) predicate.Product {
-	return predicate.Product(sql.FieldHasSuffix(FieldRecurrenceRule, v))
-}
-
-// RecurrenceRuleIsNil applies the IsNil predicate on the "recurrence_rule" field.
-func RecurrenceRuleIsNil() predicate.Product {
-	return predicate.Product(sql.FieldIsNull(FieldRecurrenceRule))
-}
-
-// RecurrenceRuleNotNil applies the NotNil predicate on the "recurrence_rule" field.
-func RecurrenceRuleNotNil() predicate.Product {
-	return predicate.Product(sql.FieldNotNull(FieldRecurrenceRule))
-}
-
-// RecurrenceRuleEqualFold applies the EqualFold predicate on the "recurrence_rule" field.
-func RecurrenceRuleEqualFold(v string) predicate.Product {
-	return predicate.Product(sql.FieldEqualFold(FieldRecurrenceRule, v))
-}
-
-// RecurrenceRuleContainsFold applies the ContainsFold predicate on the "recurrence_rule" field.
-func RecurrenceRuleContainsFold(v string) predicate.Product {
-	return predicate.Product(sql.FieldContainsFold(FieldRecurrenceRule, v))
-}
-
-// OfferInAppleStoreEQ applies the EQ predicate on the "offer_in_apple_store" field.
-func OfferInAppleStoreEQ(v bool) predicate.Product {
-	return predicate.Product(sql.FieldEQ(FieldOfferInAppleStore, v))
-}
-
-// OfferInAppleStoreNEQ applies the NEQ predicate on the "offer_in_apple_store" field.
-func OfferInAppleStoreNEQ(v bool) predicate.Product {
-	return predicate.Product(sql.FieldNEQ(FieldOfferInAppleStore, v))
+// ExpiringTimeNotNil applies the NotNil predicate on the "expiring_time" field.
+func ExpiringTimeNotNil() predicate.Product {
+	return predicate.Product(sql.FieldNotNull(FieldExpiringTime))
 }
 
 // HasInvoices applies the HasEdge predicate on the "invoices" edge.

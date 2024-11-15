@@ -13,12 +13,12 @@ type SubscriptionsRepo interface {
 		ctx context.Context, actorID, tenantID int64, appID string, dto *SubscriptionDto,
 	) (*ent.Subscriptions, error)
 	GetSubscription(
-		ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64,
+		ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64, withInvoices bool,
 	) (*ent.Subscriptions, error)
 	DeleteSubscription(ctx context.Context, actorID, subscriptionID int64) error
 	CountSubscriptions(ctx context.Context, actorID int64) (int32, error)
 	ListSubscriptions(
-		ctx context.Context, actorID int64, paginate *utils_v1.PaginateRequest,
+		ctx context.Context, actorID int64, withInvoices bool, paginate *utils_v1.PaginateRequest,
 	) ([]*ent.Subscriptions, error)
 }
 
@@ -36,14 +36,15 @@ func (r *subscriptionsRepo) CreateSubscription(
 	ctx context.Context, actorID, tenantID int64, appID string, dto *SubscriptionDto,
 ) (*ent.Subscriptions, error) {
 	return r.db.Subscriptions.Create().
-		SetUserID(dto.UserID).
-		SetTenantID(dto.TenantID).
-		SetAppID(dto.AppID).
+		SetUserID(actorID).
+		SetTenantID(tenantID).
+		SetAppID(appID).
+		SetProductID(dto.ProductID).
 		Save(ctx)
 }
 
 func (r *subscriptionsRepo) GetSubscription(
-	ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64,
+	ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64, withInvoices bool,
 ) (*ent.Subscriptions, error) {
 	return r.db.Subscriptions.Query().
 		Where(
@@ -52,6 +53,7 @@ func (r *subscriptionsRepo) GetSubscription(
 			subscriptions.TenantID(tenantID),
 			subscriptions.AppID(appID),
 		).
+		WithInvoices().
 		Only(ctx)
 }
 
@@ -74,13 +76,14 @@ func (r *subscriptionsRepo) CountSubscriptions(ctx context.Context, actorID int6
 }
 
 func (r *subscriptionsRepo) ListSubscriptions(
-	ctx context.Context, actorID int64, paginate *utils_v1.PaginateRequest,
+	ctx context.Context, actorID int64, withInvoices bool, paginate *utils_v1.PaginateRequest,
 ) ([]*ent.Subscriptions, error) {
 	return r.db.Subscriptions.Query().
 		Where(
 			subscriptions.UserID(actorID),
 			subscriptions.IDGT(paginate.GetFromId()),
 		).
+		WithInvoices().
 		Limit(int(paginate.Limit)).
 		All(ctx)
 }

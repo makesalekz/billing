@@ -3,8 +3,6 @@
 package subscriptions
 
 import (
-	"time"
-
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
@@ -73,11 +71,6 @@ func AppID(v string) predicate.Subscriptions {
 // ProductID applies equality check predicate on the "product_id" field. It's identical to ProductIDEQ.
 func ProductID(v int64) predicate.Subscriptions {
 	return predicate.Subscriptions(sql.FieldEQ(FieldProductID, v))
-}
-
-// RenewalRate applies equality check predicate on the "renewal_rate" field. It's identical to RenewalRateEQ.
-func RenewalRate(v time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldEQ(FieldRenewalRate, v))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
@@ -243,56 +236,6 @@ func ProductIDIn(vs ...int64) predicate.Subscriptions {
 // ProductIDNotIn applies the NotIn predicate on the "product_id" field.
 func ProductIDNotIn(vs ...int64) predicate.Subscriptions {
 	return predicate.Subscriptions(sql.FieldNotIn(FieldProductID, vs...))
-}
-
-// RenewalRateEQ applies the EQ predicate on the "renewal_rate" field.
-func RenewalRateEQ(v time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldEQ(FieldRenewalRate, v))
-}
-
-// RenewalRateNEQ applies the NEQ predicate on the "renewal_rate" field.
-func RenewalRateNEQ(v time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldNEQ(FieldRenewalRate, v))
-}
-
-// RenewalRateIn applies the In predicate on the "renewal_rate" field.
-func RenewalRateIn(vs ...time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldIn(FieldRenewalRate, vs...))
-}
-
-// RenewalRateNotIn applies the NotIn predicate on the "renewal_rate" field.
-func RenewalRateNotIn(vs ...time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldNotIn(FieldRenewalRate, vs...))
-}
-
-// RenewalRateGT applies the GT predicate on the "renewal_rate" field.
-func RenewalRateGT(v time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldGT(FieldRenewalRate, v))
-}
-
-// RenewalRateGTE applies the GTE predicate on the "renewal_rate" field.
-func RenewalRateGTE(v time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldGTE(FieldRenewalRate, v))
-}
-
-// RenewalRateLT applies the LT predicate on the "renewal_rate" field.
-func RenewalRateLT(v time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldLT(FieldRenewalRate, v))
-}
-
-// RenewalRateLTE applies the LTE predicate on the "renewal_rate" field.
-func RenewalRateLTE(v time.Time) predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldLTE(FieldRenewalRate, v))
-}
-
-// RenewalRateIsNil applies the IsNil predicate on the "renewal_rate" field.
-func RenewalRateIsNil() predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldIsNull(FieldRenewalRate))
-}
-
-// RenewalRateNotNil applies the NotNil predicate on the "renewal_rate" field.
-func RenewalRateNotNil() predicate.Subscriptions {
-	return predicate.Subscriptions(sql.FieldNotNull(FieldRenewalRate))
 }
 
 // HasInvoices applies the HasEdge predicate on the "invoices" edge.

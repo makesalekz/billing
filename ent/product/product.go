@@ -36,10 +36,8 @@ const (
 	FieldUniqueLimit = "unique_limit"
 	// FieldIsExpiring holds the string denoting the is_expiring field in the database.
 	FieldIsExpiring = "is_expiring"
-	// FieldRecurrenceRule holds the string denoting the recurrence_rule field in the database.
-	FieldRecurrenceRule = "recurrence_rule"
-	// FieldOfferInAppleStore holds the string denoting the offer_in_apple_store field in the database.
-	FieldOfferInAppleStore = "offer_in_apple_store"
+	// FieldExpiringTime holds the string denoting the expiring_time field in the database.
+	FieldExpiringTime = "expiring_time"
 	// EdgeInvoices holds the string denoting the invoices edge name in mutations.
 	EdgeInvoices = "invoices"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
@@ -86,8 +84,7 @@ var Columns = []string{
 	FieldIsUnique,
 	FieldUniqueLimit,
 	FieldIsExpiring,
-	FieldRecurrenceRule,
-	FieldOfferInAppleStore,
+	FieldExpiringTime,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -119,10 +116,6 @@ var (
 	UniqueLimitValidator func(int64) error
 	// DefaultIsExpiring holds the default value on creation for the "is_expiring" field.
 	DefaultIsExpiring bool
-	// RecurrenceRuleValidator is a validator for the "recurrence_rule" field. It is called by the builders before save.
-	RecurrenceRuleValidator func(string) error
-	// DefaultOfferInAppleStore holds the default value on creation for the "offer_in_apple_store" field.
-	DefaultOfferInAppleStore bool
 )
 
 // OrderOption defines the ordering options for the Product queries.
@@ -193,14 +186,9 @@ func ByIsExpiring(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsExpiring, opts...).ToFunc()
 }
 
-// ByRecurrenceRule orders the results by the recurrence_rule field.
-func ByRecurrenceRule(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldRecurrenceRule, opts...).ToFunc()
-}
-
-// ByOfferInAppleStore orders the results by the offer_in_apple_store field.
-func ByOfferInAppleStore(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOfferInAppleStore, opts...).ToFunc()
+// ByExpiringTime orders the results by the expiring_time field.
+func ByExpiringTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpiringTime, opts...).ToFunc()
 }
 
 // ByInvoicesCount orders the results by invoices count.

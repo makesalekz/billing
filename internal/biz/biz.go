@@ -9,6 +9,9 @@ import (
 var ProviderSet = wire.NewSet(
 	nats.NewQueueManager,
 	NewItemsUsecase,
+	NewProductUseCase,
+	NewInvoicesUseCase,
+	NewSubscriptionUsecase,
 )
 
 const (

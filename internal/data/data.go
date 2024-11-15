@@ -27,6 +27,9 @@ var ProviderSet = wire.NewSet(
 	u_tracing.NewTracer,
 	u_nats.NewQueueManager,
 	NewItemsRepo,
+	NewProductsRepo,
+	NewInvoicesRepo,
+	NewSubscriptionsRepo,
 )
 
 // Data .

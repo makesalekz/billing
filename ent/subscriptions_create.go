@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -45,20 +44,6 @@ func (sc *SubscriptionsCreate) SetAppID(s string) *SubscriptionsCreate {
 // SetProductID sets the "product_id" field.
 func (sc *SubscriptionsCreate) SetProductID(i int64) *SubscriptionsCreate {
 	sc.mutation.SetProductID(i)
-	return sc
-}
-
-// SetRenewalRate sets the "renewal_rate" field.
-func (sc *SubscriptionsCreate) SetRenewalRate(t time.Time) *SubscriptionsCreate {
-	sc.mutation.SetRenewalRate(t)
-	return sc
-}
-
-// SetNillableRenewalRate sets the "renewal_rate" field if the given value is not nil.
-func (sc *SubscriptionsCreate) SetNillableRenewalRate(t *time.Time) *SubscriptionsCreate {
-	if t != nil {
-		sc.SetRenewalRate(*t)
-	}
 	return sc
 }
 
@@ -182,10 +167,6 @@ func (sc *SubscriptionsCreate) createSpec() (*Subscriptions, *sqlgraph.CreateSpe
 		_spec.SetField(subscriptions.FieldAppID, field.TypeString, value)
 		_node.AppID = value
 	}
-	if value, ok := sc.mutation.RenewalRate(); ok {
-		_spec.SetField(subscriptions.FieldRenewalRate, field.TypeTime, value)
-		_node.RenewalRate = value
-	}
 	if nodes := sc.mutation.InvoicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -271,24 +252,6 @@ type (
 	}
 )
 
-// SetRenewalRate sets the "renewal_rate" field.
-func (u *SubscriptionsUpsert) SetRenewalRate(v time.Time) *SubscriptionsUpsert {
-	u.Set(subscriptions.FieldRenewalRate, v)
-	return u
-}
-
-// UpdateRenewalRate sets the "renewal_rate" field to the value that was provided on create.
-func (u *SubscriptionsUpsert) UpdateRenewalRate() *SubscriptionsUpsert {
-	u.SetExcluded(subscriptions.FieldRenewalRate)
-	return u
-}
-
-// ClearRenewalRate clears the value of the "renewal_rate" field.
-func (u *SubscriptionsUpsert) ClearRenewalRate() *SubscriptionsUpsert {
-	u.SetNull(subscriptions.FieldRenewalRate)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -347,27 +310,6 @@ func (u *SubscriptionsUpsertOne) Update(set func(*SubscriptionsUpsert)) *Subscri
 		set(&SubscriptionsUpsert{UpdateSet: update})
 	}))
 	return u
-}
-
-// SetRenewalRate sets the "renewal_rate" field.
-func (u *SubscriptionsUpsertOne) SetRenewalRate(v time.Time) *SubscriptionsUpsertOne {
-	return u.Update(func(s *SubscriptionsUpsert) {
-		s.SetRenewalRate(v)
-	})
-}
-
-// UpdateRenewalRate sets the "renewal_rate" field to the value that was provided on create.
-func (u *SubscriptionsUpsertOne) UpdateRenewalRate() *SubscriptionsUpsertOne {
-	return u.Update(func(s *SubscriptionsUpsert) {
-		s.UpdateRenewalRate()
-	})
-}
-
-// ClearRenewalRate clears the value of the "renewal_rate" field.
-func (u *SubscriptionsUpsertOne) ClearRenewalRate() *SubscriptionsUpsertOne {
-	return u.Update(func(s *SubscriptionsUpsert) {
-		s.ClearRenewalRate()
-	})
 }
 
 // Exec executes the query.
@@ -593,27 +535,6 @@ func (u *SubscriptionsUpsertBulk) Update(set func(*SubscriptionsUpsert)) *Subscr
 		set(&SubscriptionsUpsert{UpdateSet: update})
 	}))
 	return u
-}
-
-// SetRenewalRate sets the "renewal_rate" field.
-func (u *SubscriptionsUpsertBulk) SetRenewalRate(v time.Time) *SubscriptionsUpsertBulk {
-	return u.Update(func(s *SubscriptionsUpsert) {
-		s.SetRenewalRate(v)
-	})
-}
-
-// UpdateRenewalRate sets the "renewal_rate" field to the value that was provided on create.
-func (u *SubscriptionsUpsertBulk) UpdateRenewalRate() *SubscriptionsUpsertBulk {
-	return u.Update(func(s *SubscriptionsUpsert) {
-		s.UpdateRenewalRate()
-	})
-}
-
-// ClearRenewalRate clears the value of the "renewal_rate" field.
-func (u *SubscriptionsUpsertBulk) ClearRenewalRate() *SubscriptionsUpsertBulk {
-	return u.Update(func(s *SubscriptionsUpsert) {
-		s.ClearRenewalRate()
-	})
 }
 
 // Exec executes the query.

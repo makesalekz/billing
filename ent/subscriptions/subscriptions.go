@@ -20,8 +20,6 @@ const (
 	FieldAppID = "app_id"
 	// FieldProductID holds the string denoting the product_id field in the database.
 	FieldProductID = "product_id"
-	// FieldRenewalRate holds the string denoting the renewal_rate field in the database.
-	FieldRenewalRate = "renewal_rate"
 	// EdgeInvoices holds the string denoting the invoices edge name in mutations.
 	EdgeInvoices = "invoices"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
@@ -51,7 +49,6 @@ var Columns = []string{
 	FieldTenantID,
 	FieldAppID,
 	FieldProductID,
-	FieldRenewalRate,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -90,11 +87,6 @@ func ByAppID(opts ...sql.OrderTermOption) OrderOption {
 // ByProductID orders the results by the product_id field.
 func ByProductID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProductID, opts...).ToFunc()
-}
-
-// ByRenewalRate orders the results by the renewal_rate field.
-func ByRenewalRate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldRenewalRate, opts...).ToFunc()
 }
 
 // ByInvoicesCount orders the results by invoices count.

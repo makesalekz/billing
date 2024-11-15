@@ -38,9 +38,9 @@ type Invoice struct {
 	// Status holds the value of the "status" field.
 	Status enum.InvoiceStatus `json:"status,omitempty"`
 	// PaidAt holds the value of the "paid_at" field.
-	PaidAt time.Time `json:"paid_at,omitempty"`
+	PaidAt *time.Time `json:"paid_at,omitempty"`
 	// PaidTill holds the value of the "paid_till" field.
-	PaidTill time.Time `json:"paid_till,omitempty"`
+	PaidTill *time.Time `json:"paid_till,omitempty"`
 	// IsPaidAtProcessed holds the value of the "is_paid_at_processed" field.
 	IsPaidAtProcessed bool `json:"is_paid_at_processed,omitempty"`
 	// IsPaidTillProcessed holds the value of the "is_paid_till_processed" field.
@@ -174,13 +174,15 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 			if value, ok := values[j].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field paid_at", values[j])
 			} else if value.Valid {
-				i.PaidAt = value.Time
+				i.PaidAt = new(time.Time)
+				*i.PaidAt = value.Time
 			}
 		case invoice.FieldPaidTill:
 			if value, ok := values[j].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field paid_till", values[j])
 			} else if value.Valid {
-				i.PaidTill = value.Time
+				i.PaidTill = new(time.Time)
+				*i.PaidTill = value.Time
 			}
 		case invoice.FieldIsPaidAtProcessed:
 			if value, ok := values[j].(*sql.NullBool); !ok {
@@ -271,11 +273,15 @@ func (i *Invoice) String() string {
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", i.Status))
 	builder.WriteString(", ")
-	builder.WriteString("paid_at=")
-	builder.WriteString(i.PaidAt.Format(time.ANSIC))
+	if v := i.PaidAt; v != nil {
+		builder.WriteString("paid_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
-	builder.WriteString("paid_till=")
-	builder.WriteString(i.PaidTill.Format(time.ANSIC))
+	if v := i.PaidTill; v != nil {
+		builder.WriteString("paid_till=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("is_paid_at_processed=")
 	builder.WriteString(fmt.Sprintf("%v", i.IsPaidAtProcessed))

@@ -42,10 +42,8 @@ type Product struct {
 	UniqueLimit int64 `json:"unique_limit,omitempty"`
 	// Indicates that this product requires renewal.
 	IsExpiring bool `json:"is_expiring,omitempty"`
-	// Recurrence rule for renewal.
-	RecurrenceRule *string `json:"recurrence_rule,omitempty"`
-	// Indicates that this product is available in Apple Store.
-	OfferInAppleStore bool `json:"offer_in_apple_store,omitempty"`
+	// Time when this product expires.
+	ExpiringTime *time.Time `json:"expiring_time,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProductQuery when eager-loading is set.
 	Edges        ProductEdges `json:"edges"`
@@ -99,13 +97,13 @@ func (*Product) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case product.FieldPrice:
 			values[i] = new(decimal.Decimal)
-		case product.FieldIsActive, product.FieldIsLimited, product.FieldIsUnique, product.FieldIsExpiring, product.FieldOfferInAppleStore:
+		case product.FieldIsActive, product.FieldIsLimited, product.FieldIsUnique, product.FieldIsExpiring:
 			values[i] = new(sql.NullBool)
 		case product.FieldID, product.FieldLeft, product.FieldUniqueLimit:
 			values[i] = new(sql.NullInt64)
-		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency, product.FieldRecurrenceRule:
+		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency:
 			values[i] = new(sql.NullString)
-		case product.FieldLimitedTill:
+		case product.FieldLimitedTill, product.FieldExpiringTime:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -201,18 +199,12 @@ func (pr *Product) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pr.IsExpiring = value.Bool
 			}
-		case product.FieldRecurrenceRule:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field recurrence_rule", values[i])
+		case product.FieldExpiringTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field expiring_time", values[i])
 			} else if value.Valid {
-				pr.RecurrenceRule = new(string)
-				*pr.RecurrenceRule = value.String
-			}
-		case product.FieldOfferInAppleStore:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field offer_in_apple_store", values[i])
-			} else if value.Valid {
-				pr.OfferInAppleStore = value.Bool
+				pr.ExpiringTime = new(time.Time)
+				*pr.ExpiringTime = value.Time
 			}
 		default:
 			pr.selectValues.Set(columns[i], values[i])
@@ -303,13 +295,10 @@ func (pr *Product) String() string {
 	builder.WriteString("is_expiring=")
 	builder.WriteString(fmt.Sprintf("%v", pr.IsExpiring))
 	builder.WriteString(", ")
-	if v := pr.RecurrenceRule; v != nil {
-		builder.WriteString("recurrence_rule=")
-		builder.WriteString(*v)
+	if v := pr.ExpiringTime; v != nil {
+		builder.WriteString("expiring_time=")
+		builder.WriteString(v.Format(time.ANSIC))
 	}
-	builder.WriteString(", ")
-	builder.WriteString("offer_in_apple_store=")
-	builder.WriteString(fmt.Sprintf("%v", pr.OfferInAppleStore))
 	builder.WriteByte(')')
 	return builder.String()
 }

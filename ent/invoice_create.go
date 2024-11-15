@@ -351,11 +351,11 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := ic.mutation.PaidAt(); ok {
 		_spec.SetField(invoice.FieldPaidAt, field.TypeTime, value)
-		_node.PaidAt = value
+		_node.PaidAt = &value
 	}
 	if value, ok := ic.mutation.PaidTill(); ok {
 		_spec.SetField(invoice.FieldPaidTill, field.TypeTime, value)
-		_node.PaidTill = value
+		_node.PaidTill = &value
 	}
 	if value, ok := ic.mutation.IsPaidAtProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidAtProcessed, field.TypeBool, value)

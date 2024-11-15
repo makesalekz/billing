@@ -240,37 +240,23 @@ func (pu *ProductUpdate) ClearIsExpiring() *ProductUpdate {
 	return pu
 }
 
-// SetRecurrenceRule sets the "recurrence_rule" field.
-func (pu *ProductUpdate) SetRecurrenceRule(s string) *ProductUpdate {
-	pu.mutation.SetRecurrenceRule(s)
+// SetExpiringTime sets the "expiring_time" field.
+func (pu *ProductUpdate) SetExpiringTime(t time.Time) *ProductUpdate {
+	pu.mutation.SetExpiringTime(t)
 	return pu
 }
 
-// SetNillableRecurrenceRule sets the "recurrence_rule" field if the given value is not nil.
-func (pu *ProductUpdate) SetNillableRecurrenceRule(s *string) *ProductUpdate {
-	if s != nil {
-		pu.SetRecurrenceRule(*s)
+// SetNillableExpiringTime sets the "expiring_time" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillableExpiringTime(t *time.Time) *ProductUpdate {
+	if t != nil {
+		pu.SetExpiringTime(*t)
 	}
 	return pu
 }
 
-// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
-func (pu *ProductUpdate) ClearRecurrenceRule() *ProductUpdate {
-	pu.mutation.ClearRecurrenceRule()
-	return pu
-}
-
-// SetOfferInAppleStore sets the "offer_in_apple_store" field.
-func (pu *ProductUpdate) SetOfferInAppleStore(b bool) *ProductUpdate {
-	pu.mutation.SetOfferInAppleStore(b)
-	return pu
-}
-
-// SetNillableOfferInAppleStore sets the "offer_in_apple_store" field if the given value is not nil.
-func (pu *ProductUpdate) SetNillableOfferInAppleStore(b *bool) *ProductUpdate {
-	if b != nil {
-		pu.SetOfferInAppleStore(*b)
-	}
+// ClearExpiringTime clears the value of the "expiring_time" field.
+func (pu *ProductUpdate) ClearExpiringTime() *ProductUpdate {
+	pu.mutation.ClearExpiringTime()
 	return pu
 }
 
@@ -426,11 +412,6 @@ func (pu *ProductUpdate) check() error {
 			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.RecurrenceRule(); ok {
-		if err := product.RecurrenceRuleValidator(v); err != nil {
-			return &ValidationError{Name: "recurrence_rule", err: fmt.Errorf(`ent: validator failed for field "Product.recurrence_rule": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -506,14 +487,11 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if pu.mutation.IsExpiringCleared() {
 		_spec.ClearField(product.FieldIsExpiring, field.TypeBool)
 	}
-	if value, ok := pu.mutation.RecurrenceRule(); ok {
-		_spec.SetField(product.FieldRecurrenceRule, field.TypeString, value)
+	if value, ok := pu.mutation.ExpiringTime(); ok {
+		_spec.SetField(product.FieldExpiringTime, field.TypeTime, value)
 	}
-	if pu.mutation.RecurrenceRuleCleared() {
-		_spec.ClearField(product.FieldRecurrenceRule, field.TypeString)
-	}
-	if value, ok := pu.mutation.OfferInAppleStore(); ok {
-		_spec.SetField(product.FieldOfferInAppleStore, field.TypeBool, value)
+	if pu.mutation.ExpiringTimeCleared() {
+		_spec.ClearField(product.FieldExpiringTime, field.TypeTime)
 	}
 	if pu.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -879,37 +857,23 @@ func (puo *ProductUpdateOne) ClearIsExpiring() *ProductUpdateOne {
 	return puo
 }
 
-// SetRecurrenceRule sets the "recurrence_rule" field.
-func (puo *ProductUpdateOne) SetRecurrenceRule(s string) *ProductUpdateOne {
-	puo.mutation.SetRecurrenceRule(s)
+// SetExpiringTime sets the "expiring_time" field.
+func (puo *ProductUpdateOne) SetExpiringTime(t time.Time) *ProductUpdateOne {
+	puo.mutation.SetExpiringTime(t)
 	return puo
 }
 
-// SetNillableRecurrenceRule sets the "recurrence_rule" field if the given value is not nil.
-func (puo *ProductUpdateOne) SetNillableRecurrenceRule(s *string) *ProductUpdateOne {
-	if s != nil {
-		puo.SetRecurrenceRule(*s)
+// SetNillableExpiringTime sets the "expiring_time" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillableExpiringTime(t *time.Time) *ProductUpdateOne {
+	if t != nil {
+		puo.SetExpiringTime(*t)
 	}
 	return puo
 }
 
-// ClearRecurrenceRule clears the value of the "recurrence_rule" field.
-func (puo *ProductUpdateOne) ClearRecurrenceRule() *ProductUpdateOne {
-	puo.mutation.ClearRecurrenceRule()
-	return puo
-}
-
-// SetOfferInAppleStore sets the "offer_in_apple_store" field.
-func (puo *ProductUpdateOne) SetOfferInAppleStore(b bool) *ProductUpdateOne {
-	puo.mutation.SetOfferInAppleStore(b)
-	return puo
-}
-
-// SetNillableOfferInAppleStore sets the "offer_in_apple_store" field if the given value is not nil.
-func (puo *ProductUpdateOne) SetNillableOfferInAppleStore(b *bool) *ProductUpdateOne {
-	if b != nil {
-		puo.SetOfferInAppleStore(*b)
-	}
+// ClearExpiringTime clears the value of the "expiring_time" field.
+func (puo *ProductUpdateOne) ClearExpiringTime() *ProductUpdateOne {
+	puo.mutation.ClearExpiringTime()
 	return puo
 }
 
@@ -1078,11 +1042,6 @@ func (puo *ProductUpdateOne) check() error {
 			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.RecurrenceRule(); ok {
-		if err := product.RecurrenceRuleValidator(v); err != nil {
-			return &ValidationError{Name: "recurrence_rule", err: fmt.Errorf(`ent: validator failed for field "Product.recurrence_rule": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -1175,14 +1134,11 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 	if puo.mutation.IsExpiringCleared() {
 		_spec.ClearField(product.FieldIsExpiring, field.TypeBool)
 	}
-	if value, ok := puo.mutation.RecurrenceRule(); ok {
-		_spec.SetField(product.FieldRecurrenceRule, field.TypeString, value)
+	if value, ok := puo.mutation.ExpiringTime(); ok {
+		_spec.SetField(product.FieldExpiringTime, field.TypeTime, value)
 	}
-	if puo.mutation.RecurrenceRuleCleared() {
-		_spec.ClearField(product.FieldRecurrenceRule, field.TypeString)
-	}
-	if value, ok := puo.mutation.OfferInAppleStore(); ok {
-		_spec.SetField(product.FieldOfferInAppleStore, field.TypeBool, value)
+	if puo.mutation.ExpiringTimeCleared() {
+		_spec.ClearField(product.FieldExpiringTime, field.TypeTime)
 	}
 	if puo.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{

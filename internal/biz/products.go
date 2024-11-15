@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"time"
 
 	v1 "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1"
 	"gitlab.calendaria.team/services/finance/invoices/ent"
@@ -28,10 +29,6 @@ func (uc *ProductUseCase) CreateProduct(ctx context.Context, productDto *data.Pr
 	product, err := uc.productRepo.CreateProduct(ctx, productDto)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to create product: %s", err.Error())
-	}
-
-	if productDto.OfferInAppleStore {
-
 	}
 
 	return product, nil
@@ -97,4 +94,53 @@ func (uc *ProductUseCase) ListProducts(
 		Products:      products,
 		PaginateReply: paginateReply,
 	}, nil
+}
+
+func ReplyProduct(product *ent.Product) *v1.Product {
+	reply := &v1.Product{
+		Id:          product.ID,
+		Name:        product.Name,
+		Description: product.Description,
+		Price:       product.Price.String(),
+		Currency:    product.Currency,
+		IsActive:    product.IsActive,
+		IsLimited:   product.IsLimited,
+		Left:        &product.Left,
+		IsUnique:    product.IsUnique,
+		UniqueLimit: &product.UniqueLimit,
+		IsExpiring:  product.IsExpiring,
+		Bundles:     nil,
+	}
+
+	if product.LimitedTill != nil {
+		limitedTillStr := product.LimitedTill.Format(time.RFC3339)
+
+		reply.LimitedTill = &limitedTillStr
+	}
+
+	if product.ExpiringTime != nil {
+		expiringTimeStr := product.ExpiringTime.Format(time.RFC3339)
+
+		reply.ExpiringTime = &expiringTimeStr
+	}
+
+	for _, bundle := range product.Edges.Bundles {
+		reply.Bundles = append(reply.Bundles, &v1.Bundle{
+			Id:     bundle.ID,
+			ItemId: bundle.ItemID,
+			Amount: bundle.Amount,
+		})
+	}
+
+	return reply
+}
+
+func ReplyProducts(products []*ent.Product) []*v1.Product {
+	reply := make([]*v1.Product, len(products))
+
+	for i, product := range products {
+		reply[i] = ReplyProduct(product)
+	}
+
+	return reply
 }

@@ -51,10 +51,14 @@ func (r *productsRepo) CreateProduct(ctx context.Context, productDto *ProductDto
 		SetLeft(productDto.Left).
 		SetIsUnique(productDto.IsUnique).
 		SetUniqueLimit(productDto.UniqueLimit).
-		SetOfferInAppleStore(productDto.OfferInAppleStore)
+		SetIsExpiring(productDto.IsExpiring)
 
 	if productDto.LimitedTill != nil {
 		query.SetLimitedTill(*productDto.LimitedTill)
+	}
+
+	if productDto.ExpiringTime != nil {
+		query.SetExpiringTime(*productDto.ExpiringTime)
 	}
 
 	product, err := query.Save(ctx)
@@ -112,10 +116,15 @@ func (r *productsRepo) UpdateProduct(ctx context.Context, productEnt *ent.Produc
 		SetIsLimited(productDto.IsLimited).
 		SetLeft(productDto.Left).
 		SetIsUnique(productDto.IsUnique).
-		SetUniqueLimit(productDto.UniqueLimit)
+		SetUniqueLimit(productDto.UniqueLimit).
+		SetIsExpiring(productDto.IsExpiring)
 
 	if productDto.LimitedTill != nil {
 		query.SetLimitedTill(*productDto.LimitedTill)
+	}
+
+	if productDto.ExpiringTime != nil {
+		query.SetExpiringTime(*productDto.ExpiringTime)
 	}
 
 	productEnt, err = query.Save(ctx)
@@ -183,6 +192,7 @@ func (r *productsRepo) DeleteProduct(ctx context.Context, productID int64) error
 func (r *productsRepo) GetProduct(ctx context.Context, productID int64) (*ent.Product, error) {
 	return r.db.Product.Query().
 		Where(product.ID(productID)).
+		WithBundles().
 		Only(ctx)
 }
 

@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -27,26 +26,6 @@ type SubscriptionsUpdate struct {
 // Where appends a list predicates to the SubscriptionsUpdate builder.
 func (su *SubscriptionsUpdate) Where(ps ...predicate.Subscriptions) *SubscriptionsUpdate {
 	su.mutation.Where(ps...)
-	return su
-}
-
-// SetRenewalRate sets the "renewal_rate" field.
-func (su *SubscriptionsUpdate) SetRenewalRate(t time.Time) *SubscriptionsUpdate {
-	su.mutation.SetRenewalRate(t)
-	return su
-}
-
-// SetNillableRenewalRate sets the "renewal_rate" field if the given value is not nil.
-func (su *SubscriptionsUpdate) SetNillableRenewalRate(t *time.Time) *SubscriptionsUpdate {
-	if t != nil {
-		su.SetRenewalRate(*t)
-	}
-	return su
-}
-
-// ClearRenewalRate clears the value of the "renewal_rate" field.
-func (su *SubscriptionsUpdate) ClearRenewalRate() *SubscriptionsUpdate {
-	su.mutation.ClearRenewalRate()
 	return su
 }
 
@@ -144,12 +123,6 @@ func (su *SubscriptionsUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := su.mutation.RenewalRate(); ok {
-		_spec.SetField(subscriptions.FieldRenewalRate, field.TypeTime, value)
-	}
-	if su.mutation.RenewalRateCleared() {
-		_spec.ClearField(subscriptions.FieldRenewalRate, field.TypeTime)
-	}
 	if su.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -215,26 +188,6 @@ type SubscriptionsUpdateOne struct {
 	hooks     []Hook
 	mutation  *SubscriptionsMutation
 	modifiers []func(*sql.UpdateBuilder)
-}
-
-// SetRenewalRate sets the "renewal_rate" field.
-func (suo *SubscriptionsUpdateOne) SetRenewalRate(t time.Time) *SubscriptionsUpdateOne {
-	suo.mutation.SetRenewalRate(t)
-	return suo
-}
-
-// SetNillableRenewalRate sets the "renewal_rate" field if the given value is not nil.
-func (suo *SubscriptionsUpdateOne) SetNillableRenewalRate(t *time.Time) *SubscriptionsUpdateOne {
-	if t != nil {
-		suo.SetRenewalRate(*t)
-	}
-	return suo
-}
-
-// ClearRenewalRate clears the value of the "renewal_rate" field.
-func (suo *SubscriptionsUpdateOne) ClearRenewalRate() *SubscriptionsUpdateOne {
-	suo.mutation.ClearRenewalRate()
-	return suo
 }
 
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
@@ -360,12 +313,6 @@ func (suo *SubscriptionsUpdateOne) sqlSave(ctx context.Context) (_node *Subscrip
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := suo.mutation.RenewalRate(); ok {
-		_spec.SetField(subscriptions.FieldRenewalRate, field.TypeTime, value)
-	}
-	if suo.mutation.RenewalRateCleared() {
-		_spec.ClearField(subscriptions.FieldRenewalRate, field.TypeTime)
 	}
 	if suo.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{

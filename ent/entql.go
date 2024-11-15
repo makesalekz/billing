@@ -95,20 +95,19 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Product",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			product.FieldAppID:             {Type: field.TypeString, Column: product.FieldAppID},
-			product.FieldName:              {Type: field.TypeString, Column: product.FieldName},
-			product.FieldDescription:       {Type: field.TypeString, Column: product.FieldDescription},
-			product.FieldPrice:             {Type: field.TypeFloat64, Column: product.FieldPrice},
-			product.FieldCurrency:          {Type: field.TypeString, Column: product.FieldCurrency},
-			product.FieldIsActive:          {Type: field.TypeBool, Column: product.FieldIsActive},
-			product.FieldIsLimited:         {Type: field.TypeBool, Column: product.FieldIsLimited},
-			product.FieldLimitedTill:       {Type: field.TypeTime, Column: product.FieldLimitedTill},
-			product.FieldLeft:              {Type: field.TypeInt64, Column: product.FieldLeft},
-			product.FieldIsUnique:          {Type: field.TypeBool, Column: product.FieldIsUnique},
-			product.FieldUniqueLimit:       {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
-			product.FieldIsExpiring:        {Type: field.TypeBool, Column: product.FieldIsExpiring},
-			product.FieldRecurrenceRule:    {Type: field.TypeString, Column: product.FieldRecurrenceRule},
-			product.FieldOfferInAppleStore: {Type: field.TypeBool, Column: product.FieldOfferInAppleStore},
+			product.FieldAppID:        {Type: field.TypeString, Column: product.FieldAppID},
+			product.FieldName:         {Type: field.TypeString, Column: product.FieldName},
+			product.FieldDescription:  {Type: field.TypeString, Column: product.FieldDescription},
+			product.FieldPrice:        {Type: field.TypeFloat64, Column: product.FieldPrice},
+			product.FieldCurrency:     {Type: field.TypeString, Column: product.FieldCurrency},
+			product.FieldIsActive:     {Type: field.TypeBool, Column: product.FieldIsActive},
+			product.FieldIsLimited:    {Type: field.TypeBool, Column: product.FieldIsLimited},
+			product.FieldLimitedTill:  {Type: field.TypeTime, Column: product.FieldLimitedTill},
+			product.FieldLeft:         {Type: field.TypeInt64, Column: product.FieldLeft},
+			product.FieldIsUnique:     {Type: field.TypeBool, Column: product.FieldIsUnique},
+			product.FieldUniqueLimit:  {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
+			product.FieldIsExpiring:   {Type: field.TypeBool, Column: product.FieldIsExpiring},
+			product.FieldExpiringTime: {Type: field.TypeTime, Column: product.FieldExpiringTime},
 		},
 	}
 	graph.Nodes[4] = &sqlgraph.Node{
@@ -122,11 +121,10 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Subscriptions",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			subscriptions.FieldUserID:      {Type: field.TypeInt64, Column: subscriptions.FieldUserID},
-			subscriptions.FieldTenantID:    {Type: field.TypeInt64, Column: subscriptions.FieldTenantID},
-			subscriptions.FieldAppID:       {Type: field.TypeString, Column: subscriptions.FieldAppID},
-			subscriptions.FieldProductID:   {Type: field.TypeInt64, Column: subscriptions.FieldProductID},
-			subscriptions.FieldRenewalRate: {Type: field.TypeTime, Column: subscriptions.FieldRenewalRate},
+			subscriptions.FieldUserID:    {Type: field.TypeInt64, Column: subscriptions.FieldUserID},
+			subscriptions.FieldTenantID:  {Type: field.TypeInt64, Column: subscriptions.FieldTenantID},
+			subscriptions.FieldAppID:     {Type: field.TypeString, Column: subscriptions.FieldAppID},
+			subscriptions.FieldProductID: {Type: field.TypeInt64, Column: subscriptions.FieldProductID},
 		},
 	}
 	graph.MustAddE(
@@ -678,14 +676,9 @@ func (f *ProductFilter) WhereIsExpiring(p entql.BoolP) {
 	f.Where(p.Field(product.FieldIsExpiring))
 }
 
-// WhereRecurrenceRule applies the entql string predicate on the recurrence_rule field.
-func (f *ProductFilter) WhereRecurrenceRule(p entql.StringP) {
-	f.Where(p.Field(product.FieldRecurrenceRule))
-}
-
-// WhereOfferInAppleStore applies the entql bool predicate on the offer_in_apple_store field.
-func (f *ProductFilter) WhereOfferInAppleStore(p entql.BoolP) {
-	f.Where(p.Field(product.FieldOfferInAppleStore))
+// WhereExpiringTime applies the entql time.Time predicate on the expiring_time field.
+func (f *ProductFilter) WhereExpiringTime(p entql.TimeP) {
+	f.Where(p.Field(product.FieldExpiringTime))
 }
 
 // WhereHasInvoices applies a predicate to check if query has an edge invoices.
@@ -788,11 +781,6 @@ func (f *SubscriptionsFilter) WhereAppID(p entql.StringP) {
 // WhereProductID applies the entql int64 predicate on the product_id field.
 func (f *SubscriptionsFilter) WhereProductID(p entql.Int64P) {
 	f.Where(p.Field(subscriptions.FieldProductID))
-}
-
-// WhereRenewalRate applies the entql time.Time predicate on the renewal_rate field.
-func (f *SubscriptionsFilter) WhereRenewalRate(p entql.TimeP) {
-	f.Where(p.Field(subscriptions.FieldRenewalRate))
 }
 
 // WhereHasInvoices applies a predicate to check if query has an edge invoices.

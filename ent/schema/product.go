@@ -33,8 +33,7 @@ func (Product) Fields() []ent.Field {
 		field.Bool("is_unique").Optional().Default(false).Comment("Indicates that this product can only be limited amount of times."),
 		field.Int64("unique_limit").Default(0).Max(100).Comment("Number of times this product can be purchased."),
 		field.Bool("is_expiring").Optional().Default(false).Comment("Indicates that this product requires renewal."),
-		field.String("recurrence_rule").Nillable().Optional().MaxLen(250).Comment("Recurrence rule for renewal."),
-		field.Bool("offer_in_apple_store").Default(false).Comment("Indicates that this product is available in Apple Store."),
+		field.Time("expiring_time").Optional().Nillable().Comment("Time when this product expires."),
 	}
 }
 
