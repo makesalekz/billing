@@ -133,53 +133,66 @@ func (r *productsRepo) UpdateProduct(ctx context.Context, productEnt *ent.Produc
 	}
 
 	if len(productDto.Bundles) > 0 {
-		bundlesMap := make(map[int64]float64)
-		for _, bund := range productEnt.Edges.Bundles {
-			bundlesMap[bund.ItemID] = bund.Amount
-		}
-
-		err = tx.Product.UpdateOneID(productEnt.ID).ClearBundles().Exec(ctx)
+		productEnt, err = r.updateBundles(ctx, tx, productEnt, productDto)
 		if err != nil {
 			return nil, err
 		}
-
-		var updateBundles []BundleDto
-		var createBundles []BundleDto
-
-		for _, bund := range productDto.Bundles {
-			if v, ok := bundlesMap[bund.ItemID]; !ok {
-				createBundles = append(createBundles, bund)
-			} else if v != bundlesMap[bund.ItemID] {
-				updateBundles = append(updateBundles, bund)
-			}
-		}
-
-		err = tx.Bundle.MapCreateBulk(createBundles, func(create *ent.BundleCreate, i int) {
-			create.SetAmount(createBundles[i].Amount).
-				SetItemID(createBundles[i].ItemID).
-				SetProductID(productEnt.ID)
-		}).Exec(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, updateBundle := range updateBundles {
-			err = tx.Bundle.Update().Where(
-				bundle.ProductID(productEnt.ID),
-				bundle.ItemID(updateBundle.ItemID),
-			).SetAmount(updateBundle.Amount).Exec(ctx)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		bundles, err := tx.Bundle.Query().Where(bundle.ProductID(productEnt.ID)).All(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		productEnt.Edges.Bundles = bundles
 	}
+
+	return productEnt, nil
+}
+
+func (r *productsRepo) updateBundles(ctx context.Context, tx *ent.Tx, productEnt *ent.Product, productDto *ProductDto) (
+	*ent.Product, error,
+) {
+	bundlesMap := make(map[int64]float64)
+	for _, bund := range productEnt.Edges.Bundles {
+		bundlesMap[bund.ItemID] = bund.Amount
+	}
+
+	err := tx.Product.UpdateOneID(productEnt.ID).ClearBundles().Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var updateBundles []BundleDto
+	var createBundles []BundleDto
+
+	for _, bund := range productDto.Bundles {
+		if v, ok := bundlesMap[bund.ItemID]; !ok {
+			createBundles = append(createBundles, bund)
+		} else if v != bundlesMap[bund.ItemID] {
+			updateBundles = append(updateBundles, bund)
+		}
+	}
+
+	err = tx.Bundle.MapCreateBulk(createBundles, func(create *ent.BundleCreate, i int) {
+		create.SetAmount(createBundles[i].Amount).
+			SetItemID(createBundles[i].ItemID).
+			SetProductID(productEnt.ID)
+	}).Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, updateBundle := range updateBundles {
+		err = tx.Bundle.Update().Where(
+			bundle.ProductID(productEnt.ID),
+			bundle.ItemID(updateBundle.ItemID),
+		).SetAmount(updateBundle.Amount).Exec(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var bundles []*ent.Bundle
+
+	bundles, err = tx.Bundle.Query().Where(bundle.ProductID(productEnt.ID)).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	productEnt.Edges.Bundles = bundles
 
 	return productEnt, nil
 }
@@ -202,8 +215,8 @@ func (r *productsRepo) ListProducts(
 	return r.db.Product.Query().
 		Where(
 			product.AppID(appID),
-			product.IDGT(paginate.FromId),
-		).Limit(int(paginate.Limit)).All(ctx)
+			product.IDGT(paginate.GetFromId()),
+		).Limit(int(paginate.GetLimit())).All(ctx)
 }
 
 func (r *productsRepo) CountProducts(ctx context.Context, appID string) (int32, error) {
@@ -214,5 +227,6 @@ func (r *productsRepo) CountProducts(ctx context.Context, appID string) (int32, 
 		return 0, err
 	}
 
+	//nolint:gosec // pagination limit cannot hold more than int32
 	return int32(n), nil
 }

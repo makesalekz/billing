@@ -108,13 +108,14 @@ func (r *invoicesRepo) CountInvoices(ctx context.Context, actorID int64, filter 
 		return 0, err
 	}
 
+	//nolint:gosec // pagination limit cannot hold more than int32
 	return int32(n), err
 }
 
 func (r *invoicesRepo) ListInvoices(
 	ctx context.Context, actorID int64, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
 ) ([]*ent.Invoice, error) {
-	query := r.db.Invoice.Query().Where(invoice.IDGT(paginate.GetFromId())).Limit(int(paginate.Limit))
+	query := r.db.Invoice.Query().Where(invoice.IDGT(paginate.GetFromId())).Limit(int(paginate.GetLimit()))
 
 	if filter.Status.IsValid() {
 		query.Where(invoice.StatusEQ(filter.Status))

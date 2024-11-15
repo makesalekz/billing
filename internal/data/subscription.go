@@ -72,6 +72,7 @@ func (r *subscriptionsRepo) CountSubscriptions(ctx context.Context, actorID int6
 		return 0, err
 	}
 
+	//nolint:gosec // pagination limit cannot hold more than int32
 	return int32(n), nil
 }
 
@@ -84,6 +85,6 @@ func (r *subscriptionsRepo) ListSubscriptions(
 			subscriptions.IDGT(paginate.GetFromId()),
 		).
 		WithInvoices().
-		Limit(int(paginate.Limit)).
+		Limit(int(paginate.GetLimit())).
 		All(ctx)
 }

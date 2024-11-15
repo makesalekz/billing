@@ -2,12 +2,13 @@ package service
 
 import (
 	"github.com/google/wire"
+	"gitlab.calendaria.team/services/finance/invoices/internal/biz"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 
-const DefaultPageSize = 100
-
 // ProviderSet is service providers.
+//
+//nolint:gochecknoglobals // global variable, used in wire
 var ProviderSet = wire.NewSet(
 	NewItemService,
 )
@@ -16,7 +17,7 @@ func FormPaginateRequest(req *utils_v1.PaginateRequest) *utils_v1.PaginateReques
 	if req == nil {
 		return &utils_v1.PaginateRequest{
 			FromId: 0,
-			Limit:  DefaultPageSize,
+			Limit:  biz.DefaultPageSize,
 		}
 	}
 
@@ -25,12 +26,12 @@ func FormPaginateRequest(req *utils_v1.PaginateRequest) *utils_v1.PaginateReques
 		Limit:  req.GetLimit(),
 	}
 
-	if paginateRequest.FromId == 0 {
+	if paginateRequest.GetFromId() == 0 {
 		paginateRequest.FromId = 0
 	}
 
-	if paginateRequest.Limit == 0 {
-		paginateRequest.Limit = DefaultPageSize
+	if paginateRequest.GetLimit() == 0 {
+		paginateRequest.Limit = biz.DefaultPageSize
 	}
 
 	return paginateRequest

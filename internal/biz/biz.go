@@ -6,6 +6,8 @@ import (
 )
 
 // ProviderSet is biz providers.
+//
+//nolint:gochecknoglobals // global variable, used in wire
 var ProviderSet = wire.NewSet(
 	nats.NewQueueManager,
 	NewItemsUsecase,
@@ -15,5 +17,5 @@ var ProviderSet = wire.NewSet(
 )
 
 const (
-	QueueRefreshItems = "refresh/items"
+	DefaultPageSize int32 = 100
 )

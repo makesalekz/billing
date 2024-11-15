@@ -41,10 +41,12 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *v1.CreateProduc
 		IsExpiring:  req.GetProduct().GetIsExpiring(),
 	}
 
-	//nolint:protogetter // optional field, acquired by ref
 	if req.GetProduct().LimitedTill != nil && req.GetProduct().GetLimitedTill() != "" {
 		limitedTillStr := req.GetProduct().GetLimitedTill()
-		limitedTillTime, err := time.Parse(limitedTillStr, time.RFC3339)
+
+		var limitedTillTime time.Time
+
+		limitedTillTime, err = time.Parse(limitedTillStr, time.RFC3339)
 		if err != nil {
 			return nil, v1.ErrorInvalidRequest("invalid limited till")
 		}
@@ -52,10 +54,12 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *v1.CreateProduc
 		productDto.LimitedTill = &limitedTillTime
 	}
 
-	//nolint:protogetter // optional field, acquired by ref
 	if req.GetProduct().ExpiringTime != nil && req.GetProduct().GetExpiringTime() != "" {
 		expiringTimeStr := req.GetProduct().GetExpiringTime()
-		expiringTimeTime, err := time.Parse(expiringTimeStr, time.RFC3339)
+
+		var expiringTimeTime time.Time
+
+		expiringTimeTime, err = time.Parse(expiringTimeStr, time.RFC3339)
 		if err != nil {
 			return nil, v1.ErrorInvalidRequest("invalid expiring time")
 		}
@@ -102,10 +106,12 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *v1.UpdateProduc
 		IsExpiring:  req.GetProduct().GetIsExpiring(),
 	}
 
-	//nolint:protogetter // optional field, acquired by ref
 	if req.GetProduct().LimitedTill != nil && req.GetProduct().GetLimitedTill() != "" {
 		limitedTillStr := req.GetProduct().GetLimitedTill()
-		limitedTillTime, err := time.Parse(limitedTillStr, time.RFC3339)
+
+		var limitedTillTime time.Time
+
+		limitedTillTime, err = time.Parse(limitedTillStr, time.RFC3339)
 		if err != nil {
 			return nil, v1.ErrorInvalidRequest("invalid limited till")
 		}
@@ -113,10 +119,12 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *v1.UpdateProduc
 		productDto.LimitedTill = &limitedTillTime
 	}
 
-	//nolint:protogetter // optional field, acquired by ref
 	if req.GetProduct().ExpiringTime != nil && req.GetProduct().GetExpiringTime() != "" {
 		expiringTimeStr := req.GetProduct().GetExpiringTime()
-		expiringTimeTime, err := time.Parse(expiringTimeStr, time.RFC3339)
+
+		var expiringTimeTime time.Time
+
+		expiringTimeTime, err = time.Parse(expiringTimeStr, time.RFC3339)
 		if err != nil {
 			return nil, v1.ErrorInvalidRequest("invalid expiring time")
 		}

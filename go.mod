@@ -8,12 +8,12 @@ require (
 	github.com/go-kratos/kratos/v2 v2.7.3
 	github.com/google/wire v0.6.0
 	github.com/lib/pq v1.10.9
-	github.com/nats-io/nats.go v1.37.0
+	github.com/nats-io/nats.go v1.36.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/shopspring/decimal v1.4.0
-	github.com/teambition/rrule-go v1.8.2
 	gitlab.calendaria.team/services/utils v0.3.13
 	go.uber.org/automaxprocs v1.6.0
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.1
 )
@@ -85,7 +85,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect

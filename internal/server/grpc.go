@@ -2,7 +2,7 @@ package server
 
 import (
 	v1 "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1"
-	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1"
+	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1".
 	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
 	"gitlab.calendaria.team/services/finance/invoices/internal/service"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
@@ -40,14 +40,14 @@ func NewGRPCServer(
 			),
 		),
 	}
-	if c.Server.Grpc.Network != "" {
-		opts = append(opts, grpc.Network(c.Server.Grpc.Network))
+	if c.GetServer().GetGrpc().GetNetwork() != "" {
+		opts = append(opts, grpc.Network(c.GetServer().GetGrpc().GetNetwork()))
 	}
-	if c.Server.Grpc.Addr != "" {
-		opts = append(opts, grpc.Address(c.Server.Grpc.Addr))
+	if c.GetServer().GetGrpc().GetAddr() != "" {
+		opts = append(opts, grpc.Address(c.GetServer().GetGrpc().GetAddr()))
 	}
-	if c.Server.Grpc.Timeout != nil {
-		opts = append(opts, grpc.Timeout(c.Server.Grpc.Timeout.AsDuration()))
+	if c.GetServer().GetGrpc().GetTimeout() != nil {
+		opts = append(opts, grpc.Timeout(c.GetServer().GetGrpc().GetTimeout().AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
 
