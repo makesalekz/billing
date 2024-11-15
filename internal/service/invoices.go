@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	v1 "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1"
+	v1 "gitlab.calendaria.team/services/finance/invoices/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/invoices/ent/enum"
 	"gitlab.calendaria.team/services/finance/invoices/internal/biz"
 	"gitlab.calendaria.team/services/finance/invoices/internal/data"

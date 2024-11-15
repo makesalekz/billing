@@ -14,6 +14,7 @@ type ItemDto struct {
 }
 
 type ProductDto struct {
+	AppID        string
 	Name         string
 	Description  string
 	Price        decimal.Decimal

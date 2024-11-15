@@ -30,13 +30,12 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Bundle",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			bundle.FieldDeletedAt:      {Type: field.TypeTime, Column: bundle.FieldDeletedAt},
-			bundle.FieldCreatedAt:      {Type: field.TypeTime, Column: bundle.FieldCreatedAt},
-			bundle.FieldUpdatedAt:      {Type: field.TypeTime, Column: bundle.FieldUpdatedAt},
-			bundle.FieldProductID:      {Type: field.TypeInt64, Column: bundle.FieldProductID},
-			bundle.FieldItemID:         {Type: field.TypeInt64, Column: bundle.FieldItemID},
-			bundle.FieldAmount:         {Type: field.TypeFloat64, Column: bundle.FieldAmount},
-			bundle.FieldOverusagePrice: {Type: field.TypeFloat64, Column: bundle.FieldOverusagePrice},
+			bundle.FieldDeletedAt: {Type: field.TypeTime, Column: bundle.FieldDeletedAt},
+			bundle.FieldCreatedAt: {Type: field.TypeTime, Column: bundle.FieldCreatedAt},
+			bundle.FieldUpdatedAt: {Type: field.TypeTime, Column: bundle.FieldUpdatedAt},
+			bundle.FieldProductID: {Type: field.TypeInt64, Column: bundle.FieldProductID},
+			bundle.FieldItemID:    {Type: field.TypeInt64, Column: bundle.FieldItemID},
+			bundle.FieldAmount:    {Type: field.TypeFloat64, Column: bundle.FieldAmount},
 		},
 	}
 	graph.Nodes[1] = &sqlgraph.Node{
@@ -324,11 +323,6 @@ func (f *BundleFilter) WhereItemID(p entql.Int64P) {
 // WhereAmount applies the entql float64 predicate on the amount field.
 func (f *BundleFilter) WhereAmount(p entql.Float64P) {
 	f.Where(p.Field(bundle.FieldAmount))
-}
-
-// WhereOverusagePrice applies the entql float64 predicate on the overusage_price field.
-func (f *BundleFilter) WhereOverusagePrice(p entql.Float64P) {
-	f.Where(p.Field(bundle.FieldOverusagePrice))
 }
 
 // WhereHasProduct applies a predicate to check if query has an edge product.

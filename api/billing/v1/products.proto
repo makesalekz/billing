@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package invoices.v1;
 
-import "api/invoices/v1/models.proto";
+import "api/billing/v1/models.proto";
 import "api/utils/v1/models.proto";
 
 option go_package = "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1;invoices_v1";

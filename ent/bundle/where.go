@@ -7,7 +7,6 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
 )
 
@@ -84,11 +83,6 @@ func ItemID(v int64) predicate.Bundle {
 // Amount applies equality check predicate on the "amount" field. It's identical to AmountEQ.
 func Amount(v float64) predicate.Bundle {
 	return predicate.Bundle(sql.FieldEQ(FieldAmount, v))
-}
-
-// OverusagePrice applies equality check predicate on the "overusage_price" field. It's identical to OverusagePriceEQ.
-func OverusagePrice(v decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldEQ(FieldOverusagePrice, v))
 }
 
 // DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
@@ -299,46 +293,6 @@ func AmountLT(v float64) predicate.Bundle {
 // AmountLTE applies the LTE predicate on the "amount" field.
 func AmountLTE(v float64) predicate.Bundle {
 	return predicate.Bundle(sql.FieldLTE(FieldAmount, v))
-}
-
-// OverusagePriceEQ applies the EQ predicate on the "overusage_price" field.
-func OverusagePriceEQ(v decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldEQ(FieldOverusagePrice, v))
-}
-
-// OverusagePriceNEQ applies the NEQ predicate on the "overusage_price" field.
-func OverusagePriceNEQ(v decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldNEQ(FieldOverusagePrice, v))
-}
-
-// OverusagePriceIn applies the In predicate on the "overusage_price" field.
-func OverusagePriceIn(vs ...decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldIn(FieldOverusagePrice, vs...))
-}
-
-// OverusagePriceNotIn applies the NotIn predicate on the "overusage_price" field.
-func OverusagePriceNotIn(vs ...decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldNotIn(FieldOverusagePrice, vs...))
-}
-
-// OverusagePriceGT applies the GT predicate on the "overusage_price" field.
-func OverusagePriceGT(v decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldGT(FieldOverusagePrice, v))
-}
-
-// OverusagePriceGTE applies the GTE predicate on the "overusage_price" field.
-func OverusagePriceGTE(v decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldGTE(FieldOverusagePrice, v))
-}
-
-// OverusagePriceLT applies the LT predicate on the "overusage_price" field.
-func OverusagePriceLT(v decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldLT(FieldOverusagePrice, v))
-}
-
-// OverusagePriceLTE applies the LTE predicate on the "overusage_price" field.
-func OverusagePriceLTE(v decimal.Decimal) predicate.Bundle {
-	return predicate.Bundle(sql.FieldLTE(FieldOverusagePrice, v))
 }
 
 // HasProduct applies the HasEdge predicate on the "product" edge.

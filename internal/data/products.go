@@ -3,7 +3,7 @@ package data
 import (
 	"context"
 
-	v1 "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1"
+	v1 "gitlab.calendaria.team/services/finance/invoices/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/invoices/ent"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
@@ -42,6 +42,7 @@ func (r *productsRepo) CreateProduct(ctx context.Context, productDto *ProductDto
 	}()
 
 	query := tx.Product.Create().
+		SetAppID(productDto.AppID).
 		SetName(productDto.Name).
 		SetDescription(productDto.Description).
 		SetCurrency(productDto.Currency).
@@ -127,22 +128,34 @@ func (r *productsRepo) UpdateProduct(ctx context.Context, productEnt *ent.Produc
 		query.SetExpiringTime(*productDto.ExpiringTime)
 	}
 
-	productEnt, err = query.Save(ctx)
+	updatedProduct, err := query.Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	updatedProduct.Edges = productEnt.Edges
+
 	if len(productDto.Bundles) > 0 {
-		productEnt, err = r.updateBundles(ctx, tx, productEnt, productDto)
+		updatedProduct, err = r.updateBundles(ctx, tx, updatedProduct, productDto)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return productEnt, nil
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedProduct, nil
 }
 
-func (r *productsRepo) updateBundles(ctx context.Context, tx *ent.Tx, productEnt *ent.Product, productDto *ProductDto) (
+func (r *productsRepo) updateBundles(
+	ctx context.Context,
+	tx *ent.Tx,
+	productEnt *ent.Product,
+	productDto *ProductDto,
+) (
 	*ent.Product, error,
 ) {
 	bundlesMap := make(map[int64]float64)
@@ -150,20 +163,28 @@ func (r *productsRepo) updateBundles(ctx context.Context, tx *ent.Tx, productEnt
 		bundlesMap[bund.ItemID] = bund.Amount
 	}
 
-	err := tx.Product.UpdateOneID(productEnt.ID).ClearBundles().Exec(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	var updateBundles []BundleDto
 	var createBundles []BundleDto
+	var unchangedBundles []int64
 
 	for _, bund := range productDto.Bundles {
-		if v, ok := bundlesMap[bund.ItemID]; !ok {
+		if _, ok := bundlesMap[bund.ItemID]; !ok {
 			createBundles = append(createBundles, bund)
-		} else if v != bundlesMap[bund.ItemID] {
+		} else if bund.Amount != bundlesMap[bund.ItemID] {
 			updateBundles = append(updateBundles, bund)
+		} else if bund.Amount == bundlesMap[bund.ItemID] {
+			unchangedBundles = append(unchangedBundles, bund.ItemID)
 		}
+	}
+
+	_, err := tx.Bundle.Delete().
+		Where(
+			bundle.ProductID(productEnt.ID),
+			bundle.ItemIDNotIn(unchangedBundles...),
+		).
+		Exec(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	err = tx.Bundle.MapCreateBulk(createBundles, func(create *ent.BundleCreate, i int) {
@@ -179,7 +200,7 @@ func (r *productsRepo) updateBundles(ctx context.Context, tx *ent.Tx, productEnt
 		err = tx.Bundle.Update().Where(
 			bundle.ProductID(productEnt.ID),
 			bundle.ItemID(updateBundle.ItemID),
-		).SetAmount(updateBundle.Amount).Exec(ctx)
+		).ClearDeletedAt().SetAmount(updateBundle.Amount).Exec(ctx)
 		if err != nil {
 			return nil, err
 		}

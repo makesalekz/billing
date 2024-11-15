@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kratos/kratos/v2/log"
-	v1 "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1"
+	v1 "gitlab.calendaria.team/services/finance/invoices/api/billing/v1"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 
@@ -20,8 +20,8 @@ func NewAppleStoreService(logger log.Logger) *AppleStoreService {
 	}
 }
 
-func (s *AppleStoreService) ProcessServerMessage(
-	ctx context.Context, req *v1.ProcessServerMessageRequest,
+func (s *AppleStoreService) ProcessServerNotification(
+	ctx context.Context, req *v1.ProcessServerNotificationRequest,
 ) (*utils_v1.EmptyReply, error) {
 	s.log.Info(req.GetSignedPayload())
 

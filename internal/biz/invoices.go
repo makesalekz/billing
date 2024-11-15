@@ -9,7 +9,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/go-kratos/kratos/v2/log"
-	v1 "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1"
+	v1 "gitlab.calendaria.team/services/finance/invoices/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/invoices/ent"
 	"gitlab.calendaria.team/services/finance/invoices/ent/enum"
 	"gitlab.calendaria.team/services/finance/invoices/internal/data"

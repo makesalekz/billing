@@ -41,7 +41,12 @@ func (Invoice) Fields() []ent.Field {
 // Edges of the Invoice.
 func (Invoice) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("product", Product.Type).Ref("invoices").Required().Immutable().Unique().Field("product_id"),
+		edge.From("product", Product.Type).
+			Ref("invoices").
+			Required().
+			Immutable().
+			Unique().
+			Field("product_id"),
 		edge.From("subscriptions", Subscriptions.Type).
 			Ref("invoices").
 			Unique().

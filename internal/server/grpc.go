@@ -1,7 +1,7 @@
 package server
 
 import (
-	v1 "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1"
+	v1 "gitlab.calendaria.team/services/finance/invoices/api/billing/v1"
 	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1".
 	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
 	"gitlab.calendaria.team/services/finance/invoices/internal/service"
@@ -22,6 +22,10 @@ func NewGRPCServer(
 	jwtp jwt.IJwtProcessor,
 	tracer *u_tracing.Tracer,
 	itemService *service.ItemService,
+	productService *service.ProductService,
+	invoiceService *service.InvoiceService,
+	subscriptionService *service.SubscriptionService,
+	appleStoreService *service.AppleStoreService,
 ) *grpc.Server {
 	err := tracer.Initialize()
 	if err != nil {
@@ -52,6 +56,10 @@ func NewGRPCServer(
 	srv := grpc.NewServer(opts...)
 
 	v1.RegisterItemsServer(srv, itemService)
+	v1.RegisterProductsServer(srv, productService)
+	v1.RegisterInvoicesServer(srv, invoiceService)
+	v1.RegisterSubscriptionsServer(srv, subscriptionService)
+	v1.RegisterAppleStoreServer(srv, appleStoreService)
 
 	return srv
 }

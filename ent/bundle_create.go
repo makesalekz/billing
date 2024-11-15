@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
@@ -90,12 +89,6 @@ func (bc *BundleCreate) SetNillableAmount(f *float64) *BundleCreate {
 	if f != nil {
 		bc.SetAmount(*f)
 	}
-	return bc
-}
-
-// SetOverusagePrice sets the "overusage_price" field.
-func (bc *BundleCreate) SetOverusagePrice(d decimal.Decimal) *BundleCreate {
-	bc.mutation.SetOverusagePrice(d)
 	return bc
 }
 
@@ -190,9 +183,6 @@ func (bc *BundleCreate) check() error {
 	if _, ok := bc.mutation.Amount(); !ok {
 		return &ValidationError{Name: "amount", err: errors.New(`ent: missing required field "Bundle.amount"`)}
 	}
-	if _, ok := bc.mutation.OverusagePrice(); !ok {
-		return &ValidationError{Name: "overusage_price", err: errors.New(`ent: missing required field "Bundle.overusage_price"`)}
-	}
 	if len(bc.mutation.ProductIDs()) == 0 {
 		return &ValidationError{Name: "product", err: errors.New(`ent: missing required edge "Bundle.product"`)}
 	}
@@ -247,10 +237,6 @@ func (bc *BundleCreate) createSpec() (*Bundle, *sqlgraph.CreateSpec) {
 	if value, ok := bc.mutation.Amount(); ok {
 		_spec.SetField(bundle.FieldAmount, field.TypeFloat64, value)
 		_node.Amount = value
-	}
-	if value, ok := bc.mutation.OverusagePrice(); ok {
-		_spec.SetField(bundle.FieldOverusagePrice, field.TypeFloat64, value)
-		_node.OverusagePrice = value
 	}
 	if nodes := bc.mutation.ProductIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -386,24 +372,6 @@ func (u *BundleUpsert) AddAmount(v float64) *BundleUpsert {
 	return u
 }
 
-// SetOverusagePrice sets the "overusage_price" field.
-func (u *BundleUpsert) SetOverusagePrice(v decimal.Decimal) *BundleUpsert {
-	u.Set(bundle.FieldOverusagePrice, v)
-	return u
-}
-
-// UpdateOverusagePrice sets the "overusage_price" field to the value that was provided on create.
-func (u *BundleUpsert) UpdateOverusagePrice() *BundleUpsert {
-	u.SetExcluded(bundle.FieldOverusagePrice)
-	return u
-}
-
-// AddOverusagePrice adds v to the "overusage_price" field.
-func (u *BundleUpsert) AddOverusagePrice(v decimal.Decimal) *BundleUpsert {
-	u.Add(bundle.FieldOverusagePrice, v)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -514,27 +482,6 @@ func (u *BundleUpsertOne) AddAmount(v float64) *BundleUpsertOne {
 func (u *BundleUpsertOne) UpdateAmount() *BundleUpsertOne {
 	return u.Update(func(s *BundleUpsert) {
 		s.UpdateAmount()
-	})
-}
-
-// SetOverusagePrice sets the "overusage_price" field.
-func (u *BundleUpsertOne) SetOverusagePrice(v decimal.Decimal) *BundleUpsertOne {
-	return u.Update(func(s *BundleUpsert) {
-		s.SetOverusagePrice(v)
-	})
-}
-
-// AddOverusagePrice adds v to the "overusage_price" field.
-func (u *BundleUpsertOne) AddOverusagePrice(v decimal.Decimal) *BundleUpsertOne {
-	return u.Update(func(s *BundleUpsert) {
-		s.AddOverusagePrice(v)
-	})
-}
-
-// UpdateOverusagePrice sets the "overusage_price" field to the value that was provided on create.
-func (u *BundleUpsertOne) UpdateOverusagePrice() *BundleUpsertOne {
-	return u.Update(func(s *BundleUpsert) {
-		s.UpdateOverusagePrice()
 	})
 }
 
@@ -814,27 +761,6 @@ func (u *BundleUpsertBulk) AddAmount(v float64) *BundleUpsertBulk {
 func (u *BundleUpsertBulk) UpdateAmount() *BundleUpsertBulk {
 	return u.Update(func(s *BundleUpsert) {
 		s.UpdateAmount()
-	})
-}
-
-// SetOverusagePrice sets the "overusage_price" field.
-func (u *BundleUpsertBulk) SetOverusagePrice(v decimal.Decimal) *BundleUpsertBulk {
-	return u.Update(func(s *BundleUpsert) {
-		s.SetOverusagePrice(v)
-	})
-}
-
-// AddOverusagePrice adds v to the "overusage_price" field.
-func (u *BundleUpsertBulk) AddOverusagePrice(v decimal.Decimal) *BundleUpsertBulk {
-	return u.Update(func(s *BundleUpsert) {
-		s.AddOverusagePrice(v)
-	})
-}
-
-// UpdateOverusagePrice sets the "overusage_price" field to the value that was provided on create.
-func (u *BundleUpsertBulk) UpdateOverusagePrice() *BundleUpsertBulk {
-	return u.Update(func(s *BundleUpsert) {
-		s.UpdateOverusagePrice()
 	})
 }
 

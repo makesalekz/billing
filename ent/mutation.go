@@ -40,24 +40,22 @@ const (
 // BundleMutation represents an operation that mutates the Bundle nodes in the graph.
 type BundleMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *int64
-	deleted_at         *time.Time
-	created_at         *time.Time
-	updated_at         *time.Time
-	amount             *float64
-	addamount          *float64
-	overusage_price    *decimal.Decimal
-	addoverusage_price *decimal.Decimal
-	clearedFields      map[string]struct{}
-	product            *int64
-	clearedproduct     bool
-	item               *int64
-	cleareditem        bool
-	done               bool
-	oldValue           func(context.Context) (*Bundle, error)
-	predicates         []predicate.Bundle
+	op             Op
+	typ            string
+	id             *int64
+	deleted_at     *time.Time
+	created_at     *time.Time
+	updated_at     *time.Time
+	amount         *float64
+	addamount      *float64
+	clearedFields  map[string]struct{}
+	product        *int64
+	clearedproduct bool
+	item           *int64
+	cleareditem    bool
+	done           bool
+	oldValue       func(context.Context) (*Bundle, error)
+	predicates     []predicate.Bundle
 }
 
 var _ ent.Mutation = (*BundleMutation)(nil)
@@ -413,62 +411,6 @@ func (m *BundleMutation) ResetAmount() {
 	m.addamount = nil
 }
 
-// SetOverusagePrice sets the "overusage_price" field.
-func (m *BundleMutation) SetOverusagePrice(d decimal.Decimal) {
-	m.overusage_price = &d
-	m.addoverusage_price = nil
-}
-
-// OverusagePrice returns the value of the "overusage_price" field in the mutation.
-func (m *BundleMutation) OverusagePrice() (r decimal.Decimal, exists bool) {
-	v := m.overusage_price
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldOverusagePrice returns the old "overusage_price" field's value of the Bundle entity.
-// If the Bundle object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BundleMutation) OldOverusagePrice(ctx context.Context) (v decimal.Decimal, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldOverusagePrice is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldOverusagePrice requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldOverusagePrice: %w", err)
-	}
-	return oldValue.OverusagePrice, nil
-}
-
-// AddOverusagePrice adds d to the "overusage_price" field.
-func (m *BundleMutation) AddOverusagePrice(d decimal.Decimal) {
-	if m.addoverusage_price != nil {
-		*m.addoverusage_price = m.addoverusage_price.Add(d)
-	} else {
-		m.addoverusage_price = &d
-	}
-}
-
-// AddedOverusagePrice returns the value that was added to the "overusage_price" field in this mutation.
-func (m *BundleMutation) AddedOverusagePrice() (r decimal.Decimal, exists bool) {
-	v := m.addoverusage_price
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetOverusagePrice resets all changes to the "overusage_price" field.
-func (m *BundleMutation) ResetOverusagePrice() {
-	m.overusage_price = nil
-	m.addoverusage_price = nil
-}
-
 // ClearProduct clears the "product" edge to the Product entity.
 func (m *BundleMutation) ClearProduct() {
 	m.clearedproduct = true
@@ -557,7 +499,7 @@ func (m *BundleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BundleMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 6)
 	if m.deleted_at != nil {
 		fields = append(fields, bundle.FieldDeletedAt)
 	}
@@ -575,9 +517,6 @@ func (m *BundleMutation) Fields() []string {
 	}
 	if m.amount != nil {
 		fields = append(fields, bundle.FieldAmount)
-	}
-	if m.overusage_price != nil {
-		fields = append(fields, bundle.FieldOverusagePrice)
 	}
 	return fields
 }
@@ -599,8 +538,6 @@ func (m *BundleMutation) Field(name string) (ent.Value, bool) {
 		return m.ItemID()
 	case bundle.FieldAmount:
 		return m.Amount()
-	case bundle.FieldOverusagePrice:
-		return m.OverusagePrice()
 	}
 	return nil, false
 }
@@ -622,8 +559,6 @@ func (m *BundleMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldItemID(ctx)
 	case bundle.FieldAmount:
 		return m.OldAmount(ctx)
-	case bundle.FieldOverusagePrice:
-		return m.OldOverusagePrice(ctx)
 	}
 	return nil, fmt.Errorf("unknown Bundle field %s", name)
 }
@@ -675,13 +610,6 @@ func (m *BundleMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAmount(v)
 		return nil
-	case bundle.FieldOverusagePrice:
-		v, ok := value.(decimal.Decimal)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetOverusagePrice(v)
-		return nil
 	}
 	return fmt.Errorf("unknown Bundle field %s", name)
 }
@@ -693,9 +621,6 @@ func (m *BundleMutation) AddedFields() []string {
 	if m.addamount != nil {
 		fields = append(fields, bundle.FieldAmount)
 	}
-	if m.addoverusage_price != nil {
-		fields = append(fields, bundle.FieldOverusagePrice)
-	}
 	return fields
 }
 
@@ -706,8 +631,6 @@ func (m *BundleMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case bundle.FieldAmount:
 		return m.AddedAmount()
-	case bundle.FieldOverusagePrice:
-		return m.AddedOverusagePrice()
 	}
 	return nil, false
 }
@@ -723,13 +646,6 @@ func (m *BundleMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddAmount(v)
-		return nil
-	case bundle.FieldOverusagePrice:
-		v, ok := value.(decimal.Decimal)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddOverusagePrice(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Bundle numeric field %s", name)
@@ -784,9 +700,6 @@ func (m *BundleMutation) ResetField(name string) error {
 		return nil
 	case bundle.FieldAmount:
 		m.ResetAmount()
-		return nil
-	case bundle.FieldOverusagePrice:
-		m.ResetOverusagePrice()
 		return nil
 	}
 	return fmt.Errorf("unknown Bundle field %s", name)

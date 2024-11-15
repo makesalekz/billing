@@ -3,6 +3,7 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
@@ -15,7 +16,6 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "amount", Type: field.TypeFloat64, Default: 1},
-		{Name: "overusage_price", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric"}},
 		{Name: "item_id", Type: field.TypeInt64},
 		{Name: "product_id", Type: field.TypeInt64},
 	}
@@ -27,13 +27,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "bundles_items_bundles",
-				Columns:    []*schema.Column{BundlesColumns[6]},
+				Columns:    []*schema.Column{BundlesColumns[5]},
 				RefColumns: []*schema.Column{ItemsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "bundles_products_bundles",
-				Columns:    []*schema.Column{BundlesColumns[7]},
+				Columns:    []*schema.Column{BundlesColumns[6]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -41,8 +41,11 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "bundle_product_id_item_id",
-				Unique:  true,
-				Columns: []*schema.Column{BundlesColumns[7], BundlesColumns[6]},
+				Unique:  false,
+				Columns: []*schema.Column{BundlesColumns[6], BundlesColumns[5]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
 			},
 		},
 	}

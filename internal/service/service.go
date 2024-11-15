@@ -11,6 +11,10 @@ import (
 //nolint:gochecknoglobals // global variable, used in wire
 var ProviderSet = wire.NewSet(
 	NewItemService,
+	NewProductService,
+	NewInvoiceService,
+	NewSubscriptionService,
+	NewAppleStoreService,
 )
 
 func FormPaginateRequest(req *utils_v1.PaginateRequest) *utils_v1.PaginateRequest {

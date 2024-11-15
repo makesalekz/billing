@@ -1,8 +1,8 @@
 include:
   - project: 'deploy/dev'
-    file: '/go-app.yml'
+    file: '/go-app-v2.yml'
     ref: 'main'
-  
+
 lint dev:
   extends: .lint-dev
 
@@ -15,10 +15,20 @@ build dev:
 deploy dev:
   extends: .deploy-dev
   variables:
+    SERVICE_NAME: finance-billing
     DB_PORT: 54420
-  
+
+cleanup:
+  extends: .cleanup
+
+release:
+  extends: .release
+
+merge:
+  extends: .merge
+
 build:
-  extends: .build
+  extends: .build-shell
 
 migration-build:
   extends: .migration-build
@@ -28,3 +38,6 @@ helm-lint:
 
 deploy:
   extends: .deploy
+
+rollout:
+  extends: .rollout

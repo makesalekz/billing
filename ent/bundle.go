@@ -9,7 +9,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
 	"gitlab.calendaria.team/services/finance/invoices/ent/item"
 	"gitlab.calendaria.team/services/finance/invoices/ent/product"
@@ -32,8 +31,6 @@ type Bundle struct {
 	ItemID int64 `json:"item_id,omitempty"`
 	// Amount holds the value of the "amount" field.
 	Amount float64 `json:"amount,omitempty"`
-	// OverusagePrice holds the value of the "overusage_price" field.
-	OverusagePrice decimal.Decimal `json:"overusage_price,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the BundleQuery when eager-loading is set.
 	Edges        BundleEdges `json:"edges"`
@@ -78,8 +75,6 @@ func (*Bundle) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case bundle.FieldOverusagePrice:
-			values[i] = new(decimal.Decimal)
 		case bundle.FieldAmount:
 			values[i] = new(sql.NullFloat64)
 		case bundle.FieldID, bundle.FieldProductID, bundle.FieldItemID:
@@ -143,12 +138,6 @@ func (b *Bundle) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field amount", values[i])
 			} else if value.Valid {
 				b.Amount = value.Float64
-			}
-		case bundle.FieldOverusagePrice:
-			if value, ok := values[i].(*decimal.Decimal); !ok {
-				return fmt.Errorf("unexpected type %T for field overusage_price", values[i])
-			} else if value != nil {
-				b.OverusagePrice = *value
 			}
 		default:
 			b.selectValues.Set(columns[i], values[i])
@@ -215,9 +204,6 @@ func (b *Bundle) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("amount=")
 	builder.WriteString(fmt.Sprintf("%v", b.Amount))
-	builder.WriteString(", ")
-	builder.WriteString("overusage_price=")
-	builder.WriteString(fmt.Sprintf("%v", b.OverusagePrice))
 	builder.WriteByte(')')
 	return builder.String()
 }

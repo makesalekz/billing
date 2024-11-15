@@ -10,9 +10,9 @@ option java_package = "invoices.v1";
 
 
 service AppleStore {
-  rpc ProcessServerMessage(ProcessServerMessageRequest) returns (utils.v1.EmptyReply);
+  rpc ProcessServerNotification(ProcessServerNotificationRequest) returns (utils.v1.EmptyReply);
 }
 
-message ProcessServerMessageRequest {
+message ProcessServerNotificationRequest {
   string signedPayload = 1;
 }

@@ -15,6 +15,7 @@ import (
 	"gitlab.calendaria.team/services/finance/invoices/internal/server"
 	"gitlab.calendaria.team/services/finance/invoices/internal/service"
 	"gitlab.calendaria.team/services/utils/v1/config"
+	"gitlab.calendaria.team/services/utils/v1/nats"
 	"gitlab.calendaria.team/services/utils/v2/jwt"
 	"gitlab.calendaria.team/services/utils/v2/tracing"
 )
@@ -43,10 +44,27 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	itemsRepo := data.NewItemsRepo(dataData)
 	itemUseCase := biz.NewItemsUsecase(itemsRepo)
 	itemService := service.NewItemService(itemUseCase)
-	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService)
+	productRepo := data.NewProductsRepo(dataData)
+	productUseCase := biz.NewProductUseCase(productRepo)
+	productService := service.NewProductService(productUseCase)
+	invoicesRepo := data.NewInvoicesRepo(dataData)
+	encodedConn, cleanup2, err := data.NewNatsClient(bootstrap)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	iQueueManager := nats.NewQueueManager(configConfig, encodedConn, logger)
+	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesRepo, itemsRepo, productRepo, iQueueManager)
+	invoiceService := service.NewInvoiceService(invoicesUseCase)
+	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)
+	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo)
+	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
+	appleStoreService := service.NewAppleStoreService(logger)
+	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService, productService, invoiceService, subscriptionService, appleStoreService)
 	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor)
 	app := newApp(logger, configConfig, grpcServer, httpServer)
 	return app, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }
