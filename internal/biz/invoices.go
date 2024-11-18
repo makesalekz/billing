@@ -158,19 +158,16 @@ func (uc *InvoicesUseCase) ListInvoices(
 // checks if product was already used.
 func (uc *InvoicesUseCase) checkProductUniqueness(ctx context.Context, actorID int64, product *ent.Product) error {
 	if product.IsUnique {
-		invoices, err := uc.invoiceRepo.ListInvoices(ctx, data.InvoiceFilter{
+		count, err := uc.invoiceRepo.CountInvoices(ctx, data.InvoiceFilter{
 			UserID:    actorID,
 			ProductID: product.ID,
 			Status:    enum.Paid,
-		}, &utils_v1.PaginateRequest{
-			Limit:  DefaultPageSize, // I have limited unique_limit to 100
-			FromId: 0,
 		})
 		if err != nil {
 			return v1.ErrorDatabaseQuery("failed to list invoices: %s", err.Error())
 		}
 
-		if int64(len(invoices)) > product.UniqueLimit {
+		if int64(count) > product.UniqueLimit {
 			return v1.ErrorInvalidRequest("product already used")
 		}
 	}
