@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
+	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
+	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
 // SubscriptionsDelete is the builder for deleting a Subscriptions entity.

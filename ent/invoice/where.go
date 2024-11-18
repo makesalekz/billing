@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/invoices/ent/enum"
-	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
+	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

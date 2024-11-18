@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/item"
+	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
+	"gitlab.calendaria.team/services/finance/billing/ent/item"
 )
 
 // ItemCreate is the builder for creating a Item entity.

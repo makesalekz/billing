@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.calendaria.team/services/finance/invoices/ent"
+	"gitlab.calendaria.team/services/finance/billing/ent"
 )
 
 // The BundleFunc type is an adapter to allow the use of ordinary

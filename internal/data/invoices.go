@@ -3,8 +3,8 @@ package data
 import (
 	"context"
 
-	"gitlab.calendaria.team/services/finance/invoices/ent"
-	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent"
+	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 

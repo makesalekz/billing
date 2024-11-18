@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	v1 "gitlab.calendaria.team/services/finance/invoices/api/billing/v1"
-	"gitlab.calendaria.team/services/finance/invoices/ent"
-	"gitlab.calendaria.team/services/finance/invoices/internal/data"
+	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
+	"gitlab.calendaria.team/services/finance/billing/ent"
+	"gitlab.calendaria.team/services/finance/billing/internal/data"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 

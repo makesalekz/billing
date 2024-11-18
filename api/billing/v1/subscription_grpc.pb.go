@@ -4,7 +4,7 @@
 // - protoc             v5.28.1
 // source: api/billing/v1/subscription.proto
 
-package invoices_v1
+package billing_v1
 
 import (
 	context "context"
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Subscriptions_GetSubscription_FullMethodName   = "/invoices.v1.Subscriptions/GetSubscription"
-	Subscriptions_ListSubscriptions_FullMethodName = "/invoices.v1.Subscriptions/ListSubscriptions"
+	Subscriptions_GetSubscription_FullMethodName   = "/billing.v1.Subscriptions/GetSubscription"
+	Subscriptions_ListSubscriptions_FullMethodName = "/billing.v1.Subscriptions/ListSubscriptions"
 )
 
 // SubscriptionsClient is the client API for Subscriptions service.
@@ -142,7 +142,7 @@ func _Subscriptions_ListSubscriptions_Handler(srv interface{}, ctx context.Conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Subscriptions_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "invoices.v1.Subscriptions",
+	ServiceName: "billing.v1.Subscriptions",
 	HandlerType: (*SubscriptionsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

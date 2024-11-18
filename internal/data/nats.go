@@ -2,7 +2,7 @@ package data
 
 import (
 	nats "github.com/nats-io/nats.go"
-	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
+	"gitlab.calendaria.team/services/finance/billing/internal/conf"
 )
 
 // NewNatsClient .

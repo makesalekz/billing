@@ -5,11 +5,11 @@ package runtime
 import (
 	"time"
 
-	"gitlab.calendaria.team/services/finance/invoices/ent/bundle"
-	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
-	"gitlab.calendaria.team/services/finance/invoices/ent/item"
-	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/schema"
+	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
+	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/item"
+	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/schema"
 )
 
 // The init function reads all schema descriptors with runtime code

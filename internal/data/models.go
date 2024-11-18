@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/invoices/ent/enum"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 )
 
 type ItemDto struct {

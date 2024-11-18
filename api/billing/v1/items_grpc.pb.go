@@ -4,7 +4,7 @@
 // - protoc             v5.28.1
 // source: api/billing/v1/items.proto
 
-package invoices_v1
+package billing_v1
 
 import (
 	context "context"
@@ -20,11 +20,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Items_CreateItem_FullMethodName = "/invoices.v1.Items/CreateItem"
-	Items_UpdateItem_FullMethodName = "/invoices.v1.Items/UpdateItem"
-	Items_DeleteItem_FullMethodName = "/invoices.v1.Items/DeleteItem"
-	Items_GetItem_FullMethodName    = "/invoices.v1.Items/GetItem"
-	Items_ListItems_FullMethodName  = "/invoices.v1.Items/ListItems"
+	Items_CreateItem_FullMethodName = "/billing.v1.Items/CreateItem"
+	Items_UpdateItem_FullMethodName = "/billing.v1.Items/UpdateItem"
+	Items_DeleteItem_FullMethodName = "/billing.v1.Items/DeleteItem"
+	Items_GetItem_FullMethodName    = "/billing.v1.Items/GetItem"
+	Items_ListItems_FullMethodName  = "/billing.v1.Items/ListItems"
 )
 
 // ItemsClient is the client API for Items service.
@@ -245,7 +245,7 @@ func _Items_ListItems_Handler(srv interface{}, ctx context.Context, dec func(int
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Items_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "invoices.v1.Items",
+	ServiceName: "billing.v1.Items",
 	HandlerType: (*ItemsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

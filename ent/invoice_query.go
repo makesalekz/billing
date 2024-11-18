@@ -11,10 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
-	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
-	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
+	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
+	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
 // InvoiceQuery is the builder for querying Invoice entities.

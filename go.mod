@@ -1,4 +1,4 @@
-module gitlab.calendaria.team/services/finance/invoices
+module gitlab.calendaria.team/services/finance/billing
 
 go 1.23.1
 

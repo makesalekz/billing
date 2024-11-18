@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/invoices/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/product"
 )
 
 // Product is the model entity for the Product schema.

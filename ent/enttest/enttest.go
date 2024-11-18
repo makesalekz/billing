@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"gitlab.calendaria.team/services/finance/invoices/ent"
+	"gitlab.calendaria.team/services/finance/billing/ent"
 	// required by schema hooks.
-	_ "gitlab.calendaria.team/services/finance/invoices/ent/runtime"
+	_ "gitlab.calendaria.team/services/finance/billing/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"gitlab.calendaria.team/services/finance/invoices/ent/migrate"
+	"gitlab.calendaria.team/services/finance/billing/ent/migrate"
 )
 
 type (

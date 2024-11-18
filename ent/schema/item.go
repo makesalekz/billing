@@ -4,7 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/invoices/ent/mixins"
+	"gitlab.calendaria.team/services/finance/billing/ent/mixins"
 )
 
 // Item holds the schema definition for the Item entity.

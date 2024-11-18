@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
-	"gitlab.calendaria.team/services/finance/invoices/ent/predicate"
+	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 )
 
 // InvoiceDelete is the builder for deleting a Invoice entity.

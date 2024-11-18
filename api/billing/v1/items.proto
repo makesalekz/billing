@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-package invoices.v1;
+package billing.v1;
 
 import "api/billing/v1/models.proto";
 import "api/utils/v1/models.proto";
 
-option go_package = "gitlab.calendaria.team/services/finance/invoices/api/invoices/v1;invoices_v1";
+option go_package = "gitlab.calendaria.team/services/finance/billing/api/billing/v1;billing_v1";
 option java_multiple_files = true;
-option java_package = "invoices.v1";
+option java_package = "billing.v1";
 
 
 service Items{

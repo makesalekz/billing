@@ -4,7 +4,7 @@
 // - protoc             v5.28.1
 // source: api/billing/v1/invoices.proto
 
-package invoices_v1
+package billing_v1
 
 import (
 	context "context"
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Invoices_GetInvoice_FullMethodName   = "/invoices.v1.Invoices/GetInvoice"
-	Invoices_ListInvoices_FullMethodName = "/invoices.v1.Invoices/ListInvoices"
+	Invoices_GetInvoice_FullMethodName   = "/billing.v1.Invoices/GetInvoice"
+	Invoices_ListInvoices_FullMethodName = "/billing.v1.Invoices/ListInvoices"
 )
 
 // InvoicesClient is the client API for Invoices service.
@@ -142,7 +142,7 @@ func _Invoices_ListInvoices_Handler(srv interface{}, ctx context.Context, dec fu
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Invoices_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "invoices.v1.Invoices",
+	ServiceName: "billing.v1.Invoices",
 	HandlerType: (*InvoicesServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

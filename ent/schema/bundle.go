@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"gitlab.calendaria.team/services/finance/invoices/ent/mixins"
+	"gitlab.calendaria.team/services/finance/billing/ent/mixins"
 )
 
 // Bundle holds the schema definition for the Bundle entity.

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kratos/kratos/v2/log"
-	v1 "gitlab.calendaria.team/services/finance/invoices/api/billing/v1"
+	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 

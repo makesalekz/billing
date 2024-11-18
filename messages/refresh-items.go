@@ -1,6 +1,6 @@
 package messages
 
-import "gitlab.calendaria.team/services/finance/invoices/ent"
+import "gitlab.calendaria.team/services/finance/billing/ent"
 
 type RefreshItems struct {
 	Item     *ent.Item `json:"item"`

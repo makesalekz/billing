@@ -10,9 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/invoices/ent/invoice"
-	"gitlab.calendaria.team/services/finance/invoices/ent/product"
-	"gitlab.calendaria.team/services/finance/invoices/ent/subscriptions"
+	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
 // SubscriptionsCreate is the builder for creating a Subscriptions entity.

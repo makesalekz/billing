@@ -7,7 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"gitlab.calendaria.team/services/finance/invoices/ent/enum"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 )
 
 const (

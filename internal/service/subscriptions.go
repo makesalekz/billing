@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	v1 "gitlab.calendaria.team/services/finance/invoices/api/billing/v1"
-	"gitlab.calendaria.team/services/finance/invoices/internal/biz"
+	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
+	"gitlab.calendaria.team/services/finance/billing/internal/biz"
 	"gitlab.calendaria.team/services/utils/v2/auth"
 )
 

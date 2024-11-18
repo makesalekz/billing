@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"gitlab.calendaria.team/services/finance/invoices/ent"
-	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
+	"gitlab.calendaria.team/services/finance/billing/ent"
+	"gitlab.calendaria.team/services/finance/billing/internal/conf"
 	u_config "gitlab.calendaria.team/services/utils/v1/config"
 	u_jwt "gitlab.calendaria.team/services/utils/v2/jwt"
 	u_tracing "gitlab.calendaria.team/services/utils/v2/tracing"
@@ -14,7 +14,7 @@ import (
 	"github.com/google/wire"
 
 	_ "github.com/lib/pq"
-	_ "gitlab.calendaria.team/services/finance/invoices/ent/runtime"
+	_ "gitlab.calendaria.team/services/finance/billing/ent/runtime"
 )
 
 // ProviderSet is data providers.

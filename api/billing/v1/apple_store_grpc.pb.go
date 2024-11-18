@@ -4,7 +4,7 @@
 // - protoc             v5.28.1
 // source: api/billing/v1/apple_store.proto
 
-package invoices_v1
+package billing_v1
 
 import (
 	context "context"
@@ -20,7 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AppleStore_ProcessServerNotification_FullMethodName = "/invoices.v1.AppleStore/ProcessServerNotification"
+	AppleStore_ProcessServerNotification_FullMethodName = "/billing.v1.AppleStore/ProcessServerNotification"
 )
 
 // AppleStoreClient is the client API for AppleStore service.
@@ -109,7 +109,7 @@ func _AppleStore_ProcessServerNotification_Handler(srv interface{}, ctx context.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AppleStore_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "invoices.v1.AppleStore",
+	ServiceName: "billing.v1.AppleStore",
 	HandlerType: (*AppleStoreServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

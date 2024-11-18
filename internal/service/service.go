@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/google/wire"
-	"gitlab.calendaria.team/services/finance/invoices/internal/biz"
+	"gitlab.calendaria.team/services/finance/billing/internal/biz"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 

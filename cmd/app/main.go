@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"gitlab.calendaria.team/services/finance/invoices/internal/conf"
+	"gitlab.calendaria.team/services/finance/billing/internal/conf"
 	"gitlab.calendaria.team/services/utils/v1/config"
 	u_log "gitlab.calendaria.team/services/utils/v1/log"
 
