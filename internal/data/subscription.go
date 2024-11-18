@@ -10,7 +10,7 @@ import (
 
 type SubscriptionsRepo interface {
 	CreateSubscription(
-		ctx context.Context, actorID, tenantID int64, appID string, dto *SubscriptionDto,
+		ctx context.Context, actorID, tenantID int64, appID string, dto SubscriptionDto,
 	) (*ent.Subscriptions, error)
 	GetSubscription(
 		ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64, withInvoices bool,
@@ -33,7 +33,7 @@ func NewSubscriptionsRepo(d *Data) SubscriptionsRepo {
 }
 
 func (r *subscriptionsRepo) CreateSubscription(
-	ctx context.Context, actorID, tenantID int64, appID string, dto *SubscriptionDto,
+	ctx context.Context, actorID, tenantID int64, appID string, dto SubscriptionDto,
 ) (*ent.Subscriptions, error) {
 	return r.db.Subscriptions.Create().
 		SetUserID(actorID).

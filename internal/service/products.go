@@ -28,7 +28,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *v1.CreateProduc
 		return nil, v1.ErrorInvalidRequest("invalid price")
 	}
 
-	productDto := &data.ProductDto{
+	productDto := data.ProductDto{
 		AppID:       req.GetProduct().GetAppId(),
 		Name:        req.GetProduct().GetName(),
 		Description: req.GetProduct().GetDescription(),
@@ -94,7 +94,7 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *v1.UpdateProduc
 		return nil, v1.ErrorInvalidRequest("invalid price")
 	}
 
-	productDto := &data.ProductDto{
+	productDto := data.ProductDto{
 		Name:        req.GetProduct().GetName(),
 		Description: req.GetProduct().GetDescription(),
 		Price:       priceDec,

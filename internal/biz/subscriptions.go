@@ -27,7 +27,7 @@ func NewSubscriptionUsecase(
 }
 
 func (uc *SubscriptionsUseCase) CreateSubscription(
-	ctx context.Context, actorID, tenantID int64, appID string, subscriptionDto *data.SubscriptionDto,
+	ctx context.Context, actorID, tenantID int64, appID string, subscriptionDto data.SubscriptionDto,
 ) (*ent.Subscriptions, error) {
 	subscription, err := uc.subscriptionRepo.CreateSubscription(ctx, actorID, tenantID, appID, subscriptionDto)
 	if err != nil {

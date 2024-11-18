@@ -9,12 +9,12 @@ import (
 )
 
 type ItemsRepo interface {
-	CreateItem(ctx context.Context, item *ItemDto) (*ent.Item, error)
-	UpdateItem(ctx context.Context, itemID int64, item *ItemDto) (*ent.Item, error)
+	CreateItem(ctx context.Context, item ItemDto) (*ent.Item, error)
+	UpdateItem(ctx context.Context, itemID int64, item ItemDto) (*ent.Item, error)
 	DeleteItem(ctx context.Context, itemID int64) error
 	GetItem(ctx context.Context, itemID int64) (*ent.Item, error)
 	GetItems(ctx context.Context, itemIDs []int64) ([]*ent.Item, error)
-	CountItems(ctx context.Context) (int64, error)
+	CountItems(ctx context.Context) (int32, error)
 	ListItems(ctx context.Context, paginate *utils_v1.PaginateRequest) ([]*ent.Item, error)
 }
 
@@ -28,7 +28,7 @@ func NewItemsRepo(d *Data) ItemsRepo {
 	}
 }
 
-func (r *itemsRepo) CreateItem(ctx context.Context, item *ItemDto) (*ent.Item, error) {
+func (r *itemsRepo) CreateItem(ctx context.Context, item ItemDto) (*ent.Item, error) {
 	return r.db.Item.Create().
 		SetName(item.Name).
 		SetDescription(item.Description).
@@ -36,7 +36,7 @@ func (r *itemsRepo) CreateItem(ctx context.Context, item *ItemDto) (*ent.Item, e
 		Save(ctx)
 }
 
-func (r *itemsRepo) UpdateItem(ctx context.Context, itemID int64, item *ItemDto) (*ent.Item, error) {
+func (r *itemsRepo) UpdateItem(ctx context.Context, itemID int64, item ItemDto) (*ent.Item, error) {
 	return r.db.Item.UpdateOneID(itemID).
 		SetName(item.Name).
 		SetDescription(item.Description).
@@ -61,13 +61,14 @@ func (r *itemsRepo) GetItems(ctx context.Context, itemIDs []int64) ([]*ent.Item,
 		All(ctx)
 }
 
-func (r *itemsRepo) CountItems(ctx context.Context) (int64, error) {
+func (r *itemsRepo) CountItems(ctx context.Context) (int32, error) {
 	n, err := r.db.Item.Query().Count(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	return int64(n), nil
+	//nolint:gosec // pagination limit cannot hold more than int32
+	return int32(n), nil
 }
 
 func (r *itemsRepo) ListItems(ctx context.Context, paginate *utils_v1.PaginateRequest) ([]*ent.Item, error) {

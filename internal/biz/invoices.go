@@ -82,7 +82,7 @@ func (uc *InvoicesUseCase) CreateInvoice(
 
 	invoiceDto.Price = product.Price.Mul(decimal.NewFromInt(invoiceDto.Amount))
 
-	invoice, err := uc.invoiceRepo.CreateInvoice(ctx, actorID, &invoiceDto)
+	invoice, err := uc.invoiceRepo.CreateInvoice(ctx, invoiceDto)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to create invoice: %s", err.Error())
 	}
@@ -91,7 +91,7 @@ func (uc *InvoicesUseCase) CreateInvoice(
 }
 
 func (uc *InvoicesUseCase) UpdateInvoice(
-	ctx context.Context, actorID, tenantID int64, appID string, invoiceID int64, dto *data.InvoiceDto,
+	ctx context.Context, actorID, tenantID int64, appID string, invoiceID int64, dto data.InvoiceDto,
 ) (*ent.Invoice, error) {
 	invoiceData, err := uc.invoiceRepo.GetInvoice(ctx, actorID, tenantID, appID, invoiceID)
 	if err != nil {
@@ -131,12 +131,12 @@ func (uc *InvoicesUseCase) GetInvoice(
 func (uc *InvoicesUseCase) ListInvoices(
 	ctx context.Context, actorID int64, filter data.InvoiceFilter, paginate *utils_v1.PaginateRequest,
 ) (*InvoicesList, error) {
-	total, err := uc.invoiceRepo.CountInvoices(ctx, actorID, filter)
+	total, err := uc.invoiceRepo.CountInvoices(ctx, filter)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to list invoices, err %s", err.Error())
 	}
 
-	invoices, err := uc.invoiceRepo.ListInvoices(ctx, actorID, filter, paginate)
+	invoices, err := uc.invoiceRepo.ListInvoices(ctx, filter, paginate)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to list invoices, err %s", err.Error())
 	}
@@ -158,7 +158,8 @@ func (uc *InvoicesUseCase) ListInvoices(
 // checks if product was already used.
 func (uc *InvoicesUseCase) checkProductUniqueness(ctx context.Context, actorID int64, product *ent.Product) error {
 	if product.IsUnique {
-		invoices, err := uc.invoiceRepo.ListInvoices(ctx, actorID, data.InvoiceFilter{
+		invoices, err := uc.invoiceRepo.ListInvoices(ctx, data.InvoiceFilter{
+			UserID:    actorID,
 			ProductID: product.ID,
 			Status:    enum.Paid,
 		}, &utils_v1.PaginateRequest{

@@ -22,7 +22,7 @@ func NewItemsUsecase(itemsRepo data.ItemsRepo) *ItemUseCase {
 	return &ItemUseCase{itemsRepo: itemsRepo}
 }
 
-func (uc *ItemUseCase) CreateItem(ctx context.Context, itemDto *data.ItemDto) (*ent.Item, error) {
+func (uc *ItemUseCase) CreateItem(ctx context.Context, itemDto data.ItemDto) (*ent.Item, error) {
 	item, err := uc.itemsRepo.CreateItem(ctx, itemDto)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to create item: %s", err.Error())
@@ -31,7 +31,7 @@ func (uc *ItemUseCase) CreateItem(ctx context.Context, itemDto *data.ItemDto) (*
 	return item, nil
 }
 
-func (uc *ItemUseCase) UpdateItem(ctx context.Context, itemID int64, itemDto *data.ItemDto) (*ent.Item, error) {
+func (uc *ItemUseCase) UpdateItem(ctx context.Context, itemID int64, itemDto data.ItemDto) (*ent.Item, error) {
 	item, err := uc.itemsRepo.UpdateItem(ctx, itemID, itemDto)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to update item: %s", err.Error())
@@ -73,9 +73,11 @@ func (uc *ItemUseCase) ListItems(ctx context.Context, paginate *utils_v1.Paginat
 		return nil, v1.ErrorDatabaseQuery("failed to list items: %s", err.Error())
 	}
 
-	paginateReply := &utils_v1.PaginateReply{}
+	paginateReply := &utils_v1.PaginateReply{
+		Total: &count,
+	}
 
-	if count != 0 {
+	if len(items) > 0 {
 		paginateReply.FromId = &items[len(items)-1].ID
 	}
 

@@ -11,8 +11,8 @@ import (
 )
 
 type ProductRepo interface {
-	CreateProduct(ctx context.Context, product *ProductDto) (*ent.Product, error)
-	UpdateProduct(ctx context.Context, productEnt *ent.Product, product *ProductDto) (*ent.Product, error)
+	CreateProduct(ctx context.Context, product ProductDto) (*ent.Product, error)
+	UpdateProduct(ctx context.Context, productEnt *ent.Product, product ProductDto) (*ent.Product, error)
 	DeleteProduct(ctx context.Context, productID int64) error
 	GetProduct(ctx context.Context, productID int64) (*ent.Product, error)
 	ListProducts(ctx context.Context, appID string, paginate *utils_v1.PaginateRequest) ([]*ent.Product, error)
@@ -29,7 +29,7 @@ func NewProductsRepo(d *Data) ProductRepo {
 	}
 }
 
-func (r *productsRepo) CreateProduct(ctx context.Context, productDto *ProductDto) (*ent.Product, error) {
+func (r *productsRepo) CreateProduct(ctx context.Context, productDto ProductDto) (*ent.Product, error) {
 	tx, err := r.db.Tx(ctx)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("transaction initialize failed")
@@ -94,7 +94,7 @@ func (r *productsRepo) CreateProduct(ctx context.Context, productDto *ProductDto
 	return product, nil
 }
 
-func (r *productsRepo) UpdateProduct(ctx context.Context, productEnt *ent.Product, productDto *ProductDto) (
+func (r *productsRepo) UpdateProduct(ctx context.Context, productEnt *ent.Product, productDto ProductDto) (
 	*ent.Product, error,
 ) {
 	tx, err := r.db.Tx(ctx)
@@ -154,7 +154,7 @@ func (r *productsRepo) updateBundles(
 	ctx context.Context,
 	tx *ent.Tx,
 	productEnt *ent.Product,
-	productDto *ProductDto,
+	productDto ProductDto,
 ) (
 	*ent.Product, error,
 ) {

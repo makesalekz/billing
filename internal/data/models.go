@@ -52,6 +52,7 @@ type InvoiceDto struct {
 }
 
 type InvoiceFilter struct {
+	UserID         int64
 	ProductID      int64
 	Status         enum.InvoiceStatus
 	Paid           bool

@@ -25,7 +25,7 @@ func NewProductUseCase(productRepo data.ProductRepo) *ProductUseCase {
 	}
 }
 
-func (uc *ProductUseCase) CreateProduct(ctx context.Context, productDto *data.ProductDto) (*ent.Product, error) {
+func (uc *ProductUseCase) CreateProduct(ctx context.Context, productDto data.ProductDto) (*ent.Product, error) {
 	product, err := uc.productRepo.CreateProduct(ctx, productDto)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to create product: %s", err.Error())
@@ -35,7 +35,7 @@ func (uc *ProductUseCase) CreateProduct(ctx context.Context, productDto *data.Pr
 }
 
 func (uc *ProductUseCase) UpdateProduct(
-	ctx context.Context, productID int64, productDto *data.ProductDto,
+	ctx context.Context, productID int64, productDto data.ProductDto,
 ) (*ent.Product, error) {
 	productData, err := uc.productRepo.GetProduct(ctx, productID)
 	if err != nil {

@@ -20,7 +20,7 @@ func NewItemService(uc *biz.ItemUseCase) *ItemService {
 }
 
 func (s *ItemService) CreateItem(ctx context.Context, req *v1.CreateItemRequest) (*v1.ItemReply, error) {
-	itemDto := &data.ItemDto{
+	itemDto := data.ItemDto{
 		Name:        req.GetItem().GetName(),
 		Description: req.GetItem().GetDescription(),
 	}
@@ -36,7 +36,7 @@ func (s *ItemService) CreateItem(ctx context.Context, req *v1.CreateItemRequest)
 }
 
 func (s *ItemService) UpdateItem(ctx context.Context, req *v1.UpdateItemRequest) (*v1.ItemReply, error) {
-	itemDto := &data.ItemDto{
+	itemDto := data.ItemDto{
 		Name:        req.GetItem().GetName(),
 		Description: req.GetItem().GetDescription(),
 	}

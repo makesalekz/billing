@@ -9,13 +9,13 @@ import (
 )
 
 type InvoicesRepo interface {
-	CreateInvoice(ctx context.Context, actorID int64, dto *InvoiceDto) (*ent.Invoice, error)
-	UpdateInvoice(ctx context.Context, actorID, invoiceID int64, dto *InvoiceDto) (*ent.Invoice, error)
-	DeleteInvoice(ctx context.Context, actorID, invoiceID int64) error
+	CreateInvoice(ctx context.Context, dto InvoiceDto) (*ent.Invoice, error)
+	UpdateInvoice(ctx context.Context, actorID, invoiceID int64, dto InvoiceDto) (*ent.Invoice, error)
+	DeleteInvoice(ctx context.Context, invoiceID int64) error
 	GetInvoice(ctx context.Context, actorID, tenantID int64, appID string, invoiceID int64) (*ent.Invoice, error)
-	CountInvoices(ctx context.Context, actorID int64, filter InvoiceFilter) (int32, error)
+	CountInvoices(ctx context.Context, filter InvoiceFilter) (int32, error)
 	ListInvoices(
-		ctx context.Context, actorID int64, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
+		ctx context.Context, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
 	) ([]*ent.Invoice, error)
 }
 
@@ -29,7 +29,7 @@ func NewInvoicesRepo(d *Data) InvoicesRepo {
 	}
 }
 
-func (r *invoicesRepo) CreateInvoice(ctx context.Context, actorID int64, dto *InvoiceDto) (*ent.Invoice, error) {
+func (r *invoicesRepo) CreateInvoice(ctx context.Context, dto InvoiceDto) (*ent.Invoice, error) {
 	query := r.db.Invoice.Create().
 		SetUserID(dto.UserID).
 		SetAppID(dto.AppID).
@@ -50,7 +50,7 @@ func (r *invoicesRepo) CreateInvoice(ctx context.Context, actorID int64, dto *In
 }
 
 func (r *invoicesRepo) UpdateInvoice(
-	ctx context.Context, actorID, invoiceID int64, dto *InvoiceDto,
+	ctx context.Context, actorID, invoiceID int64, dto InvoiceDto,
 ) (*ent.Invoice, error) {
 	query := r.db.Invoice.UpdateOneID(invoiceID).Where(invoice.UserID(actorID))
 
@@ -65,7 +65,7 @@ func (r *invoicesRepo) UpdateInvoice(
 	return query.Save(ctx)
 }
 
-func (r *invoicesRepo) DeleteInvoice(ctx context.Context, actorID, invoiceID int64) error {
+func (r *invoicesRepo) DeleteInvoice(ctx context.Context, invoiceID int64) error {
 	return r.db.Invoice.
 		DeleteOneID(invoiceID).
 		Exec(ctx)
@@ -84,8 +84,12 @@ func (r *invoicesRepo) GetInvoice(
 		Only(ctx)
 }
 
-func (r *invoicesRepo) CountInvoices(ctx context.Context, actorID int64, filter InvoiceFilter) (int32, error) {
+func (r *invoicesRepo) CountInvoices(ctx context.Context, filter InvoiceFilter) (int32, error) {
 	query := r.db.Invoice.Query()
+
+	if filter.UserID != 0 {
+		query.Where(invoice.UserID(filter.UserID))
+	}
 
 	if filter.Status.IsValid() {
 		query.Where(invoice.StatusEQ(filter.Status))
@@ -113,9 +117,13 @@ func (r *invoicesRepo) CountInvoices(ctx context.Context, actorID int64, filter 
 }
 
 func (r *invoicesRepo) ListInvoices(
-	ctx context.Context, actorID int64, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
+	ctx context.Context, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
 ) ([]*ent.Invoice, error) {
 	query := r.db.Invoice.Query().Where(invoice.IDGT(paginate.GetFromId())).Limit(int(paginate.GetLimit()))
+
+	if filter.UserID != 0 {
+		query.Where(invoice.UserID(filter.UserID))
+	}
 
 	if filter.Status.IsValid() {
 		query.Where(invoice.StatusEQ(filter.Status))
