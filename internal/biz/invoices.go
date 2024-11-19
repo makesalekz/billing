@@ -67,7 +67,7 @@ func (uc *InvoicesUseCase) CreateInvoice(
 	}
 
 	if product.IsUnique {
-		err = uc.checkProductUniqueness(ctx, actorID, product)
+		err = uc.canProductBeUsedOneMoreTime(ctx, actorID, product)
 		if err != nil {
 			return nil, err
 		}
@@ -156,7 +156,7 @@ func (uc *InvoicesUseCase) ListInvoices(
 }
 
 // checks if product was already used.
-func (uc *InvoicesUseCase) checkProductUniqueness(ctx context.Context, actorID int64, product *ent.Product) error {
+func (uc *InvoicesUseCase) canProductBeUsedOneMoreTime(ctx context.Context, actorID int64, product *ent.Product) error {
 	if product.IsUnique {
 		count, err := uc.invoiceRepo.CountInvoices(ctx, data.InvoiceFilter{
 			UserID:    actorID,
