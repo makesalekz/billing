@@ -167,7 +167,7 @@ func (uc *InvoicesUseCase) checkProductUniqueness(ctx context.Context, actorID i
 			return v1.ErrorDatabaseQuery("failed to list invoices: %s", err.Error())
 		}
 
-		if int64(count) > product.UniqueLimit {
+		if int64(count) >= product.UniqueLimit {
 			return v1.ErrorInvalidRequest("product already used")
 		}
 	}
