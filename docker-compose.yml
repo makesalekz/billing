@@ -30,6 +30,7 @@ services:
       - VAULT_ADDRESS=${VAULT_ADDRESS}
       - VAULT_ROLE_ID=${VAULT_ROLE_ID}
       - VAULT_SECRET_ID_PATH=/run/secrets/vault_secret_id
+      - OTLP_GRPC_ADDRESS=${OTLP_GRPC_ADDRESS}
     secrets:
       - vault_secret_id
     command: ["./app"]

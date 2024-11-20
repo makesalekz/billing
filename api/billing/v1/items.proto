@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package billing.v1;
+
+import "api/billing/v1/models.proto";
+import "api/utils/v1/models.proto";
+
+option go_package = "gitlab.calendaria.team/services/finance/billing/api/billing/v1;billing_v1";
+option java_multiple_files = true;
+option java_package = "billing.v1";
+
+
+service Items{
+  rpc CreateItem(CreateItemRequest) returns (ItemReply);
+  rpc UpdateItem(UpdateItemRequest) returns (ItemReply);
+  rpc DeleteItem(ItemRequest) returns (utils.v1.EmptyReply);
+  rpc GetItem(ItemRequest) returns (ItemReply);
+  rpc ListItems(ListItemsRequest) returns (ListItemsReply);
+}
+
+message CreateItemRequest{
+  ItemDto item = 1;
+}
+
+message UpdateItemRequest{
+  int64 id = 1;
+  ItemDto item = 2;
+}
+
+message ItemRequest{
+  int64 id = 1;
+}
+
+message ItemReply{
+  Item item = 1;
+}
+
+message ListItemsRequest{
+  utils.v1.PaginateRequest pagination = 1;
+}
+
+message ListItemsReply{
+  repeated Item items = 1;
+  utils.v1.PaginateReply pagination = 2;
+}

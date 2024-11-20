@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"gitlab.calendaria.team/services/dummy/internal/conf"
+	"gitlab.calendaria.team/services/finance/billing/internal/conf"
 	"gitlab.calendaria.team/services/utils/v1/config"
 	u_log "gitlab.calendaria.team/services/utils/v1/log"
 
@@ -22,7 +22,7 @@ import (
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name string = "dummy"
+	Name string = "finance-billing"
 	// Version is the version of the compiled software.
 	Version string = "0.1.0"
 	// flagconf is the config flag.
@@ -32,7 +32,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&flagconf, "conf", "config.yaml", "config path, eg: -conf config.yaml")
+	flag.StringVar(&flagconf, "conf", "./configs/config.yaml", "config path, eg: -conf config.yaml")
 }
 
 func newApp(logger log.Logger, c *config.Config, gs *grpc.Server, hs *http.Server) *kratos.App {

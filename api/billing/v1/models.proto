@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package billing.v1;
+
+option go_package = "gitlab.calendaria.team/services/finance/billing/api/billing/v1;billing_v1";
+option java_multiple_files = true;
+option java_package = "billing.v1";
+
+message Item{
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message ItemDto{
+  string name = 1;
+  string description = 2;
+}
+
+message Product{
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string price = 4;
+  string currency = 5;
+  bool isActive = 6;
+  bool isLimited = 7;
+  optional string limitedTill = 8;
+  optional int64 left = 9;
+  bool isUnique = 10;
+  optional int64 uniqueLimit = 11;
+  bool isExpiring = 12;
+  optional string expiringTime = 13;
+  repeated Bundle bundles = 14;
+}
+
+message Bundle {
+  int64 id = 1;
+  int64 itemId = 2;
+  double amount = 3;
+}
+
+message ProductDto{
+  string name = 1;
+  string appId = 2;
+  string description = 3;
+  string price = 4;
+  string currency = 5;
+  bool isActive = 6;
+  bool isLimited = 7;
+  optional string limitedTill = 8;
+  optional int64 left = 9;
+  bool isUnique = 10;
+  optional int64 uniqueLimit = 11;
+  bool isExpiring = 12;
+  optional string expiringTime = 13;
+  repeated BundleDto bundles = 14;
+}
+
+message BundleDto {
+  int64 itemId = 1;
+  double amount = 2;
+}
+
+message Invoice {
+  int64 id = 1;
+  int64 userId = 2;
+  int64 tenantId = 3;
+  string appId = 4;
+  int64 productId = 5;
+  int64 amount = 6;
+  string price = 7;
+  string currency = 8;
+  string paidAt = 9;
+  string paidTill = 10;
+  bool isPaidAtProcessed = 11;
+  bool isPaidTillProcessed = 12;
+  int64 subscriptionId = 13;
+}
+
+message Subscription {
+  int64 id = 1;
+  int64 userId = 2;
+  int64 tenantId = 3;
+  string appId = 4;
+  int64 productId = 5;
+}
