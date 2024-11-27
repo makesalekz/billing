@@ -35,12 +35,20 @@ const (
 	FieldPaidAt = "paid_at"
 	// FieldPaidTill holds the string denoting the paid_till field in the database.
 	FieldPaidTill = "paid_till"
+	// FieldIsRevoked holds the string denoting the is_revoked field in the database.
+	FieldIsRevoked = "is_revoked"
+	// FieldRevokedAt holds the string denoting the revoked_at field in the database.
+	FieldRevokedAt = "revoked_at"
+	// FieldIsRevokedProcessed holds the string denoting the is_revoked_processed field in the database.
+	FieldIsRevokedProcessed = "is_revoked_processed"
 	// FieldIsPaidAtProcessed holds the string denoting the is_paid_at_processed field in the database.
 	FieldIsPaidAtProcessed = "is_paid_at_processed"
 	// FieldIsPaidTillProcessed holds the string denoting the is_paid_till_processed field in the database.
 	FieldIsPaidTillProcessed = "is_paid_till_processed"
 	// FieldSubscriptionID holds the string denoting the subscription_id field in the database.
 	FieldSubscriptionID = "subscription_id"
+	// FieldAppleStoreTransactionID holds the string denoting the apple_store_transaction_id field in the database.
+	FieldAppleStoreTransactionID = "apple_store_transaction_id"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
 	EdgeProduct = "product"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
@@ -76,9 +84,13 @@ var Columns = []string{
 	FieldStatus,
 	FieldPaidAt,
 	FieldPaidTill,
+	FieldIsRevoked,
+	FieldRevokedAt,
+	FieldIsRevokedProcessed,
 	FieldIsPaidAtProcessed,
 	FieldIsPaidTillProcessed,
 	FieldSubscriptionID,
+	FieldAppleStoreTransactionID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -96,6 +108,10 @@ var (
 	DefaultCurrency string
 	// CurrencyValidator is a validator for the "currency" field. It is called by the builders before save.
 	CurrencyValidator func(string) error
+	// DefaultIsRevoked holds the default value on creation for the "is_revoked" field.
+	DefaultIsRevoked bool
+	// DefaultIsRevokedProcessed holds the default value on creation for the "is_revoked_processed" field.
+	DefaultIsRevokedProcessed bool
 	// DefaultIsPaidAtProcessed holds the default value on creation for the "is_paid_at_processed" field.
 	DefaultIsPaidAtProcessed bool
 	// DefaultIsPaidTillProcessed holds the default value on creation for the "is_paid_till_processed" field.
@@ -172,6 +188,21 @@ func ByPaidTill(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPaidTill, opts...).ToFunc()
 }
 
+// ByIsRevoked orders the results by the is_revoked field.
+func ByIsRevoked(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsRevoked, opts...).ToFunc()
+}
+
+// ByRevokedAt orders the results by the revoked_at field.
+func ByRevokedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRevokedAt, opts...).ToFunc()
+}
+
+// ByIsRevokedProcessed orders the results by the is_revoked_processed field.
+func ByIsRevokedProcessed(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsRevokedProcessed, opts...).ToFunc()
+}
+
 // ByIsPaidAtProcessed orders the results by the is_paid_at_processed field.
 func ByIsPaidAtProcessed(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsPaidAtProcessed, opts...).ToFunc()
@@ -185,6 +216,11 @@ func ByIsPaidTillProcessed(opts ...sql.OrderTermOption) OrderOption {
 // BySubscriptionID orders the results by the subscription_id field.
 func BySubscriptionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubscriptionID, opts...).ToFunc()
+}
+
+// ByAppleStoreTransactionID orders the results by the apple_store_transaction_id field.
+func ByAppleStoreTransactionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAppleStoreTransactionID, opts...).ToFunc()
 }
 
 // ByProductField orders the results by product field.

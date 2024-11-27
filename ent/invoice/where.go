@@ -102,6 +102,21 @@ func PaidTill(v time.Time) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldPaidTill, v))
 }
 
+// IsRevoked applies equality check predicate on the "is_revoked" field. It's identical to IsRevokedEQ.
+func IsRevoked(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsRevoked, v))
+}
+
+// RevokedAt applies equality check predicate on the "revoked_at" field. It's identical to RevokedAtEQ.
+func RevokedAt(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldRevokedAt, v))
+}
+
+// IsRevokedProcessed applies equality check predicate on the "is_revoked_processed" field. It's identical to IsRevokedProcessedEQ.
+func IsRevokedProcessed(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsRevokedProcessed, v))
+}
+
 // IsPaidAtProcessed applies equality check predicate on the "is_paid_at_processed" field. It's identical to IsPaidAtProcessedEQ.
 func IsPaidAtProcessed(v bool) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldIsPaidAtProcessed, v))
@@ -115,6 +130,11 @@ func IsPaidTillProcessed(v bool) predicate.Invoice {
 // SubscriptionID applies equality check predicate on the "subscription_id" field. It's identical to SubscriptionIDEQ.
 func SubscriptionID(v int64) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldSubscriptionID, v))
+}
+
+// AppleStoreTransactionID applies equality check predicate on the "apple_store_transaction_id" field. It's identical to AppleStoreTransactionIDEQ.
+func AppleStoreTransactionID(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldAppleStoreTransactionID, v))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
@@ -557,6 +577,76 @@ func PaidTillNotNil() predicate.Invoice {
 	return predicate.Invoice(sql.FieldNotNull(FieldPaidTill))
 }
 
+// IsRevokedEQ applies the EQ predicate on the "is_revoked" field.
+func IsRevokedEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsRevoked, v))
+}
+
+// IsRevokedNEQ applies the NEQ predicate on the "is_revoked" field.
+func IsRevokedNEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldIsRevoked, v))
+}
+
+// RevokedAtEQ applies the EQ predicate on the "revoked_at" field.
+func RevokedAtEQ(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldRevokedAt, v))
+}
+
+// RevokedAtNEQ applies the NEQ predicate on the "revoked_at" field.
+func RevokedAtNEQ(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldRevokedAt, v))
+}
+
+// RevokedAtIn applies the In predicate on the "revoked_at" field.
+func RevokedAtIn(vs ...time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldRevokedAt, vs...))
+}
+
+// RevokedAtNotIn applies the NotIn predicate on the "revoked_at" field.
+func RevokedAtNotIn(vs ...time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldRevokedAt, vs...))
+}
+
+// RevokedAtGT applies the GT predicate on the "revoked_at" field.
+func RevokedAtGT(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldRevokedAt, v))
+}
+
+// RevokedAtGTE applies the GTE predicate on the "revoked_at" field.
+func RevokedAtGTE(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldRevokedAt, v))
+}
+
+// RevokedAtLT applies the LT predicate on the "revoked_at" field.
+func RevokedAtLT(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldRevokedAt, v))
+}
+
+// RevokedAtLTE applies the LTE predicate on the "revoked_at" field.
+func RevokedAtLTE(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldRevokedAt, v))
+}
+
+// RevokedAtIsNil applies the IsNil predicate on the "revoked_at" field.
+func RevokedAtIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldRevokedAt))
+}
+
+// RevokedAtNotNil applies the NotNil predicate on the "revoked_at" field.
+func RevokedAtNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldRevokedAt))
+}
+
+// IsRevokedProcessedEQ applies the EQ predicate on the "is_revoked_processed" field.
+func IsRevokedProcessedEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsRevokedProcessed, v))
+}
+
+// IsRevokedProcessedNEQ applies the NEQ predicate on the "is_revoked_processed" field.
+func IsRevokedProcessedNEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldIsRevokedProcessed, v))
+}
+
 // IsPaidAtProcessedEQ applies the EQ predicate on the "is_paid_at_processed" field.
 func IsPaidAtProcessedEQ(v bool) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldIsPaidAtProcessed, v))
@@ -605,6 +695,81 @@ func SubscriptionIDIsNil() predicate.Invoice {
 // SubscriptionIDNotNil applies the NotNil predicate on the "subscription_id" field.
 func SubscriptionIDNotNil() predicate.Invoice {
 	return predicate.Invoice(sql.FieldNotNull(FieldSubscriptionID))
+}
+
+// AppleStoreTransactionIDEQ applies the EQ predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDEQ(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDNEQ applies the NEQ predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDNEQ(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDIn applies the In predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDIn(vs ...string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldAppleStoreTransactionID, vs...))
+}
+
+// AppleStoreTransactionIDNotIn applies the NotIn predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDNotIn(vs ...string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldAppleStoreTransactionID, vs...))
+}
+
+// AppleStoreTransactionIDGT applies the GT predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDGT(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDGTE applies the GTE predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDGTE(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDLT applies the LT predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDLT(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDLTE applies the LTE predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDLTE(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDContains applies the Contains predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDContains(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldContains(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDHasPrefix applies the HasPrefix predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDHasPrefix(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldHasPrefix(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDHasSuffix applies the HasSuffix predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDHasSuffix(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldHasSuffix(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDIsNil applies the IsNil predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldAppleStoreTransactionID))
+}
+
+// AppleStoreTransactionIDNotNil applies the NotNil predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldAppleStoreTransactionID))
+}
+
+// AppleStoreTransactionIDEqualFold applies the EqualFold predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDEqualFold(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEqualFold(FieldAppleStoreTransactionID, v))
+}
+
+// AppleStoreTransactionIDContainsFold applies the ContainsFold predicate on the "apple_store_transaction_id" field.
+func AppleStoreTransactionIDContainsFold(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldContainsFold(FieldAppleStoreTransactionID, v))
 }
 
 // HasProduct applies the HasEdge predicate on the "product" edge.

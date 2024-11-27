@@ -118,6 +118,48 @@ func (ic *InvoiceCreate) SetNillablePaidTill(t *time.Time) *InvoiceCreate {
 	return ic
 }
 
+// SetIsRevoked sets the "is_revoked" field.
+func (ic *InvoiceCreate) SetIsRevoked(b bool) *InvoiceCreate {
+	ic.mutation.SetIsRevoked(b)
+	return ic
+}
+
+// SetNillableIsRevoked sets the "is_revoked" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableIsRevoked(b *bool) *InvoiceCreate {
+	if b != nil {
+		ic.SetIsRevoked(*b)
+	}
+	return ic
+}
+
+// SetRevokedAt sets the "revoked_at" field.
+func (ic *InvoiceCreate) SetRevokedAt(t time.Time) *InvoiceCreate {
+	ic.mutation.SetRevokedAt(t)
+	return ic
+}
+
+// SetNillableRevokedAt sets the "revoked_at" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableRevokedAt(t *time.Time) *InvoiceCreate {
+	if t != nil {
+		ic.SetRevokedAt(*t)
+	}
+	return ic
+}
+
+// SetIsRevokedProcessed sets the "is_revoked_processed" field.
+func (ic *InvoiceCreate) SetIsRevokedProcessed(b bool) *InvoiceCreate {
+	ic.mutation.SetIsRevokedProcessed(b)
+	return ic
+}
+
+// SetNillableIsRevokedProcessed sets the "is_revoked_processed" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableIsRevokedProcessed(b *bool) *InvoiceCreate {
+	if b != nil {
+		ic.SetIsRevokedProcessed(*b)
+	}
+	return ic
+}
+
 // SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
 func (ic *InvoiceCreate) SetIsPaidAtProcessed(b bool) *InvoiceCreate {
 	ic.mutation.SetIsPaidAtProcessed(b)
@@ -156,6 +198,20 @@ func (ic *InvoiceCreate) SetSubscriptionID(i int64) *InvoiceCreate {
 func (ic *InvoiceCreate) SetNillableSubscriptionID(i *int64) *InvoiceCreate {
 	if i != nil {
 		ic.SetSubscriptionID(*i)
+	}
+	return ic
+}
+
+// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
+func (ic *InvoiceCreate) SetAppleStoreTransactionID(s string) *InvoiceCreate {
+	ic.mutation.SetAppleStoreTransactionID(s)
+	return ic
+}
+
+// SetNillableAppleStoreTransactionID sets the "apple_store_transaction_id" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableAppleStoreTransactionID(s *string) *InvoiceCreate {
+	if s != nil {
+		ic.SetAppleStoreTransactionID(*s)
 	}
 	return ic
 }
@@ -233,6 +289,14 @@ func (ic *InvoiceCreate) defaults() {
 		v := invoice.DefaultStatus
 		ic.mutation.SetStatus(v)
 	}
+	if _, ok := ic.mutation.IsRevoked(); !ok {
+		v := invoice.DefaultIsRevoked
+		ic.mutation.SetIsRevoked(v)
+	}
+	if _, ok := ic.mutation.IsRevokedProcessed(); !ok {
+		v := invoice.DefaultIsRevokedProcessed
+		ic.mutation.SetIsRevokedProcessed(v)
+	}
 	if _, ok := ic.mutation.IsPaidAtProcessed(); !ok {
 		v := invoice.DefaultIsPaidAtProcessed
 		ic.mutation.SetIsPaidAtProcessed(v)
@@ -278,6 +342,12 @@ func (ic *InvoiceCreate) check() error {
 		if err := invoice.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Invoice.status": %w`, err)}
 		}
+	}
+	if _, ok := ic.mutation.IsRevoked(); !ok {
+		return &ValidationError{Name: "is_revoked", err: errors.New(`ent: missing required field "Invoice.is_revoked"`)}
+	}
+	if _, ok := ic.mutation.IsRevokedProcessed(); !ok {
+		return &ValidationError{Name: "is_revoked_processed", err: errors.New(`ent: missing required field "Invoice.is_revoked_processed"`)}
 	}
 	if _, ok := ic.mutation.IsPaidAtProcessed(); !ok {
 		return &ValidationError{Name: "is_paid_at_processed", err: errors.New(`ent: missing required field "Invoice.is_paid_at_processed"`)}
@@ -357,6 +427,18 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 		_spec.SetField(invoice.FieldPaidTill, field.TypeTime, value)
 		_node.PaidTill = &value
 	}
+	if value, ok := ic.mutation.IsRevoked(); ok {
+		_spec.SetField(invoice.FieldIsRevoked, field.TypeBool, value)
+		_node.IsRevoked = value
+	}
+	if value, ok := ic.mutation.RevokedAt(); ok {
+		_spec.SetField(invoice.FieldRevokedAt, field.TypeTime, value)
+		_node.RevokedAt = &value
+	}
+	if value, ok := ic.mutation.IsRevokedProcessed(); ok {
+		_spec.SetField(invoice.FieldIsRevokedProcessed, field.TypeBool, value)
+		_node.IsRevokedProcessed = value
+	}
 	if value, ok := ic.mutation.IsPaidAtProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidAtProcessed, field.TypeBool, value)
 		_node.IsPaidAtProcessed = value
@@ -364,6 +446,10 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.IsPaidTillProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
 		_node.IsPaidTillProcessed = value
+	}
+	if value, ok := ic.mutation.AppleStoreTransactionID(); ok {
+		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
+		_node.AppleStoreTransactionID = &value
 	}
 	if nodes := ic.mutation.ProductIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -529,6 +615,48 @@ func (u *InvoiceUpsert) ClearPaidTill() *InvoiceUpsert {
 	return u
 }
 
+// SetIsRevoked sets the "is_revoked" field.
+func (u *InvoiceUpsert) SetIsRevoked(v bool) *InvoiceUpsert {
+	u.Set(invoice.FieldIsRevoked, v)
+	return u
+}
+
+// UpdateIsRevoked sets the "is_revoked" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateIsRevoked() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldIsRevoked)
+	return u
+}
+
+// SetRevokedAt sets the "revoked_at" field.
+func (u *InvoiceUpsert) SetRevokedAt(v time.Time) *InvoiceUpsert {
+	u.Set(invoice.FieldRevokedAt, v)
+	return u
+}
+
+// UpdateRevokedAt sets the "revoked_at" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateRevokedAt() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldRevokedAt)
+	return u
+}
+
+// ClearRevokedAt clears the value of the "revoked_at" field.
+func (u *InvoiceUpsert) ClearRevokedAt() *InvoiceUpsert {
+	u.SetNull(invoice.FieldRevokedAt)
+	return u
+}
+
+// SetIsRevokedProcessed sets the "is_revoked_processed" field.
+func (u *InvoiceUpsert) SetIsRevokedProcessed(v bool) *InvoiceUpsert {
+	u.Set(invoice.FieldIsRevokedProcessed, v)
+	return u
+}
+
+// UpdateIsRevokedProcessed sets the "is_revoked_processed" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateIsRevokedProcessed() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldIsRevokedProcessed)
+	return u
+}
+
 // SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
 func (u *InvoiceUpsert) SetIsPaidAtProcessed(v bool) *InvoiceUpsert {
 	u.Set(invoice.FieldIsPaidAtProcessed, v)
@@ -550,6 +678,24 @@ func (u *InvoiceUpsert) SetIsPaidTillProcessed(v bool) *InvoiceUpsert {
 // UpdateIsPaidTillProcessed sets the "is_paid_till_processed" field to the value that was provided on create.
 func (u *InvoiceUpsert) UpdateIsPaidTillProcessed() *InvoiceUpsert {
 	u.SetExcluded(invoice.FieldIsPaidTillProcessed)
+	return u
+}
+
+// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
+func (u *InvoiceUpsert) SetAppleStoreTransactionID(v string) *InvoiceUpsert {
+	u.Set(invoice.FieldAppleStoreTransactionID, v)
+	return u
+}
+
+// UpdateAppleStoreTransactionID sets the "apple_store_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateAppleStoreTransactionID() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldAppleStoreTransactionID)
+	return u
+}
+
+// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
+func (u *InvoiceUpsert) ClearAppleStoreTransactionID() *InvoiceUpsert {
+	u.SetNull(invoice.FieldAppleStoreTransactionID)
 	return u
 }
 
@@ -710,6 +856,55 @@ func (u *InvoiceUpsertOne) ClearPaidTill() *InvoiceUpsertOne {
 	})
 }
 
+// SetIsRevoked sets the "is_revoked" field.
+func (u *InvoiceUpsertOne) SetIsRevoked(v bool) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsRevoked(v)
+	})
+}
+
+// UpdateIsRevoked sets the "is_revoked" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateIsRevoked() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsRevoked()
+	})
+}
+
+// SetRevokedAt sets the "revoked_at" field.
+func (u *InvoiceUpsertOne) SetRevokedAt(v time.Time) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetRevokedAt(v)
+	})
+}
+
+// UpdateRevokedAt sets the "revoked_at" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateRevokedAt() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateRevokedAt()
+	})
+}
+
+// ClearRevokedAt clears the value of the "revoked_at" field.
+func (u *InvoiceUpsertOne) ClearRevokedAt() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearRevokedAt()
+	})
+}
+
+// SetIsRevokedProcessed sets the "is_revoked_processed" field.
+func (u *InvoiceUpsertOne) SetIsRevokedProcessed(v bool) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsRevokedProcessed(v)
+	})
+}
+
+// UpdateIsRevokedProcessed sets the "is_revoked_processed" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateIsRevokedProcessed() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsRevokedProcessed()
+	})
+}
+
 // SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
 func (u *InvoiceUpsertOne) SetIsPaidAtProcessed(v bool) *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
@@ -735,6 +930,27 @@ func (u *InvoiceUpsertOne) SetIsPaidTillProcessed(v bool) *InvoiceUpsertOne {
 func (u *InvoiceUpsertOne) UpdateIsPaidTillProcessed() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.UpdateIsPaidTillProcessed()
+	})
+}
+
+// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
+func (u *InvoiceUpsertOne) SetAppleStoreTransactionID(v string) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetAppleStoreTransactionID(v)
+	})
+}
+
+// UpdateAppleStoreTransactionID sets the "apple_store_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateAppleStoreTransactionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateAppleStoreTransactionID()
+	})
+}
+
+// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
+func (u *InvoiceUpsertOne) ClearAppleStoreTransactionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearAppleStoreTransactionID()
 	})
 }
 
@@ -1061,6 +1277,55 @@ func (u *InvoiceUpsertBulk) ClearPaidTill() *InvoiceUpsertBulk {
 	})
 }
 
+// SetIsRevoked sets the "is_revoked" field.
+func (u *InvoiceUpsertBulk) SetIsRevoked(v bool) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsRevoked(v)
+	})
+}
+
+// UpdateIsRevoked sets the "is_revoked" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateIsRevoked() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsRevoked()
+	})
+}
+
+// SetRevokedAt sets the "revoked_at" field.
+func (u *InvoiceUpsertBulk) SetRevokedAt(v time.Time) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetRevokedAt(v)
+	})
+}
+
+// UpdateRevokedAt sets the "revoked_at" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateRevokedAt() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateRevokedAt()
+	})
+}
+
+// ClearRevokedAt clears the value of the "revoked_at" field.
+func (u *InvoiceUpsertBulk) ClearRevokedAt() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearRevokedAt()
+	})
+}
+
+// SetIsRevokedProcessed sets the "is_revoked_processed" field.
+func (u *InvoiceUpsertBulk) SetIsRevokedProcessed(v bool) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsRevokedProcessed(v)
+	})
+}
+
+// UpdateIsRevokedProcessed sets the "is_revoked_processed" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateIsRevokedProcessed() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsRevokedProcessed()
+	})
+}
+
 // SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
 func (u *InvoiceUpsertBulk) SetIsPaidAtProcessed(v bool) *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
@@ -1086,6 +1351,27 @@ func (u *InvoiceUpsertBulk) SetIsPaidTillProcessed(v bool) *InvoiceUpsertBulk {
 func (u *InvoiceUpsertBulk) UpdateIsPaidTillProcessed() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.UpdateIsPaidTillProcessed()
+	})
+}
+
+// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
+func (u *InvoiceUpsertBulk) SetAppleStoreTransactionID(v string) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetAppleStoreTransactionID(v)
+	})
+}
+
+// UpdateAppleStoreTransactionID sets the "apple_store_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateAppleStoreTransactionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateAppleStoreTransactionID()
+	})
+}
+
+// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
+func (u *InvoiceUpsertBulk) ClearAppleStoreTransactionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearAppleStoreTransactionID()
 	})
 }
 

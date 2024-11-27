@@ -49,19 +49,23 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Invoice",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			invoice.FieldUserID:              {Type: field.TypeInt64, Column: invoice.FieldUserID},
-			invoice.FieldTenantID:            {Type: field.TypeInt64, Column: invoice.FieldTenantID},
-			invoice.FieldAppID:               {Type: field.TypeString, Column: invoice.FieldAppID},
-			invoice.FieldProductID:           {Type: field.TypeInt64, Column: invoice.FieldProductID},
-			invoice.FieldAmount:              {Type: field.TypeInt64, Column: invoice.FieldAmount},
-			invoice.FieldPrice:               {Type: field.TypeFloat64, Column: invoice.FieldPrice},
-			invoice.FieldCurrency:            {Type: field.TypeString, Column: invoice.FieldCurrency},
-			invoice.FieldStatus:              {Type: field.TypeEnum, Column: invoice.FieldStatus},
-			invoice.FieldPaidAt:              {Type: field.TypeTime, Column: invoice.FieldPaidAt},
-			invoice.FieldPaidTill:            {Type: field.TypeTime, Column: invoice.FieldPaidTill},
-			invoice.FieldIsPaidAtProcessed:   {Type: field.TypeBool, Column: invoice.FieldIsPaidAtProcessed},
-			invoice.FieldIsPaidTillProcessed: {Type: field.TypeBool, Column: invoice.FieldIsPaidTillProcessed},
-			invoice.FieldSubscriptionID:      {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
+			invoice.FieldUserID:                  {Type: field.TypeInt64, Column: invoice.FieldUserID},
+			invoice.FieldTenantID:                {Type: field.TypeInt64, Column: invoice.FieldTenantID},
+			invoice.FieldAppID:                   {Type: field.TypeString, Column: invoice.FieldAppID},
+			invoice.FieldProductID:               {Type: field.TypeInt64, Column: invoice.FieldProductID},
+			invoice.FieldAmount:                  {Type: field.TypeInt64, Column: invoice.FieldAmount},
+			invoice.FieldPrice:                   {Type: field.TypeFloat64, Column: invoice.FieldPrice},
+			invoice.FieldCurrency:                {Type: field.TypeString, Column: invoice.FieldCurrency},
+			invoice.FieldStatus:                  {Type: field.TypeEnum, Column: invoice.FieldStatus},
+			invoice.FieldPaidAt:                  {Type: field.TypeTime, Column: invoice.FieldPaidAt},
+			invoice.FieldPaidTill:                {Type: field.TypeTime, Column: invoice.FieldPaidTill},
+			invoice.FieldIsRevoked:               {Type: field.TypeBool, Column: invoice.FieldIsRevoked},
+			invoice.FieldRevokedAt:               {Type: field.TypeTime, Column: invoice.FieldRevokedAt},
+			invoice.FieldIsRevokedProcessed:      {Type: field.TypeBool, Column: invoice.FieldIsRevokedProcessed},
+			invoice.FieldIsPaidAtProcessed:       {Type: field.TypeBool, Column: invoice.FieldIsPaidAtProcessed},
+			invoice.FieldIsPaidTillProcessed:     {Type: field.TypeBool, Column: invoice.FieldIsPaidTillProcessed},
+			invoice.FieldSubscriptionID:          {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
+			invoice.FieldAppleStoreTransactionID: {Type: field.TypeString, Column: invoice.FieldAppleStoreTransactionID},
 		},
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
@@ -443,6 +447,21 @@ func (f *InvoiceFilter) WherePaidTill(p entql.TimeP) {
 	f.Where(p.Field(invoice.FieldPaidTill))
 }
 
+// WhereIsRevoked applies the entql bool predicate on the is_revoked field.
+func (f *InvoiceFilter) WhereIsRevoked(p entql.BoolP) {
+	f.Where(p.Field(invoice.FieldIsRevoked))
+}
+
+// WhereRevokedAt applies the entql time.Time predicate on the revoked_at field.
+func (f *InvoiceFilter) WhereRevokedAt(p entql.TimeP) {
+	f.Where(p.Field(invoice.FieldRevokedAt))
+}
+
+// WhereIsRevokedProcessed applies the entql bool predicate on the is_revoked_processed field.
+func (f *InvoiceFilter) WhereIsRevokedProcessed(p entql.BoolP) {
+	f.Where(p.Field(invoice.FieldIsRevokedProcessed))
+}
+
 // WhereIsPaidAtProcessed applies the entql bool predicate on the is_paid_at_processed field.
 func (f *InvoiceFilter) WhereIsPaidAtProcessed(p entql.BoolP) {
 	f.Where(p.Field(invoice.FieldIsPaidAtProcessed))
@@ -456,6 +475,11 @@ func (f *InvoiceFilter) WhereIsPaidTillProcessed(p entql.BoolP) {
 // WhereSubscriptionID applies the entql int64 predicate on the subscription_id field.
 func (f *InvoiceFilter) WhereSubscriptionID(p entql.Int64P) {
 	f.Where(p.Field(invoice.FieldSubscriptionID))
+}
+
+// WhereAppleStoreTransactionID applies the entql string predicate on the apple_store_transaction_id field.
+func (f *InvoiceFilter) WhereAppleStoreTransactionID(p entql.StringP) {
+	f.Where(p.Field(invoice.FieldAppleStoreTransactionID))
 }
 
 // WhereHasProduct applies a predicate to check if query has an edge product.

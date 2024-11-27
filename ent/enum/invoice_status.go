@@ -9,11 +9,11 @@ const (
 	CanceledByVendor InvoiceStatus = "CANCELED_BY_VENDOR"
 	Failed           InvoiceStatus = "FAILED"
 	Rejected         InvoiceStatus = "REJECTED"
-	Refunded         InvoiceStatus = "REFUNDED"
+	Revoked          InvoiceStatus = "REVOKED"
 )
 
 func invoiceStatusValues() []InvoiceStatus {
-	return []InvoiceStatus{Created, Paid, CanceledByUser, CanceledByVendor, Failed, Rejected, Refunded}
+	return []InvoiceStatus{Created, Paid, CanceledByUser, CanceledByVendor, Failed, Rejected, Revoked}
 }
 
 func (InvoiceStatus) Values() (kinds []string) {

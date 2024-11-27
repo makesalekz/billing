@@ -80,7 +80,9 @@ func (uc *InvoicesUseCase) CreateInvoice(
 		}
 	}
 
-	invoiceDto.Price = product.Price.Mul(decimal.NewFromInt(invoiceDto.Amount))
+	if invoiceDto.Price.IsZero() {
+		invoiceDto.Price = product.Price.Mul(decimal.NewFromInt(invoiceDto.Amount))
+	}
 
 	invoice, err := uc.invoiceRepo.CreateInvoice(ctx, invoiceDto)
 	if err != nil {
@@ -102,11 +104,7 @@ func (uc *InvoicesUseCase) UpdateInvoice(
 		return nil, v1.ErrorDatabaseQuery("failed to update invoice, err %s", err.Error())
 	}
 
-	if dto.Status == enum.Paid && invoiceData.Status != enum.Paid {
-		uc.updateResources(ctx, invoiceData, invoiceData.ProductID)
-	}
-
-	invoice, err := uc.invoiceRepo.UpdateInvoice(ctx, actorID, invoiceID, dto)
+	invoice, err := uc.invoiceRepo.UpdateInvoice(ctx, invoiceData, dto)
 	if err != nil {
 		return nil, v1.ErrorDatabaseQuery("failed to update invoice, err %s", err.Error())
 	}
@@ -175,6 +173,32 @@ func (uc *InvoicesUseCase) canProductBeUsedOneMoreTime(ctx context.Context, acto
 	return nil
 }
 
+func (uc *InvoicesUseCase) RevokeInvoice(
+	ctx context.Context, actorID, tenantID int64, appID string, invoiceID int64,
+) error {
+	invoiceData, err := uc.invoiceRepo.GetInvoice(ctx, actorID, tenantID, appID, invoiceID)
+	if err != nil {
+		return v1.ErrorDatabaseQuery("failed to revoke invoice: %s", err.Error())
+	}
+
+	if invoiceData.Status != enum.Paid {
+		return v1.ErrorInvalidRequest("invoice is not paid")
+	}
+
+	now := time.Now()
+	tvar := true
+
+	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoiceData, data.InvoiceDto{
+		IsRevoked: &tvar,
+		RevokedAt: &now,
+	})
+	if err != nil {
+		return v1.ErrorDatabaseQuery("failed to revoke invoice: %s", err.Error())
+	}
+
+	return nil
+}
+
 func (uc *InvoicesUseCase) checkProductLimit(amount int64, product *ent.Product) error {
 	if product.IsLimited {
 		if product.Left <= 0 || product.Left < amount {
@@ -189,10 +213,39 @@ func (uc *InvoicesUseCase) checkProductLimit(amount int64, product *ent.Product)
 	return nil
 }
 
-func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Invoice, productID int64) {
+func (uc *InvoicesUseCase) UpdateResources(ctx context.Context) {
+	fvar := false
+	now := time.Now()
+	invoices, err := uc.invoiceRepo.ListInvoices(ctx, data.InvoiceFilter{
+		Status:        enum.Paid,
+		PaidProcesses: &fvar,
+		IsRevoked:     &fvar,
+		PaidTill:      &now,
+	}, &utils_v1.PaginateRequest{Limit: 1000, FromId: 0})
+	if err != nil {
+		uc.log.Errorf("failed to list invoices: %s", err.Error())
+
+		return
+	}
+
+	for _, invoice := range invoices {
+		err = uc.updateResources(ctx, invoice, invoice.ProductID)
+		if err != nil {
+			uc.log.Errorf("failed to update resources of invoice: %d, err %s", invoice.ID, err.Error())
+
+			continue
+		}
+	}
+}
+
+func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Invoice, productID int64) error {
 	product, err := uc.productRepo.GetProduct(ctx, productID)
 	if err != nil {
-		uc.log.Errorf("failed to update resources, err %s", err.Error())
+		return v1.ErrorInternal("failed to get product: %s", err.Error())
+	}
+
+	if product.Edges.Bundles == nil {
+		return nil
 	}
 
 	bundles := product.Edges.Bundles
@@ -204,9 +257,7 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 
 	items, err := uc.itemsRepo.GetItems(ctx, maps.Keys(itemIDs))
 	if err != nil {
-		uc.log.Errorf("failed to get items: %s", err.Error())
-
-		return
+		return v1.ErrorInternal("failed to get items: %s", err.Error())
 	}
 
 	for _, item := range items {
@@ -224,6 +275,93 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 
 		uc.queryManager.GetRemote(*item.TopicName).Pub(refreshedItem)
 	}
+
+	tvar := true
+	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoice, data.InvoiceDto{
+		IsPaidAtProcessed: &tvar,
+	})
+	if err != nil {
+		return v1.ErrorInternal("failed to update invoice: %s", err.Error())
+	}
+
+	return nil
+}
+
+func (uc *InvoicesUseCase) RevokeResources(ctx context.Context) {
+	fvar := false
+	tvar := true
+	now := time.Now()
+
+	invoices, err := uc.invoiceRepo.ListInvoices(ctx, data.InvoiceFilter{
+		Status:        enum.Paid,
+		PaidProcesses: &tvar,
+		IsRevoked:     &tvar,
+		IsRevokedProc: &fvar,
+		PaidTill:      &now,
+	}, &utils_v1.PaginateRequest{Limit: 1000, FromId: 0})
+	if err != nil {
+		uc.log.Errorf("failed to list invoices: %s", err.Error())
+
+		return
+	}
+
+	for _, invoice := range invoices {
+		err = uc.revokeResources(ctx, invoice, invoice.ProductID)
+		if err != nil {
+			uc.log.Errorf("failed to revoke resources of invoice: %d, err %s", invoice.ID, err.Error())
+
+			continue
+		}
+	}
+}
+
+func (uc *InvoicesUseCase) revokeResources(ctx context.Context, invoice *ent.Invoice, productID int64) error {
+	product, err := uc.productRepo.GetProduct(ctx, productID)
+	if err != nil {
+		return v1.ErrorInternal("failed to get product: %s", err.Error())
+	}
+
+	if product.Edges.Bundles == nil {
+		return nil
+	}
+
+	bundles := product.Edges.Bundles
+
+	itemIDs := make(map[int64]float64, len(bundles))
+	for _, bundle := range bundles {
+		itemIDs[bundle.ItemID] = bundle.Amount
+	}
+
+	items, err := uc.itemsRepo.GetItems(ctx, maps.Keys(itemIDs))
+	if err != nil {
+		return v1.ErrorInternal("failed to get items: %s", err.Error())
+	}
+
+	for _, item := range items {
+		if item.TopicName == nil {
+			continue
+		}
+
+		refreshedItem := messages.RefreshItems{
+			Item:     item,
+			Amount:   itemIDs[item.ID] * float64(invoice.Amount),
+			UserID:   invoice.UserID,
+			TenantID: invoice.TenantID,
+			AppID:    invoice.AppID,
+		}
+
+		uc.queryManager.GetRemote(*item.TopicName + "/revoke").Pub(refreshedItem)
+	}
+
+	tvar := true
+	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoice, data.InvoiceDto{
+		IsRevokedProcessed: &tvar,
+	})
+	if err != nil {
+		return v1.ErrorInternal("failed to update invoice: %s", err.Error())
+	}
+
+	return nil
 }
 
 func ReplyInvoice(invoice *ent.Invoice) *v1.Invoice {

@@ -120,6 +120,54 @@ func (iu *InvoiceUpdate) ClearPaidTill() *InvoiceUpdate {
 	return iu
 }
 
+// SetIsRevoked sets the "is_revoked" field.
+func (iu *InvoiceUpdate) SetIsRevoked(b bool) *InvoiceUpdate {
+	iu.mutation.SetIsRevoked(b)
+	return iu
+}
+
+// SetNillableIsRevoked sets the "is_revoked" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableIsRevoked(b *bool) *InvoiceUpdate {
+	if b != nil {
+		iu.SetIsRevoked(*b)
+	}
+	return iu
+}
+
+// SetRevokedAt sets the "revoked_at" field.
+func (iu *InvoiceUpdate) SetRevokedAt(t time.Time) *InvoiceUpdate {
+	iu.mutation.SetRevokedAt(t)
+	return iu
+}
+
+// SetNillableRevokedAt sets the "revoked_at" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableRevokedAt(t *time.Time) *InvoiceUpdate {
+	if t != nil {
+		iu.SetRevokedAt(*t)
+	}
+	return iu
+}
+
+// ClearRevokedAt clears the value of the "revoked_at" field.
+func (iu *InvoiceUpdate) ClearRevokedAt() *InvoiceUpdate {
+	iu.mutation.ClearRevokedAt()
+	return iu
+}
+
+// SetIsRevokedProcessed sets the "is_revoked_processed" field.
+func (iu *InvoiceUpdate) SetIsRevokedProcessed(b bool) *InvoiceUpdate {
+	iu.mutation.SetIsRevokedProcessed(b)
+	return iu
+}
+
+// SetNillableIsRevokedProcessed sets the "is_revoked_processed" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableIsRevokedProcessed(b *bool) *InvoiceUpdate {
+	if b != nil {
+		iu.SetIsRevokedProcessed(*b)
+	}
+	return iu
+}
+
 // SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
 func (iu *InvoiceUpdate) SetIsPaidAtProcessed(b bool) *InvoiceUpdate {
 	iu.mutation.SetIsPaidAtProcessed(b)
@@ -145,6 +193,26 @@ func (iu *InvoiceUpdate) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpdate 
 	if b != nil {
 		iu.SetIsPaidTillProcessed(*b)
 	}
+	return iu
+}
+
+// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
+func (iu *InvoiceUpdate) SetAppleStoreTransactionID(s string) *InvoiceUpdate {
+	iu.mutation.SetAppleStoreTransactionID(s)
+	return iu
+}
+
+// SetNillableAppleStoreTransactionID sets the "apple_store_transaction_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableAppleStoreTransactionID(s *string) *InvoiceUpdate {
+	if s != nil {
+		iu.SetAppleStoreTransactionID(*s)
+	}
+	return iu
+}
+
+// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
+func (iu *InvoiceUpdate) ClearAppleStoreTransactionID() *InvoiceUpdate {
+	iu.mutation.ClearAppleStoreTransactionID()
 	return iu
 }
 
@@ -240,11 +308,29 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if iu.mutation.PaidTillCleared() {
 		_spec.ClearField(invoice.FieldPaidTill, field.TypeTime)
 	}
+	if value, ok := iu.mutation.IsRevoked(); ok {
+		_spec.SetField(invoice.FieldIsRevoked, field.TypeBool, value)
+	}
+	if value, ok := iu.mutation.RevokedAt(); ok {
+		_spec.SetField(invoice.FieldRevokedAt, field.TypeTime, value)
+	}
+	if iu.mutation.RevokedAtCleared() {
+		_spec.ClearField(invoice.FieldRevokedAt, field.TypeTime)
+	}
+	if value, ok := iu.mutation.IsRevokedProcessed(); ok {
+		_spec.SetField(invoice.FieldIsRevokedProcessed, field.TypeBool, value)
+	}
 	if value, ok := iu.mutation.IsPaidAtProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidAtProcessed, field.TypeBool, value)
 	}
 	if value, ok := iu.mutation.IsPaidTillProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
+	}
+	if value, ok := iu.mutation.AppleStoreTransactionID(); ok {
+		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
+	}
+	if iu.mutation.AppleStoreTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
 	}
 	_spec.AddModifiers(iu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
@@ -357,6 +443,54 @@ func (iuo *InvoiceUpdateOne) ClearPaidTill() *InvoiceUpdateOne {
 	return iuo
 }
 
+// SetIsRevoked sets the "is_revoked" field.
+func (iuo *InvoiceUpdateOne) SetIsRevoked(b bool) *InvoiceUpdateOne {
+	iuo.mutation.SetIsRevoked(b)
+	return iuo
+}
+
+// SetNillableIsRevoked sets the "is_revoked" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableIsRevoked(b *bool) *InvoiceUpdateOne {
+	if b != nil {
+		iuo.SetIsRevoked(*b)
+	}
+	return iuo
+}
+
+// SetRevokedAt sets the "revoked_at" field.
+func (iuo *InvoiceUpdateOne) SetRevokedAt(t time.Time) *InvoiceUpdateOne {
+	iuo.mutation.SetRevokedAt(t)
+	return iuo
+}
+
+// SetNillableRevokedAt sets the "revoked_at" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableRevokedAt(t *time.Time) *InvoiceUpdateOne {
+	if t != nil {
+		iuo.SetRevokedAt(*t)
+	}
+	return iuo
+}
+
+// ClearRevokedAt clears the value of the "revoked_at" field.
+func (iuo *InvoiceUpdateOne) ClearRevokedAt() *InvoiceUpdateOne {
+	iuo.mutation.ClearRevokedAt()
+	return iuo
+}
+
+// SetIsRevokedProcessed sets the "is_revoked_processed" field.
+func (iuo *InvoiceUpdateOne) SetIsRevokedProcessed(b bool) *InvoiceUpdateOne {
+	iuo.mutation.SetIsRevokedProcessed(b)
+	return iuo
+}
+
+// SetNillableIsRevokedProcessed sets the "is_revoked_processed" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableIsRevokedProcessed(b *bool) *InvoiceUpdateOne {
+	if b != nil {
+		iuo.SetIsRevokedProcessed(*b)
+	}
+	return iuo
+}
+
 // SetIsPaidAtProcessed sets the "is_paid_at_processed" field.
 func (iuo *InvoiceUpdateOne) SetIsPaidAtProcessed(b bool) *InvoiceUpdateOne {
 	iuo.mutation.SetIsPaidAtProcessed(b)
@@ -382,6 +516,26 @@ func (iuo *InvoiceUpdateOne) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpd
 	if b != nil {
 		iuo.SetIsPaidTillProcessed(*b)
 	}
+	return iuo
+}
+
+// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
+func (iuo *InvoiceUpdateOne) SetAppleStoreTransactionID(s string) *InvoiceUpdateOne {
+	iuo.mutation.SetAppleStoreTransactionID(s)
+	return iuo
+}
+
+// SetNillableAppleStoreTransactionID sets the "apple_store_transaction_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableAppleStoreTransactionID(s *string) *InvoiceUpdateOne {
+	if s != nil {
+		iuo.SetAppleStoreTransactionID(*s)
+	}
+	return iuo
+}
+
+// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
+func (iuo *InvoiceUpdateOne) ClearAppleStoreTransactionID() *InvoiceUpdateOne {
+	iuo.mutation.ClearAppleStoreTransactionID()
 	return iuo
 }
 
@@ -507,11 +661,29 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	if iuo.mutation.PaidTillCleared() {
 		_spec.ClearField(invoice.FieldPaidTill, field.TypeTime)
 	}
+	if value, ok := iuo.mutation.IsRevoked(); ok {
+		_spec.SetField(invoice.FieldIsRevoked, field.TypeBool, value)
+	}
+	if value, ok := iuo.mutation.RevokedAt(); ok {
+		_spec.SetField(invoice.FieldRevokedAt, field.TypeTime, value)
+	}
+	if iuo.mutation.RevokedAtCleared() {
+		_spec.ClearField(invoice.FieldRevokedAt, field.TypeTime)
+	}
+	if value, ok := iuo.mutation.IsRevokedProcessed(); ok {
+		_spec.SetField(invoice.FieldIsRevokedProcessed, field.TypeBool, value)
+	}
 	if value, ok := iuo.mutation.IsPaidAtProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidAtProcessed, field.TypeBool, value)
 	}
 	if value, ok := iuo.mutation.IsPaidTillProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
+	}
+	if value, ok := iuo.mutation.AppleStoreTransactionID(); ok {
+		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
+	}
+	if iuo.mutation.AppleStoreTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
 	}
 	_spec.AddModifiers(iuo.modifiers...)
 	_node = &Invoice{config: iuo.config}

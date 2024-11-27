@@ -14,6 +14,7 @@ var ProviderSet = wire.NewSet(
 	NewProductUseCase,
 	NewInvoicesUseCase,
 	NewSubscriptionUsecase,
+	NewAppleStoreUsecase,
 )
 
 const (
