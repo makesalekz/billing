@@ -16,6 +16,12 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/internal/data"
 )
 
+const (
+	milliUnits = 1000
+	centiUnits = 100
+	deciUnits  = 10
+)
+
 type AppleStoreUsecase struct {
 	invoices      data.InvoicesRepo
 	subscriptions data.SubscriptionsRepo
@@ -31,16 +37,16 @@ func NewAppleStoreUsecase(invoices data.InvoicesRepo) *AppleStoreUsecase {
 func (uc *AppleStoreUsecase) ProcessPayload(ctx context.Context, payload data.Payload) error {
 	var err error
 
-	if payload.NotificationType == data.TYPE_SUBSCRIBED ||
-		payload.NotificationType == data.TYPE_DID_RENEW ||
-		payload.NotificationType == data.TYPE_OFFER_REDEEMED {
+	if payload.NotificationType == data.TypeSubscribed ||
+		payload.NotificationType == data.TypeDidRenew ||
+		payload.NotificationType == data.TypeOfferRedeemed {
 		err = uc.processSubscription(ctx, payload)
 	}
 
-	if payload.NotificationType == data.TYPE_EXPIRED ||
-		payload.NotificationType == data.TYPE_DID_FAIL_TO_RENEW ||
-		payload.NotificationType == data.TYPE_GRACE_PERIOD_EXPIRED ||
-		payload.NotificationType == data.TYPE_REVOKE {
+	if payload.NotificationType == data.TypeExpired ||
+		payload.NotificationType == data.TypeDidFailToRenew ||
+		payload.NotificationType == data.TypeGracePeriodExpired ||
+		payload.NotificationType == data.TypeRevoke {
 		err = uc.processExpired(ctx, payload)
 	}
 
@@ -107,8 +113,8 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 		}
 	}
 
-	paidAt := time.Unix(transaction.PurchaseDate/1000, 0)
-	paidTill := time.Unix(transaction.ExpiresDate/1000, 0)
+	paidAt := time.Unix(transaction.PurchaseDate/milliUnits, 0)
+	paidTill := time.Unix(transaction.ExpiresDate/milliUnits, 0)
 	_, err = uc.invoices.CreateInvoice(ctx, data.InvoiceDto{
 		UserID:                  subscription.UserID,
 		TenantID:                subscription.TenantID,
@@ -158,12 +164,12 @@ func (uc *AppleStoreUsecase) processExpired(ctx context.Context, payload data.Pa
 		return v1.ErrorDatabaseQuery("failed to get subscription: %s", err.Error())
 	}
 
-	if payload.NotificationType == data.TYPE_REVOKE {
-		revocationDate := time.Unix(transaction.RevocationDate/1000, 0)
+	if payload.NotificationType == data.TypeRevoke {
+		revocationDate := time.Unix(transaction.RevocationDate/milliUnits, 0)
 
 		err = uc.subscriptions.RevokeActiveSubscription(ctx, subscription.ID, revocationDate)
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 
@@ -171,7 +177,7 @@ func (uc *AppleStoreUsecase) processExpired(ctx context.Context, payload data.Pa
 }
 
 func extractUserIDFromUUID(uid uuid.UUID) int64 {
-	reconstructedActorId := int64(
+	reconstructedActorID := int64( //nolint:gosec // reconstructed actor id cannot be negative
 		binary.BigEndian.Uint64(
 			[]byte{
 				uid[8], uid[9], uid[10], uid[11], uid[12], uid[13], uid[14], uid[15],
@@ -179,11 +185,11 @@ func extractUserIDFromUUID(uid uuid.UUID) int64 {
 		),
 	)
 
-	return reconstructedActorId
+	return reconstructedActorID
 }
 
 func extractTenantIDFromUUID(uid uuid.UUID) int64 {
-	reconstructedTenantId := int64(
+	reconstructedTenantID := int64( //nolint:gosec // reconstructed tenant id cannot be negative
 		binary.BigEndian.Uint64(
 			[]byte{
 				uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7],
@@ -191,5 +197,5 @@ func extractTenantIDFromUUID(uid uuid.UUID) int64 {
 		),
 	)
 
-	return reconstructedTenantId
+	return reconstructedTenantID
 }

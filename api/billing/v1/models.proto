@@ -73,9 +73,13 @@ message Invoice {
   string currency = 8;
   string paidAt = 9;
   string paidTill = 10;
-  bool isPaidAtProcessed = 11;
-  bool isPaidTillProcessed = 12;
-  int64 subscriptionId = 13;
+  bool revoked = 11;
+  string revokedAt = 12;
+  string isRevokedProcessed = 13;
+  bool isPaidAtProcessed = 14;
+  bool isPaidTillProcessed = 15;
+  int64 subscriptionId = 16;
+  string appleStoreTransactionId = 17;
 }
 
 message Subscription {

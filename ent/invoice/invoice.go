@@ -123,7 +123,7 @@ const DefaultStatus enum.InvoiceStatus = "CREATED"
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
 func StatusValidator(s enum.InvoiceStatus) error {
 	switch s {
-	case "CREATED", "PAID", "CANCELED_BY_USER", "CANCELED_BY_VENDOR", "FAILED", "REJECTED", "REFUNDED":
+	case "CREATED", "PAID", "CANCELED_BY_USER", "CANCELED_BY_VENDOR", "FAILED", "REJECTED", "REVOKED":
 		return nil
 	default:
 		return fmt.Errorf("invoice: invalid enum value for status field: %q", s)

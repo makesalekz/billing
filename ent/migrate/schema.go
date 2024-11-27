@@ -58,7 +58,7 @@ var (
 		{Name: "amount", Type: field.TypeInt64},
 		{Name: "price", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric"}},
 		{Name: "currency", Type: field.TypeString, Size: 3, Default: "KZT"},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"CREATED", "PAID", "CANCELED_BY_USER", "CANCELED_BY_VENDOR", "FAILED", "REJECTED", "REFUNDED"}, Default: "CREATED"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"CREATED", "PAID", "CANCELED_BY_USER", "CANCELED_BY_VENDOR", "FAILED", "REJECTED", "REVOKED"}, Default: "CREATED"},
 		{Name: "paid_at", Type: field.TypeTime, Nullable: true},
 		{Name: "paid_till", Type: field.TypeTime, Nullable: true},
 		{Name: "is_revoked", Type: field.TypeBool, Default: false},

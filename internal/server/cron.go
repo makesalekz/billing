@@ -23,14 +23,15 @@ func NewCronServer(
 		cron: cron.New(),
 	}
 
-	cs.checkEventsNotify(invoice)
+	cs.processInvoices(invoice)
 
 	return cs
 }
 
-func (cs *CronServer) processPaidInvoices(uc *biz.InvoicesUseCase) {
+func (cs *CronServer) processInvoices(uc *biz.InvoicesUseCase) {
 	entryId, err := cs.cron.AddFunc("@every 1m", func() {
 		uc.UpdateResources(context.Background())
+		uc.RevokeResources(context.Background())
 	})
 	if err != nil {
 		cs.log.Errorf("failed on cron entryId: %v, err: %v", entryId, err)

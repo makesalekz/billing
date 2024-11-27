@@ -221,7 +221,7 @@ func (uc *InvoicesUseCase) UpdateResources(ctx context.Context) {
 		PaidProcesses: &fvar,
 		IsRevoked:     &fvar,
 		PaidTill:      &now,
-	}, &utils_v1.PaginateRequest{Limit: 1000, FromId: 0})
+	}, &utils_v1.PaginateRequest{Limit: BackgroundProcessPageSize, FromId: 0})
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 
@@ -298,7 +298,7 @@ func (uc *InvoicesUseCase) RevokeResources(ctx context.Context) {
 		IsRevoked:     &tvar,
 		IsRevokedProc: &fvar,
 		PaidTill:      &now,
-	}, &utils_v1.PaginateRequest{Limit: 1000, FromId: 0})
+	}, &utils_v1.PaginateRequest{Limit: BackgroundProcessPageSize, FromId: 0})
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 

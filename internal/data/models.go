@@ -21,64 +21,66 @@ type OfferDiscountType string
 type ProductType string
 
 const (
-	TYPE_SUBSCRIBED                NotificationType = "SUBSCRIBED"
-	TYPE_DID_CHANGE_RENEWAL_PREF   NotificationType = "DID_CHANGE_RENEWAL_PREF"
-	TYPE_DID_CHANGE_RENEWAL_STATUS NotificationType = "DID_CHANGE_RENEWAL_STATUS"
-	TYPE_OFFER_REDEEMED            NotificationType = "OFFER_REDEEMED"
-	TYPE_DID_RENEW                 NotificationType = "DID_RENEW"
-	TYPE_EXPIRED                   NotificationType = "EXPIRED"
-	TYPE_DID_FAIL_TO_RENEW         NotificationType = "DID_FAIL_TO_RENEW"
-	TYPE_GRACE_PERIOD_EXPIRED      NotificationType = "GRACE_PERIOD_EXPIRED"
-	TYPE_PRICE_INCREASE            NotificationType = "PRICE_INCREASE"
-	TYPE_REFUND                    NotificationType = "REFUND"
-	TYPE_REFUND_DECLINED           NotificationType = "REFUND_DECLINED"
-	TYPE_CONSUMPTION_REQUEST       NotificationType = "CONSUMPTION_REQUEST"
-	TYPE_RENEWAL_EXTENDED          NotificationType = "RENEWAL_EXTENDED"
-	TYPE_REVOKE                    NotificationType = "REVOKE"
-	TYPE_TEST                      NotificationType = "TEST"
-	TYPE_RENEWAL_EXTENSION         NotificationType = "RENEWAL_EXTENSION"
-	TYPE_REFUND_REVERSED           NotificationType = "REFUND_REVERSED"
-	TYPE_EXTERNAL_PURCHASE_TOKEN   NotificationType = "EXTERNAL_PURCHASE_TOKEN"
-	TYPE_ONE_TIME_CHARGE           NotificationType = "ONE_TIME_CHARGE"
+	TypeSubscribed             NotificationType = "SUBSCRIBED"
+	TypeDidChangeRenewalPref   NotificationType = "DID_CHANGE_RENEWAL_PREF"
+	TypeDidChangeRenewalStatus NotificationType = "DID_CHANGE_RENEWAL_STATUS"
+	TypeOfferRedeemed          NotificationType = "OFFER_REDEEMED"
+	TypeDidRenew               NotificationType = "DID_RENEW"
+	TypeExpired                NotificationType = "EXPIRED"
+	TypeDidFailToRenew         NotificationType = "DID_FAIL_TO_RENEW"
+	TypeGracePeriodExpired     NotificationType = "GRACE_PERIOD_EXPIRED"
+	TypePriceIncrease          NotificationType = "PRICE_INCREASE"
+	TypeRefund                 NotificationType = "REFUND"
+	TypeRefundDeclined         NotificationType = "REFUND_DECLINED"
+	TypeConsumptionRequest     NotificationType = "CONSUMPTION_REQUEST"
+	TypeRenewalExtended        NotificationType = "RENEWAL_EXTENDED"
+	TypeRevoke                 NotificationType = "REVOKE"
+	TypeTest                   NotificationType = "TEST"
+	TypeRenewalExtension       NotificationType = "RENEWAL_EXTENSION"
+	TypeRefundReversed         NotificationType = "REFUND_REVERSED"
 
-	SUBTYPE_INITIAL_BUY          Subtype = "INITIAL_BUY"
-	SUBTYPE_RESUBSCRIBE          Subtype = "RESUBSCRIBE"
-	SUBTYPE_DOWNGRADE            Subtype = "DOWNGRADE"
-	SUBTYPE_UPGRADE              Subtype = "UPGRADE"
-	SUBTYPE_AUTO_RENEW_ENABLED   Subtype = "AUTO_RENEW_ENABLED"
-	SUBTYPE_AUTO_RENEW_DISABLED  Subtype = "AUTO_RENEW_DISABLED"
-	SUBTYPE_VOLUNTARY            Subtype = "VOLUNTARY"
-	SUBTYPE_BILLING_RETRY        Subtype = "BILLING_RETRY"
-	SUBTYPE_PRICE_INCREASE       Subtype = "PRICE_INCREASE"
-	SUBTYPE_GRACE_PERIOD         Subtype = "GRACE_PERIOD"
-	SUBTYPE_PENDING              Subtype = "PENDING"
-	SUBTYPE_ACCEPTED             Subtype = "ACCEPTED"
-	SUBTYPE_BILLING_RECOVERY     Subtype = "BILLING_RECOVERY"
-	SUBTYPE_PRODUCT_NOT_FOR_SALE Subtype = "PRODUCT_NOT_FOR_SALE"
-	SUBTYPE_SUMMARY              Subtype = "SUMMARY"
-	SUBTYPE_FAILURE              Subtype = "FAILURE"
-	SUBTYPE_UNREPORTED           Subtype = "UNREPORTED"
+	//nolint:gosec // external purchase token is notification type and not some credential
+	TypeExternalPurchaseToken NotificationType = "EXTERNAL_PURCHASE_TOKEN"
+	TypeOneTimeCharge         NotificationType = "ONE_TIME_CHARGE"
 
-	UNINTENDED_PURCHASE       ConsumptionRequestReason = "UNINTENDED_PURCHASE"
-	FULFILLMENT_ISSUE         ConsumptionRequestReason = "FULFILLMENT_ISSUE"
-	UNSATISFIED_WITH_PURCHASE ConsumptionRequestReason = "UNSATISFIED_WITH_PURCHASE"
-	LEGAL                     ConsumptionRequestReason = "LEGAL"
-	OTHER                     ConsumptionRequestReason = "OTHER"
+	SubtypeInitialBuy        Subtype = "INITIAL_BUY"
+	SubtypeResubscribe       Subtype = "RESUBSCRIBE"
+	SubtypeDowngrade         Subtype = "DOWNGRADE"
+	SubtypeUpgrade           Subtype = "UPGRADE"
+	SubtypeAutoRenewEnabled  Subtype = "AUTO_RENEW_ENABLED"
+	SubtypeAutoRenewDisabled Subtype = "AUTO_RENEW_DISABLED"
+	SubtypeVoluntary         Subtype = "VOLUNTARY"
+	SubtypeBillingRetry      Subtype = "BILLING_RETRY"
+	SubtypePriceIncrease     Subtype = "PRICE_INCREASE"
+	SubtypeGracePeriod       Subtype = "GRACE_PERIOD"
+	SubtypePending           Subtype = "PENDING"
+	SubtypeAccepted          Subtype = "ACCEPTED"
+	SubtypeBillingRecovery   Subtype = "BILLING_RECOVERY"
+	SubtypeProductNotForSale Subtype = "PRODUCT_NOT_FOR_SALE"
+	SubtypeSummary           Subtype = "SUMMARY"
+	SubtypeFailure           Subtype = "FAILURE"
+	SubtypeUnreported        Subtype = "UNREPORTED"
+
+	UnintendedPurchase      ConsumptionRequestReason = "UNINTENDED_PURCHASE"
+	FulfillmentIssue        ConsumptionRequestReason = "FULFILLMENT_ISSUE"
+	UnsatisfiedWithPurchase ConsumptionRequestReason = "UNSATISFIED_WITH_PURCHASE"
+	Legal                   ConsumptionRequestReason = "LEGAL"
+	Other                   ConsumptionRequestReason = "OTHER"
 
 	Sandbox    Environment = "Sandbox"
 	Production Environment = "Production"
 
-	OWNERSHIP_FAMILY_SHARED OwnershipType = "FAMILY_SHARED"
-	OWNERSHIP_PURCHASED     OwnershipType = "PURCHASED"
+	OwnershipFamilyShared OwnershipType = "FAMILY_SHARED"
+	OwnershipPurchased    OwnershipType = "PURCHASED"
 
-	DISCOUNT_FREE_TRIAL    OfferDiscountType = "FREE_TRIAL"
-	DISCOUNT_PAY_AS_YOU_GO OfferDiscountType = "PAY_AS_YOU_GO"
-	DISCOUNT_PAY_UP_FRONT  OfferDiscountType = "PAY_UP_FRONT"
+	DiscountFreeTrial  OfferDiscountType = "FREE_TRIAL"
+	DiscountPayAsYouGo OfferDiscountType = "PAY_AS_YOU_GO"
+	DiscountPayUpFront OfferDiscountType = "PAY_UP_FRONT"
 
-	PRODUCT_AUTO_RENEWABLE ProductType = "Auto-Renewable Subscription"
-	PRODUCT_NON_RENEWABLE  ProductType = "Non-Renewing Subscription"
-	PRODUCT_NON_CONSUMABLE ProductType = "Non-Consumable"
-	PRODUCT_CONSUMABLE     ProductType = "Consumable"
+	ProductAutoRenewable ProductType = "Auto-Renewable Subscription"
+	ProductNonRenewable  ProductType = "Non-Renewing Subscription"
+	ProductNonConsumable ProductType = "Non-Consumable"
+	ProductConsumable    ProductType = "Consumable"
 )
 
 type ItemDto struct {
@@ -150,65 +152,65 @@ type SubscriptionDto struct {
 }
 
 type Payload struct {
-	NotificationType NotificationType
-	Subtype          Subtype
+	NotificationType NotificationType `json:"notificationType,omitempty"`
+	Subtype          Subtype          `json:"subtype,omitempty"`
 	Data             struct {
-		AppAppleId               int64
-		BundleID                 string
-		BundleVersion            string
-		ConsumptionRequestReason string
-		Environment              Environment
-		SignedRenewalInfo        string
-		SignedTransactionInfo    string
-		Status                   int64
-	}
+		AppAppleID               int64       `json:"appAppleID,omitempty"`
+		BundleID                 string      `json:"bundleID,omitempty"`
+		BundleVersion            string      `json:"bundleVersion,omitempty"`
+		ConsumptionRequestReason string      `json:"consumptionRequestReason,omitempty"`
+		Environment              Environment `json:"environment,omitempty"`
+		SignedRenewalInfo        string      `json:"signedRenewalInfo,omitempty"`
+		SignedTransactionInfo    string      `json:"signedTransactionInfo,omitempty"`
+		Status                   int64       `json:"status,omitempty"`
+	} `json:"data"`
 	Summary struct {
-		RequestIdentifier      string
-		Environment            Environment
-		AppAppleID             int64
-		BundleID               string
-		ProductID              string
-		StoreFrontCountryCodes []string
-		FailedCount            int64
-		SucceededCount         int64
-	}
+		RequestIdentifier      string      `json:"requestIdentifier,omitempty"`
+		Environment            Environment `json:"environment,omitempty"`
+		AppAppleID             int64       `json:"appAppleID,omitempty"`
+		BundleID               string      `json:"bundleID,omitempty"`
+		ProductID              string      `json:"productID,omitempty"`
+		StoreFrontCountryCodes []string    `json:"storeFrontCountryCodes,omitempty"`
+		FailedCount            int64       `json:"failedCount,omitempty"`
+		SucceededCount         int64       `json:"succeededCount,omitempty"`
+	} `json:"summary"`
 	ExternalPurchaseToken struct {
-		ExternalPurchaseID string
-		TokenCreationDate  int64
-		AppAppleID         int64
-		BundleID           string
-	}
-	Version          string
-	SignedDate       int64
-	NotificationUUID string
+		ExternalPurchaseID string `json:"externalPurchaseID,omitempty"`
+		TokenCreationDate  int64  `json:"tokenCreationDate,omitempty"`
+		AppAppleID         int64  `json:"appAppleID,omitempty"`
+		BundleID           string `json:"bundleID,omitempty"`
+	} `json:"externalPurchaseToken"`
+	Version          string `json:"version,omitempty"`
+	SignedDate       int64  `json:"signedDate,omitempty"`
+	NotificationUUID string `json:"notificationUUID,omitempty"`
 }
 
 type JWSTransaction struct {
-	AppAccountToken             string
-	BundleID                    string
-	Currency                    string
-	Environment                 Environment
-	ExpiresDate                 int64
-	InAppOwnershipType          OwnershipType
-	OfferDiscountType           OfferDiscountType
-	OfferIdentifier             string
-	OfferType                   int64
-	OriginalPurchaseDate        int64
-	OriginalTransactionID       string
-	Price                       int64 // holds price in milliunits
-	ProductID                   string
-	PurchaseDate                int64
-	Quantity                    int64
-	RevocationDate              int64
-	RevocationReason            int64
-	SignedDate                  int64
-	StoreFront                  string
-	StoreFrontID                string
-	SubscriptionGroupIdentifier string
-	TransactionID               string
-	TransactionReason           string
-	Type                        ProductType
-	WebOrderLineItemID          string
+	AppAccountToken             string            `json:"appAccountToken,omitempty"`
+	BundleID                    string            `json:"bundleID,omitempty"`
+	Currency                    string            `json:"currency,omitempty"`
+	Environment                 Environment       `json:"environment,omitempty"`
+	ExpiresDate                 int64             `json:"expiresDate,omitempty"`
+	InAppOwnershipType          OwnershipType     `json:"inAppOwnershipType,omitempty"`
+	OfferDiscountType           OfferDiscountType `json:"offerDiscountType,omitempty"`
+	OfferIdentifier             string            `json:"offerIdentifier,omitempty"`
+	OfferType                   int64             `json:"offerType,omitempty"`
+	OriginalPurchaseDate        int64             `json:"originalPurchaseDate,omitempty"`
+	OriginalTransactionID       string            `json:"originalTransactionID,omitempty"`
+	Price                       int64             `json:"price,omitempty"` // holds price in milliunits
+	ProductID                   string            `json:"productID,omitempty"`
+	PurchaseDate                int64             `json:"purchaseDate,omitempty"`
+	Quantity                    int64             `json:"quantity,omitempty"`
+	RevocationDate              int64             `json:"revocationDate,omitempty"`
+	RevocationReason            int64             `json:"revocationReason,omitempty"`
+	SignedDate                  int64             `json:"signedDate,omitempty"`
+	StoreFront                  string            `json:"storeFront,omitempty"`
+	StoreFrontID                string            `json:"storeFrontID,omitempty"`
+	SubscriptionGroupIdentifier string            `json:"subscriptionGroupIdentifier,omitempty"`
+	TransactionID               string            `json:"transactionID,omitempty"`
+	TransactionReason           string            `json:"transactionReason,omitempty"`
+	Type                        ProductType       `json:"type,omitempty"`
+	WebOrderLineItemID          string            `json:"webOrderLineItemID,omitempty"`
 }
 
 type RenewalInfo struct {
