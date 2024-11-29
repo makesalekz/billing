@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/google/wire"
-	"gitlab.calendaria.team/services/finance/billing/internal/biz"
+	"gitlab.calendaria.team/services/finance/billing/internal/data"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 
@@ -21,7 +21,7 @@ func FormPaginateRequest(req *utils_v1.PaginateRequest) *utils_v1.PaginateReques
 	if req == nil {
 		return &utils_v1.PaginateRequest{
 			FromId: 0,
-			Limit:  biz.DefaultPageSize,
+			Limit:  data.DefaultPageSize,
 		}
 	}
 
@@ -35,7 +35,7 @@ func FormPaginateRequest(req *utils_v1.PaginateRequest) *utils_v1.PaginateReques
 	}
 
 	if paginateRequest.GetLimit() == 0 {
-		paginateRequest.Limit = biz.DefaultPageSize
+		paginateRequest.Limit = data.DefaultPageSize
 	}
 
 	return paginateRequest
