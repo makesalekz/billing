@@ -220,8 +220,9 @@ func (uc *InvoicesUseCase) UpdateResources(ctx context.Context) {
 		Status:        enum.Paid,
 		PaidProcesses: &fvar,
 		IsRevoked:     &fvar,
+		PaidTillProc:  &fvar,
 		PaidTill:      &now,
-	}, &utils_v1.PaginateRequest{Limit: BackgroundProcessPageSize, FromId: 0})
+	}, &utils_v1.PaginateRequest{Limit: data.BackgroundProcessPageSize, FromId: 0})
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 
@@ -287,18 +288,26 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 	return nil
 }
 
+func (uc *InvoicesUseCase) ExpireResources(ctx context.Context) {
+	now := time.Now().Add(time.Hour) // give one hour to renew subscription
+
+	invoices, err := uc.invoiceRepo.GetInvoicesToExpire(ctx, &now)
+	if err != nil {
+		uc.log.Errorf("failed to list invoices: %s", err.Error())
+	}
+
+	for _, invoice := range invoices {
+		err = uc.revokeResources(ctx, invoice, invoice.ProductID, true)
+		if err != nil {
+			uc.log.Errorf("failed to revoke resources of invoice: %d, err %s", invoice.ID, err.Error())
+		}
+	}
+}
+
 func (uc *InvoicesUseCase) RevokeResources(ctx context.Context) {
-	fvar := false
-	tvar := true
 	now := time.Now()
 
-	invoices, err := uc.invoiceRepo.ListInvoices(ctx, data.InvoiceFilter{
-		Status:        enum.Paid,
-		PaidProcesses: &tvar,
-		IsRevoked:     &tvar,
-		IsRevokedProc: &fvar,
-		PaidTill:      &now,
-	}, &utils_v1.PaginateRequest{Limit: BackgroundProcessPageSize, FromId: 0})
+	invoices, err := uc.invoiceRepo.GetInvoicesToRevoke(ctx, &now)
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 
@@ -306,7 +315,7 @@ func (uc *InvoicesUseCase) RevokeResources(ctx context.Context) {
 	}
 
 	for _, invoice := range invoices {
-		err = uc.revokeResources(ctx, invoice, invoice.ProductID)
+		err = uc.revokeResources(ctx, invoice, invoice.ProductID, false)
 		if err != nil {
 			uc.log.Errorf("failed to revoke resources of invoice: %d, err %s", invoice.ID, err.Error())
 
@@ -315,7 +324,9 @@ func (uc *InvoicesUseCase) RevokeResources(ctx context.Context) {
 	}
 }
 
-func (uc *InvoicesUseCase) revokeResources(ctx context.Context, invoice *ent.Invoice, productID int64) error {
+func (uc *InvoicesUseCase) revokeResources(
+	ctx context.Context, invoice *ent.Invoice, productID int64, isExpired bool,
+) error {
 	product, err := uc.productRepo.GetProduct(ctx, productID)
 	if err != nil {
 		return v1.ErrorInternal("failed to get product: %s", err.Error())
@@ -354,9 +365,15 @@ func (uc *InvoicesUseCase) revokeResources(ctx context.Context, invoice *ent.Inv
 	}
 
 	tvar := true
-	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoice, data.InvoiceDto{
-		IsRevokedProcessed: &tvar,
-	})
+	dto := data.InvoiceDto{}
+
+	if isExpired {
+		dto.IsPaidTillProcessed = &tvar
+	} else {
+		dto.IsRevokedProcessed = &tvar
+	}
+
+	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoice, dto)
 	if err != nil {
 		return v1.ErrorInternal("failed to update invoice: %s", err.Error())
 	}
@@ -374,6 +391,8 @@ func ReplyInvoice(invoice *ent.Invoice) *v1.Invoice {
 		Amount:              invoice.Amount,
 		Price:               invoice.Price.String(),
 		Currency:            invoice.Currency,
+		Revoked:             invoice.IsRevoked,
+		IsRevokedProcessed:  invoice.IsRevokedProcessed,
 		IsPaidAtProcessed:   invoice.IsPaidAtProcessed,
 		IsPaidTillProcessed: invoice.IsPaidTillProcessed,
 	}
@@ -388,6 +407,14 @@ func ReplyInvoice(invoice *ent.Invoice) *v1.Invoice {
 
 	if invoice.SubscriptionID != nil {
 		reply.SubscriptionId = *invoice.SubscriptionID
+	}
+
+	if invoice.RevokedAt != nil {
+		reply.RevokedAt = invoice.RevokedAt.Format(time.RFC3339)
+	}
+
+	if invoice.AppleStoreTransactionID != nil {
+		reply.AppleStoreTransactionId = *invoice.AppleStoreTransactionID
 	}
 
 	return reply

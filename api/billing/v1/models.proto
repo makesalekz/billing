@@ -75,7 +75,7 @@ message Invoice {
   string paidTill = 10;
   bool revoked = 11;
   string revokedAt = 12;
-  string isRevokedProcessed = 13;
+  bool isRevokedProcessed = 13;
   bool isPaidAtProcessed = 14;
   bool isPaidTillProcessed = 15;
   int64 subscriptionId = 16;

@@ -13,7 +13,7 @@ import (
 )
 
 type NotificationType string
-type Subtype string
+type NotificationSubtype string
 type ConsumptionRequestReason string
 type Environment string
 type OwnershipType string
@@ -43,23 +43,23 @@ const (
 	TypeExternalPurchaseToken NotificationType = "EXTERNAL_PURCHASE_TOKEN"
 	TypeOneTimeCharge         NotificationType = "ONE_TIME_CHARGE"
 
-	SubtypeInitialBuy        Subtype = "INITIAL_BUY"
-	SubtypeResubscribe       Subtype = "RESUBSCRIBE"
-	SubtypeDowngrade         Subtype = "DOWNGRADE"
-	SubtypeUpgrade           Subtype = "UPGRADE"
-	SubtypeAutoRenewEnabled  Subtype = "AUTO_RENEW_ENABLED"
-	SubtypeAutoRenewDisabled Subtype = "AUTO_RENEW_DISABLED"
-	SubtypeVoluntary         Subtype = "VOLUNTARY"
-	SubtypeBillingRetry      Subtype = "BILLING_RETRY"
-	SubtypePriceIncrease     Subtype = "PRICE_INCREASE"
-	SubtypeGracePeriod       Subtype = "GRACE_PERIOD"
-	SubtypePending           Subtype = "PENDING"
-	SubtypeAccepted          Subtype = "ACCEPTED"
-	SubtypeBillingRecovery   Subtype = "BILLING_RECOVERY"
-	SubtypeProductNotForSale Subtype = "PRODUCT_NOT_FOR_SALE"
-	SubtypeSummary           Subtype = "SUMMARY"
-	SubtypeFailure           Subtype = "FAILURE"
-	SubtypeUnreported        Subtype = "UNREPORTED"
+	SubtypeInitialBuy        NotificationSubtype = "INITIAL_BUY"
+	SubtypeResubscribe       NotificationSubtype = "RESUBSCRIBE"
+	SubtypeDowngrade         NotificationSubtype = "DOWNGRADE"
+	SubtypeUpgrade           NotificationSubtype = "UPGRADE"
+	SubtypeAutoRenewEnabled  NotificationSubtype = "AUTO_RENEW_ENABLED"
+	SubtypeAutoRenewDisabled NotificationSubtype = "AUTO_RENEW_DISABLED"
+	SubtypeVoluntary         NotificationSubtype = "VOLUNTARY"
+	SubtypeBillingRetry      NotificationSubtype = "BILLING_RETRY"
+	SubtypePriceIncrease     NotificationSubtype = "PRICE_INCREASE"
+	SubtypeGracePeriod       NotificationSubtype = "GRACE_PERIOD"
+	SubtypePending           NotificationSubtype = "PENDING"
+	SubtypeAccepted          NotificationSubtype = "ACCEPTED"
+	SubtypeBillingRecovery   NotificationSubtype = "BILLING_RECOVERY"
+	SubtypeProductNotForSale NotificationSubtype = "PRODUCT_NOT_FOR_SALE"
+	SubtypeSummary           NotificationSubtype = "SUMMARY"
+	SubtypeFailure           NotificationSubtype = "FAILURE"
+	SubtypeUnreported        NotificationSubtype = "UNREPORTED"
 
 	UnintendedPurchase      ConsumptionRequestReason = "UNINTENDED_PURCHASE"
 	FulfillmentIssue        ConsumptionRequestReason = "FULFILLMENT_ISSUE"
@@ -140,8 +140,9 @@ type InvoiceFilter struct {
 	PaidProcesses  *bool
 	IsRevoked      *bool
 	IsRevokedProc  *bool
-	PaidTill       *time.Time
+	PaidTillProc   *bool
 	SubscriptionID int64
+	PaidTill       *time.Time
 }
 
 type SubscriptionDto struct {
@@ -152,8 +153,8 @@ type SubscriptionDto struct {
 }
 
 type Payload struct {
-	NotificationType NotificationType `json:"notificationType,omitempty"`
-	Subtype          Subtype          `json:"subtype,omitempty"`
+	NotificationType NotificationType    `json:"notificationType,omitempty"`
+	Subtype          NotificationSubtype `json:"subtype,omitempty"`
 	Data             struct {
 		AppAppleID               int64       `json:"appAppleID,omitempty"`
 		BundleID                 string      `json:"bundleID,omitempty"`

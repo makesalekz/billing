@@ -2,8 +2,11 @@ package data
 
 import (
 	"context"
+	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"gitlab.calendaria.team/services/finance/billing/ent"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
@@ -17,6 +20,8 @@ type InvoicesRepo interface {
 	ListInvoices(
 		ctx context.Context, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
 	) ([]*ent.Invoice, error)
+	GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
+	GetInvoicesToRevoke(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 }
 
 type invoicesRepo struct {
@@ -170,6 +175,10 @@ func (r *invoicesRepo) ListInvoices(
 		query.Where(invoice.IsPaidAtProcessed(*filter.PaidProcesses))
 	}
 
+	if filter.PaidTillProc != nil {
+		query.Where(invoice.IsPaidTillProcessed(*filter.PaidTillProc))
+	}
+
 	if filter.IsRevoked != nil {
 		query.Where(invoice.IsRevoked(*filter.IsRevoked))
 	}
@@ -187,4 +196,31 @@ func (r *invoicesRepo) ListInvoices(
 	}
 
 	return query.All(ctx)
+}
+
+func (r *invoicesRepo) GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error) {
+	return r.db.Invoice.Query().Where(
+		invoice.StatusEQ(enum.Paid),
+		invoice.IsPaidAtProcessed(true),
+		invoice.IsRevoked(false),
+		invoice.IsPaidTillProcessed(false),
+		invoice.PaidTillLT(*paidTill),
+	).Limit(int(BackgroundProcessPageSize)).
+		All(ctx)
+}
+
+func (r *invoicesRepo) GetInvoicesToRevoke(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error) {
+	return r.db.Invoice.Query().Where(
+		invoice.StatusEQ(enum.Paid),
+		invoice.IsPaidAtProcessed(true),
+		invoice.IsRevoked(true),
+		invoice.IsRevokedProcessed(false),
+		invoice.IsPaidTillProcessed(false),
+	).Modify(func(s *sql.Selector) {
+		s.Where(sql.And(
+			sql.NotNull(s.C(invoice.FieldPaidTill)),
+			sql.ColumnsLT(s.C(invoice.FieldRevokedAt), s.C(invoice.FieldPaidTill)),
+		))
+	}).Limit(int(BackgroundProcessPageSize)).
+		All(ctx)
 }

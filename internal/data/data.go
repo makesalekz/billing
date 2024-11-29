@@ -32,6 +32,11 @@ var ProviderSet = wire.NewSet(
 	NewSubscriptionsRepo,
 )
 
+const (
+	DefaultPageSize           int32 = 100
+	BackgroundProcessPageSize int32 = 1000
+)
+
 // Data .
 type Data struct {
 	db *ent.Client

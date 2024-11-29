@@ -26,18 +26,18 @@ func NewAppleStoreService(uc *biz.AppleStoreUsecase) *AppleStoreService {
 func (s *AppleStoreService) ProcessServerNotification(
 	ctx context.Context, req *v1.ProcessServerNotificationRequest,
 ) (*utils_v1.EmptyReply, error) {
-	parse, err := data.ParseAppleSignedBody(req.GetSignedPayload())
+	decodedPayload, err := data.ParseAppleSignedBody(req.GetSignedPayload())
 	if err != nil {
 		return nil, v1.ErrorInvalidRequest("failed to parse signed payload: %s", err.Error())
 	}
 
-	if !parse.Valid {
+	if !decodedPayload.Valid {
 		return nil, v1.ErrorForbidden("invalid signed payload")
 	}
 
 	var payload data.Payload
 
-	mapClaims, ok := parse.Claims.(jwt.MapClaims)
+	mapClaims, ok := decodedPayload.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, v1.ErrorInvalidRequest("failed to parse signed payload: claims is not a map")
 	}

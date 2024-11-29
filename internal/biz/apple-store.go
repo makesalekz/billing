@@ -56,12 +56,12 @@ func (uc *AppleStoreUsecase) ProcessPayload(ctx context.Context, payload data.Pa
 func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload data.Payload) error {
 	var transaction data.JWSTransaction
 
-	parse, err := data.ParseAppleSignedBody(payload.Data.SignedTransactionInfo)
+	decodedTransaction, err := data.ParseAppleSignedBody(payload.Data.SignedTransactionInfo)
 	if err != nil {
 		return v1.ErrorInternal("failed to parse signed transaction info")
 	}
 
-	mapClaims, ok := parse.Claims.(jwt.MapClaims)
+	mapClaims, ok := decodedTransaction.Claims.(jwt.MapClaims)
 	if !ok {
 		return v1.ErrorInvalidRequest("failed to parse signed transaction: claims is not a map")
 	}
@@ -138,12 +138,12 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 func (uc *AppleStoreUsecase) processExpired(ctx context.Context, payload data.Payload) error {
 	var transaction data.JWSTransaction
 
-	parse, err := data.ParseAppleSignedBody(payload.Data.SignedTransactionInfo)
+	decodedTransaction, err := data.ParseAppleSignedBody(payload.Data.SignedTransactionInfo)
 	if err != nil {
 		return v1.ErrorInternal("failed to parse signed transaction info")
 	}
 
-	mapClaims, ok := parse.Claims.(jwt.MapClaims)
+	mapClaims, ok := decodedTransaction.Claims.(jwt.MapClaims)
 	if !ok {
 		return v1.ErrorInvalidRequest("failed to parse signed transaction: claims is not a map")
 	}

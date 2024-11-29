@@ -89,6 +89,7 @@ func (r *subscriptionsRepo) RevokeActiveSubscription(
 ) error {
 	return r.db.Invoice.Update().Where(
 		invoice.SubscriptionID(subscriptionID),
+		invoice.PaidTillGT(revokedAt),
 	).SetIsRevoked(true).
 		SetRevokedAt(revokedAt).
 		Exec(ctx)

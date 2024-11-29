@@ -16,8 +16,3 @@ var ProviderSet = wire.NewSet(
 	NewSubscriptionUsecase,
 	NewAppleStoreUsecase,
 )
-
-const (
-	DefaultPageSize           int32 = 100
-	BackgroundProcessPageSize int32 = 1000
-)
