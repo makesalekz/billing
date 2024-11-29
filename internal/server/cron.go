@@ -32,6 +32,7 @@ func (cs *CronServer) processInvoices(uc *biz.InvoicesUseCase) {
 	entryId, err := cs.cron.AddFunc("@every 1m", func() {
 		uc.UpdateResources(context.Background())
 		uc.RevokeResources(context.Background())
+		uc.ExpireResources(context.Background())
 	})
 	if err != nil {
 		cs.log.Errorf("failed on cron entryId: %v, err: %v", entryId, err)
