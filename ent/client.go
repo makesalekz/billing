@@ -878,12 +878,14 @@ func (c *ProductClient) QueryBundles(pr *Product) *BundleQuery {
 
 // Hooks returns the client hooks.
 func (c *ProductClient) Hooks() []Hook {
-	return c.hooks.Product
+	hooks := c.hooks.Product
+	return append(hooks[:len(hooks):len(hooks)], product.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.
 func (c *ProductClient) Interceptors() []Interceptor {
-	return c.inters.Product
+	inters := c.inters.Product
+	return append(inters[:len(inters):len(inters)], product.Interceptors[:]...)
 }
 
 func (c *ProductClient) mutate(ctx context.Context, m *ProductMutation) (Value, error) {

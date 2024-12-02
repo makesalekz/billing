@@ -82,8 +82,25 @@ func init() {
 	item.DefaultUpdatedAt = itemDescUpdatedAt.Default.(func() time.Time)
 	// item.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	item.UpdateDefaultUpdatedAt = itemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	productMixin := schema.Product{}.Mixin()
+	productMixinHooks1 := productMixin[1].Hooks()
+	product.Hooks[0] = productMixinHooks1[0]
+	productMixinInters1 := productMixin[1].Interceptors()
+	product.Interceptors[0] = productMixinInters1[0]
+	productMixinFields0 := productMixin[0].Fields()
+	_ = productMixinFields0
 	productFields := schema.Product{}.Fields()
 	_ = productFields
+	// productDescCreatedAt is the schema descriptor for created_at field.
+	productDescCreatedAt := productMixinFields0[0].Descriptor()
+	// product.DefaultCreatedAt holds the default value on creation for the created_at field.
+	product.DefaultCreatedAt = productDescCreatedAt.Default.(func() time.Time)
+	// productDescUpdatedAt is the schema descriptor for updated_at field.
+	productDescUpdatedAt := productMixinFields0[1].Descriptor()
+	// product.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	product.DefaultUpdatedAt = productDescUpdatedAt.Default.(func() time.Time)
+	// product.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	product.UpdateDefaultUpdatedAt = productDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// productDescCurrency is the schema descriptor for currency field.
 	productDescCurrency := productFields[5].Descriptor()
 	// product.DefaultCurrency holds the default value on creation for the currency field.

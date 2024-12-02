@@ -98,6 +98,9 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Product",
 		Fields: map[string]*sqlgraph.FieldSpec{
+			product.FieldCreatedAt:    {Type: field.TypeTime, Column: product.FieldCreatedAt},
+			product.FieldUpdatedAt:    {Type: field.TypeTime, Column: product.FieldUpdatedAt},
+			product.FieldDeletedAt:    {Type: field.TypeTime, Column: product.FieldDeletedAt},
 			product.FieldAppID:        {Type: field.TypeString, Column: product.FieldAppID},
 			product.FieldName:         {Type: field.TypeString, Column: product.FieldName},
 			product.FieldDescription:  {Type: field.TypeString, Column: product.FieldDescription},
@@ -632,6 +635,21 @@ func (f *ProductFilter) Where(p entql.P) {
 // WhereID applies the entql int64 predicate on the id field.
 func (f *ProductFilter) WhereID(p entql.Int64P) {
 	f.Where(p.Field(product.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *ProductFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(product.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *ProductFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(product.FieldUpdatedAt))
+}
+
+// WhereDeletedAt applies the entql time.Time predicate on the deleted_at field.
+func (f *ProductFilter) WhereDeletedAt(p entql.TimeP) {
+	f.Where(p.Field(product.FieldDeletedAt))
 }
 
 // WhereAppID applies the entql string predicate on the app_id field.

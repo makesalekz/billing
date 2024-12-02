@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
+	"gitlab.calendaria.team/services/finance/billing/ent/mixins"
 )
 
 // Product holds the schema definition for the Product entity.
@@ -43,5 +44,12 @@ func (Product) Edges() []ent.Edge {
 		edge.To("invoices", Invoice.Type),
 		edge.To("subscriptions", Subscriptions.Type),
 		edge.To("bundles", Bundle.Type),
+	}
+}
+
+func (Product) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		mixins.CreateUpdateMixin{},
+		mixins.SoftDeleteMixin{},
 	}
 }

@@ -373,12 +373,12 @@ func (pq *ProductQuery) WithBundles(opts ...func(*BundleQuery)) *ProductQuery {
 // Example:
 //
 //	var v []struct {
-//		AppID string `json:"app_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Product.Query().
-//		GroupBy(product.FieldAppID).
+//		GroupBy(product.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (pq *ProductQuery) GroupBy(field string, fields ...string) *ProductGroupBy {
@@ -396,11 +396,11 @@ func (pq *ProductQuery) GroupBy(field string, fields ...string) *ProductGroupBy 
 // Example:
 //
 //	var v []struct {
-//		AppID string `json:"app_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Product.Query().
-//		Select(product.FieldAppID).
+//		Select(product.FieldCreatedAt).
 //		Scan(ctx, &v)
 func (pq *ProductQuery) Select(fields ...string) *ProductSelect {
 	pq.ctx.Fields = append(pq.ctx.Fields, fields...)
