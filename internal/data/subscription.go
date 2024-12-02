@@ -2,8 +2,10 @@ package data
 
 import (
 	"context"
+	"time"
 
 	"gitlab.calendaria.team/services/finance/billing/ent"
+	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
@@ -15,6 +17,12 @@ type SubscriptionsRepo interface {
 	GetSubscription(
 		ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64, withInvoices bool,
 	) (*ent.Subscriptions, error)
+	GetSubscriptionByOriginalAppleTransactionID(
+		ctx context.Context, originalTransactionID string, withInvoices bool,
+	) (*ent.Subscriptions, error)
+	RevokeActiveSubscription(
+		ctx context.Context, subscriptionID int64, revokedAt time.Time,
+	) error
 	DeleteSubscription(ctx context.Context, actorID, subscriptionID int64) error
 	CountSubscriptions(ctx context.Context, actorID int64) (int32, error)
 	ListSubscriptions(
@@ -46,15 +54,45 @@ func (r *subscriptionsRepo) CreateSubscription(
 func (r *subscriptionsRepo) GetSubscription(
 	ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64, withInvoices bool,
 ) (*ent.Subscriptions, error) {
-	return r.db.Subscriptions.Query().
+	query := r.db.Subscriptions.Query().
 		Where(
 			subscriptions.ID(subscriptionID),
 			subscriptions.UserID(actorID),
 			subscriptions.TenantID(tenantID),
 			subscriptions.AppID(appID),
-		).
-		WithInvoices().
-		Only(ctx)
+		)
+
+	if withInvoices {
+		query = query.WithInvoices()
+	}
+
+	return query.Only(ctx)
+}
+
+func (r *subscriptionsRepo) GetSubscriptionByOriginalAppleTransactionID(
+	ctx context.Context, originalTransactionID string, withInvoices bool,
+) (*ent.Subscriptions, error) {
+	query := r.db.Subscriptions.Query().
+		Where(
+			subscriptions.HasInvoicesWith(invoice.AppleStoreTransactionID(originalTransactionID)),
+		)
+
+	if withInvoices {
+		query = query.WithInvoices()
+	}
+
+	return query.Only(ctx)
+}
+
+func (r *subscriptionsRepo) RevokeActiveSubscription(
+	ctx context.Context, subscriptionID int64, revokedAt time.Time,
+) error {
+	return r.db.Invoice.Update().Where(
+		invoice.SubscriptionID(subscriptionID),
+		invoice.PaidTillGT(revokedAt),
+	).SetIsRevoked(true).
+		SetRevokedAt(revokedAt).
+		Exec(ctx)
 }
 
 func (r *subscriptionsRepo) DeleteSubscription(ctx context.Context, actorID, subscriptionID int64) error {

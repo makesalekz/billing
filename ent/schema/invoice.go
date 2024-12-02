@@ -32,9 +32,13 @@ func (Invoice) Fields() []ent.Field {
 		field.Enum("status").GoType(enum.InvoiceStatus("")).Default(enum.Created.Value()),
 		field.Time("paid_at").Optional().Nillable(),
 		field.Time("paid_till").Optional().Nillable(),
+		field.Bool("is_revoked").Default(false),
+		field.Time("revoked_at").Optional().Nillable(),
+		field.Bool("is_revoked_processed").Default(false),
 		field.Bool("is_paid_at_processed").Default(false),
 		field.Bool("is_paid_till_processed").Default(false),
 		field.Int64("subscription_id").Optional().Nillable().Immutable(),
+		field.String("apple_store_transaction_id").Optional().Nillable(),
 	}
 }
 

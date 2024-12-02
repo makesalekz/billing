@@ -41,12 +41,20 @@ type Invoice struct {
 	PaidAt *time.Time `json:"paid_at,omitempty"`
 	// PaidTill holds the value of the "paid_till" field.
 	PaidTill *time.Time `json:"paid_till,omitempty"`
+	// IsRevoked holds the value of the "is_revoked" field.
+	IsRevoked bool `json:"is_revoked,omitempty"`
+	// RevokedAt holds the value of the "revoked_at" field.
+	RevokedAt *time.Time `json:"revoked_at,omitempty"`
+	// IsRevokedProcessed holds the value of the "is_revoked_processed" field.
+	IsRevokedProcessed bool `json:"is_revoked_processed,omitempty"`
 	// IsPaidAtProcessed holds the value of the "is_paid_at_processed" field.
 	IsPaidAtProcessed bool `json:"is_paid_at_processed,omitempty"`
 	// IsPaidTillProcessed holds the value of the "is_paid_till_processed" field.
 	IsPaidTillProcessed bool `json:"is_paid_till_processed,omitempty"`
 	// SubscriptionID holds the value of the "subscription_id" field.
 	SubscriptionID *int64 `json:"subscription_id,omitempty"`
+	// AppleStoreTransactionID holds the value of the "apple_store_transaction_id" field.
+	AppleStoreTransactionID *string `json:"apple_store_transaction_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InvoiceQuery when eager-loading is set.
 	Edges        InvoiceEdges `json:"edges"`
@@ -93,13 +101,13 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case invoice.FieldPrice:
 			values[i] = new(decimal.Decimal)
-		case invoice.FieldIsPaidAtProcessed, invoice.FieldIsPaidTillProcessed:
+		case invoice.FieldIsRevoked, invoice.FieldIsRevokedProcessed, invoice.FieldIsPaidAtProcessed, invoice.FieldIsPaidTillProcessed:
 			values[i] = new(sql.NullBool)
 		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID:
 			values[i] = new(sql.NullInt64)
-		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus:
+		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus, invoice.FieldAppleStoreTransactionID:
 			values[i] = new(sql.NullString)
-		case invoice.FieldPaidAt, invoice.FieldPaidTill:
+		case invoice.FieldPaidAt, invoice.FieldPaidTill, invoice.FieldRevokedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -184,6 +192,25 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 				i.PaidTill = new(time.Time)
 				*i.PaidTill = value.Time
 			}
+		case invoice.FieldIsRevoked:
+			if value, ok := values[j].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_revoked", values[j])
+			} else if value.Valid {
+				i.IsRevoked = value.Bool
+			}
+		case invoice.FieldRevokedAt:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field revoked_at", values[j])
+			} else if value.Valid {
+				i.RevokedAt = new(time.Time)
+				*i.RevokedAt = value.Time
+			}
+		case invoice.FieldIsRevokedProcessed:
+			if value, ok := values[j].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_revoked_processed", values[j])
+			} else if value.Valid {
+				i.IsRevokedProcessed = value.Bool
+			}
 		case invoice.FieldIsPaidAtProcessed:
 			if value, ok := values[j].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_paid_at_processed", values[j])
@@ -202,6 +229,13 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.SubscriptionID = new(int64)
 				*i.SubscriptionID = value.Int64
+			}
+		case invoice.FieldAppleStoreTransactionID:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field apple_store_transaction_id", values[j])
+			} else if value.Valid {
+				i.AppleStoreTransactionID = new(string)
+				*i.AppleStoreTransactionID = value.String
 			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
@@ -283,6 +317,17 @@ func (i *Invoice) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
+	builder.WriteString("is_revoked=")
+	builder.WriteString(fmt.Sprintf("%v", i.IsRevoked))
+	builder.WriteString(", ")
+	if v := i.RevokedAt; v != nil {
+		builder.WriteString("revoked_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("is_revoked_processed=")
+	builder.WriteString(fmt.Sprintf("%v", i.IsRevokedProcessed))
+	builder.WriteString(", ")
 	builder.WriteString("is_paid_at_processed=")
 	builder.WriteString(fmt.Sprintf("%v", i.IsPaidAtProcessed))
 	builder.WriteString(", ")
@@ -292,6 +337,11 @@ func (i *Invoice) String() string {
 	if v := i.SubscriptionID; v != nil {
 		builder.WriteString("subscription_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := i.AppleStoreTransactionID; v != nil {
+		builder.WriteString("apple_store_transaction_id=")
+		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')
 	return builder.String()

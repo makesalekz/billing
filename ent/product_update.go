@@ -33,6 +33,32 @@ func (pu *ProductUpdate) Where(ps ...predicate.Product) *ProductUpdate {
 	return pu
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (pu *ProductUpdate) SetUpdatedAt(t time.Time) *ProductUpdate {
+	pu.mutation.SetUpdatedAt(t)
+	return pu
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (pu *ProductUpdate) SetDeletedAt(t time.Time) *ProductUpdate {
+	pu.mutation.SetDeletedAt(t)
+	return pu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillableDeletedAt(t *time.Time) *ProductUpdate {
+	if t != nil {
+		pu.SetDeletedAt(*t)
+	}
+	return pu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (pu *ProductUpdate) ClearDeletedAt() *ProductUpdate {
+	pu.mutation.ClearDeletedAt()
+	return pu
+}
+
 // SetAppID sets the "app_id" field.
 func (pu *ProductUpdate) SetAppID(s string) *ProductUpdate {
 	pu.mutation.SetAppID(s)
@@ -375,6 +401,9 @@ func (pu *ProductUpdate) RemoveBundles(b ...*Bundle) *ProductUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *ProductUpdate) Save(ctx context.Context) (int, error) {
+	if err := pu.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
 }
 
@@ -398,6 +427,18 @@ func (pu *ProductUpdate) ExecX(ctx context.Context) {
 	if err := pu.Exec(ctx); err != nil {
 		panic(err)
 	}
+}
+
+// defaults sets the default values of the builder before save.
+func (pu *ProductUpdate) defaults() error {
+	if _, ok := pu.mutation.UpdatedAt(); !ok {
+		if product.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized product.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
+		v := product.UpdateDefaultUpdatedAt()
+		pu.mutation.SetUpdatedAt(v)
+	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -432,6 +473,15 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := pu.mutation.UpdatedAt(); ok {
+		_spec.SetField(product.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := pu.mutation.DeletedAt(); ok {
+		_spec.SetField(product.FieldDeletedAt, field.TypeTime, value)
+	}
+	if pu.mutation.DeletedAtCleared() {
+		_spec.ClearField(product.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := pu.mutation.AppID(); ok {
 		_spec.SetField(product.FieldAppID, field.TypeString, value)
@@ -648,6 +698,32 @@ type ProductUpdateOne struct {
 	hooks     []Hook
 	mutation  *ProductMutation
 	modifiers []func(*sql.UpdateBuilder)
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (puo *ProductUpdateOne) SetUpdatedAt(t time.Time) *ProductUpdateOne {
+	puo.mutation.SetUpdatedAt(t)
+	return puo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (puo *ProductUpdateOne) SetDeletedAt(t time.Time) *ProductUpdateOne {
+	puo.mutation.SetDeletedAt(t)
+	return puo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillableDeletedAt(t *time.Time) *ProductUpdateOne {
+	if t != nil {
+		puo.SetDeletedAt(*t)
+	}
+	return puo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (puo *ProductUpdateOne) ClearDeletedAt() *ProductUpdateOne {
+	puo.mutation.ClearDeletedAt()
+	return puo
 }
 
 // SetAppID sets the "app_id" field.
@@ -1005,6 +1081,9 @@ func (puo *ProductUpdateOne) Select(field string, fields ...string) *ProductUpda
 
 // Save executes the query and returns the updated Product entity.
 func (puo *ProductUpdateOne) Save(ctx context.Context) (*Product, error) {
+	if err := puo.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
 }
 
@@ -1028,6 +1107,18 @@ func (puo *ProductUpdateOne) ExecX(ctx context.Context) {
 	if err := puo.Exec(ctx); err != nil {
 		panic(err)
 	}
+}
+
+// defaults sets the default values of the builder before save.
+func (puo *ProductUpdateOne) defaults() error {
+	if _, ok := puo.mutation.UpdatedAt(); !ok {
+		if product.UpdateDefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized product.UpdateDefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
+		v := product.UpdateDefaultUpdatedAt()
+		puo.mutation.SetUpdatedAt(v)
+	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -1079,6 +1170,15 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := puo.mutation.UpdatedAt(); ok {
+		_spec.SetField(product.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := puo.mutation.DeletedAt(); ok {
+		_spec.SetField(product.FieldDeletedAt, field.TypeTime, value)
+	}
+	if puo.mutation.DeletedAtCleared() {
+		_spec.ClearField(product.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := puo.mutation.AppID(); ok {
 		_spec.SetField(product.FieldAppID, field.TypeString, value)

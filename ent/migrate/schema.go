@@ -58,11 +58,15 @@ var (
 		{Name: "amount", Type: field.TypeInt64},
 		{Name: "price", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "numeric"}},
 		{Name: "currency", Type: field.TypeString, Size: 3, Default: "KZT"},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"CREATED", "PAID", "CANCELED_BY_USER", "CANCELED_BY_VENDOR", "FAILED", "REJECTED", "REFUNDED"}, Default: "CREATED"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"CREATED", "PAID", "CANCELED_BY_USER", "CANCELED_BY_VENDOR", "FAILED", "REJECTED", "REVOKED"}, Default: "CREATED"},
 		{Name: "paid_at", Type: field.TypeTime, Nullable: true},
 		{Name: "paid_till", Type: field.TypeTime, Nullable: true},
+		{Name: "is_revoked", Type: field.TypeBool, Default: false},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "is_revoked_processed", Type: field.TypeBool, Default: false},
 		{Name: "is_paid_at_processed", Type: field.TypeBool, Default: false},
 		{Name: "is_paid_till_processed", Type: field.TypeBool, Default: false},
+		{Name: "apple_store_transaction_id", Type: field.TypeString, Nullable: true},
 		{Name: "product_id", Type: field.TypeInt64},
 		{Name: "subscription_id", Type: field.TypeInt64, Nullable: true},
 	}
@@ -74,13 +78,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "invoices_products_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[12]},
+				Columns:    []*schema.Column{InvoicesColumns[16]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "invoices_subscriptions_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[13]},
+				Columns:    []*schema.Column{InvoicesColumns[17]},
 				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -105,6 +109,9 @@ var (
 	// ProductsColumns holds the columns for the "products" table.
 	ProductsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "app_id", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},

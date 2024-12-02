@@ -26,6 +26,48 @@ type ProductCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (pc *ProductCreate) SetCreatedAt(t time.Time) *ProductCreate {
+	pc.mutation.SetCreatedAt(t)
+	return pc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableCreatedAt(t *time.Time) *ProductCreate {
+	if t != nil {
+		pc.SetCreatedAt(*t)
+	}
+	return pc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (pc *ProductCreate) SetUpdatedAt(t time.Time) *ProductCreate {
+	pc.mutation.SetUpdatedAt(t)
+	return pc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableUpdatedAt(t *time.Time) *ProductCreate {
+	if t != nil {
+		pc.SetUpdatedAt(*t)
+	}
+	return pc
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (pc *ProductCreate) SetDeletedAt(t time.Time) *ProductCreate {
+	pc.mutation.SetDeletedAt(t)
+	return pc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableDeletedAt(t *time.Time) *ProductCreate {
+	if t != nil {
+		pc.SetDeletedAt(*t)
+	}
+	return pc
+}
+
 // SetAppID sets the "app_id" field.
 func (pc *ProductCreate) SetAppID(s string) *ProductCreate {
 	pc.mutation.SetAppID(s)
@@ -234,7 +276,9 @@ func (pc *ProductCreate) Mutation() *ProductMutation {
 
 // Save creates the Product in the database.
 func (pc *ProductCreate) Save(ctx context.Context) (*Product, error) {
-	pc.defaults()
+	if err := pc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, pc.sqlSave, pc.mutation, pc.hooks)
 }
 
@@ -261,7 +305,21 @@ func (pc *ProductCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (pc *ProductCreate) defaults() {
+func (pc *ProductCreate) defaults() error {
+	if _, ok := pc.mutation.CreatedAt(); !ok {
+		if product.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized product.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
+		v := product.DefaultCreatedAt()
+		pc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := pc.mutation.UpdatedAt(); !ok {
+		if product.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized product.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
+		v := product.DefaultUpdatedAt()
+		pc.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := pc.mutation.Currency(); !ok {
 		v := product.DefaultCurrency
 		pc.mutation.SetCurrency(v)
@@ -290,10 +348,17 @@ func (pc *ProductCreate) defaults() {
 		v := product.DefaultIsExpiring
 		pc.mutation.SetIsExpiring(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (pc *ProductCreate) check() error {
+	if _, ok := pc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Product.created_at"`)}
+	}
+	if _, ok := pc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Product.updated_at"`)}
+	}
 	if _, ok := pc.mutation.AppID(); !ok {
 		return &ValidationError{Name: "app_id", err: errors.New(`ent: missing required field "Product.app_id"`)}
 	}
@@ -363,6 +428,18 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 	if id, ok := pc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
+	}
+	if value, ok := pc.mutation.CreatedAt(); ok {
+		_spec.SetField(product.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := pc.mutation.UpdatedAt(); ok {
+		_spec.SetField(product.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
+	}
+	if value, ok := pc.mutation.DeletedAt(); ok {
+		_spec.SetField(product.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	if value, ok := pc.mutation.AppID(); ok {
 		_spec.SetField(product.FieldAppID, field.TypeString, value)
@@ -471,7 +548,7 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 // of the `INSERT` statement. For example:
 //
 //	client.Product.Create().
-//		SetAppID(v).
+//		SetCreatedAt(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -480,7 +557,7 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.ProductUpsert) {
-//			SetAppID(v+v).
+//			SetCreatedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (pc *ProductCreate) OnConflict(opts ...sql.ConflictOption) *ProductUpsertOne {
@@ -515,6 +592,36 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ProductUpsert) SetUpdatedAt(v time.Time) *ProductUpsert {
+	u.Set(product.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateUpdatedAt() *ProductUpsert {
+	u.SetExcluded(product.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ProductUpsert) SetDeletedAt(v time.Time) *ProductUpsert {
+	u.Set(product.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateDeletedAt() *ProductUpsert {
+	u.SetExcluded(product.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ProductUpsert) ClearDeletedAt() *ProductUpsert {
+	u.SetNull(product.FieldDeletedAt)
+	return u
+}
 
 // SetAppID sets the "app_id" field.
 func (u *ProductUpsert) SetAppID(v string) *ProductUpsert {
@@ -731,6 +838,9 @@ func (u *ProductUpsertOne) UpdateNewValues() *ProductUpsertOne {
 		if _, exists := u.create.mutation.ID(); exists {
 			s.SetIgnore(product.FieldID)
 		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(product.FieldCreatedAt)
+		}
 	}))
 	return u
 }
@@ -760,6 +870,41 @@ func (u *ProductUpsertOne) Update(set func(*ProductUpsert)) *ProductUpsertOne {
 		set(&ProductUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ProductUpsertOne) SetUpdatedAt(v time.Time) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateUpdatedAt() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ProductUpsertOne) SetDeletedAt(v time.Time) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateDeletedAt() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ProductUpsertOne) ClearDeletedAt() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.ClearDeletedAt()
+	})
 }
 
 // SetAppID sets the "app_id" field.
@@ -1128,7 +1273,7 @@ func (pcb *ProductCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.ProductUpsert) {
-//			SetAppID(v+v).
+//			SetCreatedAt(v+v).
 //		}).
 //		Exec(ctx)
 func (pcb *ProductCreateBulk) OnConflict(opts ...sql.ConflictOption) *ProductUpsertBulk {
@@ -1175,6 +1320,9 @@ func (u *ProductUpsertBulk) UpdateNewValues() *ProductUpsertBulk {
 			if _, exists := b.mutation.ID(); exists {
 				s.SetIgnore(product.FieldID)
 			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(product.FieldCreatedAt)
+			}
 		}
 	}))
 	return u
@@ -1205,6 +1353,41 @@ func (u *ProductUpsertBulk) Update(set func(*ProductUpsert)) *ProductUpsertBulk 
 		set(&ProductUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ProductUpsertBulk) SetUpdatedAt(v time.Time) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateUpdatedAt() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *ProductUpsertBulk) SetDeletedAt(v time.Time) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateDeletedAt() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *ProductUpsertBulk) ClearDeletedAt() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.ClearDeletedAt()
+	})
 }
 
 // SetAppID sets the "app_id" field.

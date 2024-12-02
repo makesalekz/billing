@@ -47,12 +47,20 @@ func init() {
 	invoice.DefaultCurrency = invoiceDescCurrency.Default.(string)
 	// invoice.CurrencyValidator is a validator for the "currency" field. It is called by the builders before save.
 	invoice.CurrencyValidator = invoiceDescCurrency.Validators[0].(func(string) error)
+	// invoiceDescIsRevoked is the schema descriptor for is_revoked field.
+	invoiceDescIsRevoked := invoiceFields[11].Descriptor()
+	// invoice.DefaultIsRevoked holds the default value on creation for the is_revoked field.
+	invoice.DefaultIsRevoked = invoiceDescIsRevoked.Default.(bool)
+	// invoiceDescIsRevokedProcessed is the schema descriptor for is_revoked_processed field.
+	invoiceDescIsRevokedProcessed := invoiceFields[13].Descriptor()
+	// invoice.DefaultIsRevokedProcessed holds the default value on creation for the is_revoked_processed field.
+	invoice.DefaultIsRevokedProcessed = invoiceDescIsRevokedProcessed.Default.(bool)
 	// invoiceDescIsPaidAtProcessed is the schema descriptor for is_paid_at_processed field.
-	invoiceDescIsPaidAtProcessed := invoiceFields[11].Descriptor()
+	invoiceDescIsPaidAtProcessed := invoiceFields[14].Descriptor()
 	// invoice.DefaultIsPaidAtProcessed holds the default value on creation for the is_paid_at_processed field.
 	invoice.DefaultIsPaidAtProcessed = invoiceDescIsPaidAtProcessed.Default.(bool)
 	// invoiceDescIsPaidTillProcessed is the schema descriptor for is_paid_till_processed field.
-	invoiceDescIsPaidTillProcessed := invoiceFields[12].Descriptor()
+	invoiceDescIsPaidTillProcessed := invoiceFields[15].Descriptor()
 	// invoice.DefaultIsPaidTillProcessed holds the default value on creation for the is_paid_till_processed field.
 	invoice.DefaultIsPaidTillProcessed = invoiceDescIsPaidTillProcessed.Default.(bool)
 	itemMixin := schema.Item{}.Mixin()
@@ -74,8 +82,25 @@ func init() {
 	item.DefaultUpdatedAt = itemDescUpdatedAt.Default.(func() time.Time)
 	// item.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	item.UpdateDefaultUpdatedAt = itemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	productMixin := schema.Product{}.Mixin()
+	productMixinHooks1 := productMixin[1].Hooks()
+	product.Hooks[0] = productMixinHooks1[0]
+	productMixinInters1 := productMixin[1].Interceptors()
+	product.Interceptors[0] = productMixinInters1[0]
+	productMixinFields0 := productMixin[0].Fields()
+	_ = productMixinFields0
 	productFields := schema.Product{}.Fields()
 	_ = productFields
+	// productDescCreatedAt is the schema descriptor for created_at field.
+	productDescCreatedAt := productMixinFields0[0].Descriptor()
+	// product.DefaultCreatedAt holds the default value on creation for the created_at field.
+	product.DefaultCreatedAt = productDescCreatedAt.Default.(func() time.Time)
+	// productDescUpdatedAt is the schema descriptor for updated_at field.
+	productDescUpdatedAt := productMixinFields0[1].Descriptor()
+	// product.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	product.DefaultUpdatedAt = productDescUpdatedAt.Default.(func() time.Time)
+	// product.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	product.UpdateDefaultUpdatedAt = productDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// productDescCurrency is the schema descriptor for currency field.
 	productDescCurrency := productFields[5].Descriptor()
 	// product.DefaultCurrency holds the default value on creation for the currency field.
