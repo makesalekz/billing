@@ -361,7 +361,7 @@ func (uc *InvoicesUseCase) revokeResources(
 			AppID:    invoice.AppID,
 		}
 
-		uc.queryManager.GetLocal(*item.TopicName + "/revoke").Pub(refreshedItem)
+		uc.queryManager.GetLocal(*item.TopicName + "_revoke").Pub(refreshedItem)
 	}
 
 	tvar := true
