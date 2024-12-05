@@ -219,6 +219,7 @@ func (r *invoicesRepo) GetInvoicesToRevoke(ctx context.Context, paidTill *time.T
 	).Modify(func(s *sql.Selector) {
 		s.Where(sql.And(
 			sql.NotNull(s.C(invoice.FieldPaidTill)),
+			sql.GT(s.C(invoice.FieldPaidTill), paidTill),
 			sql.ColumnsLT(s.C(invoice.FieldRevokedAt), s.C(invoice.FieldPaidTill)),
 		))
 	}).Limit(int(BackgroundProcessPageSize)).
