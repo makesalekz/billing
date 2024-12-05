@@ -15,8 +15,8 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/internal/server"
 	"gitlab.calendaria.team/services/finance/billing/internal/service"
 	"gitlab.calendaria.team/services/utils/v1/config"
-	"gitlab.calendaria.team/services/utils/v1/nats"
 	"gitlab.calendaria.team/services/utils/v2/jwt"
+	"gitlab.calendaria.team/services/utils/v2/nats"
 	"gitlab.calendaria.team/services/utils/v2/tracing"
 )
 
@@ -48,12 +48,12 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	productUseCase := biz.NewProductUseCase(productRepo)
 	productService := service.NewProductService(productUseCase)
 	invoicesRepo := data.NewInvoicesRepo(dataData)
-	encodedConn, cleanup2, err := data.NewNatsClient(bootstrap)
+	conn, cleanup2, err := data.NewNatsClient(bootstrap)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	iQueueManager := nats.NewQueueManager(configConfig, encodedConn, logger)
+	iQueueManager := nats.NewQueueManager(configConfig, conn, logger)
 	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesRepo, itemsRepo, productRepo, iQueueManager)
 	invoiceService := service.NewInvoiceService(invoicesUseCase)
 	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)

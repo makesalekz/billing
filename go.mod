@@ -14,7 +14,7 @@ require (
 	github.com/prometheus/client_golang v1.18.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shopspring/decimal v1.4.0
-	gitlab.calendaria.team/services/utils v0.3.13
+	gitlab.calendaria.team/services/utils v0.3.14
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/exp v0.0.0-20240110193028-0dcbfd608b1e
 	google.golang.org/grpc v1.65.0

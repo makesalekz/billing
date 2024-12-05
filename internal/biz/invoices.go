@@ -14,7 +14,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/internal/data"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
-	u_nats "gitlab.calendaria.team/services/utils/v1/nats"
+	u_nats "gitlab.calendaria.team/services/utils/v2/nats"
 )
 
 type InvoicesList struct {
@@ -274,7 +274,7 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 			AppID:    invoice.AppID,
 		}
 
-		uc.queryManager.GetRemote(*item.TopicName).Pub(refreshedItem)
+		uc.queryManager.GetLocal(*item.TopicName).Pub(refreshedItem)
 	}
 
 	tvar := true
@@ -361,7 +361,7 @@ func (uc *InvoicesUseCase) revokeResources(
 			AppID:    invoice.AppID,
 		}
 
-		uc.queryManager.GetRemote(*item.TopicName + "/revoke").Pub(refreshedItem)
+		uc.queryManager.GetLocal(*item.TopicName + "/revoke").Pub(refreshedItem)
 	}
 
 	tvar := true
