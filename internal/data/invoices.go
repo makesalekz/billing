@@ -205,7 +205,14 @@ func (r *invoicesRepo) GetInvoicesToExpire(ctx context.Context, paidTill *time.T
 		invoice.IsRevoked(false),
 		invoice.IsPaidTillProcessed(false),
 		invoice.PaidTillLT(*paidTill),
-	).Limit(int(BackgroundProcessPageSize)).
+	).Modify(func(s *sql.Selector) {
+		invoicesT := sql.Table(invoice.Table).As("t2")
+
+		s.LeftJoin(invoicesT).
+			On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
+			OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
+		s.Where(sql.IsNull(invoicesT.C(invoice.FieldPaidTill)))
+	}).Limit(int(BackgroundProcessPageSize)).
 		All(ctx)
 }
 
@@ -217,7 +224,14 @@ func (r *invoicesRepo) GetInvoicesToRevoke(ctx context.Context, paidTill *time.T
 		invoice.IsRevokedProcessed(false),
 		invoice.IsPaidTillProcessed(false),
 	).Modify(func(s *sql.Selector) {
+		invoicesT := sql.Table(invoice.Table).As("t2")
+
+		s.LeftJoin(invoicesT).
+			On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
+			OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
+
 		s.Where(sql.And(
+			sql.IsNull(invoicesT.C(invoice.FieldPaidTill)),
 			sql.NotNull(s.C(invoice.FieldPaidTill)),
 			sql.GT(s.C(invoice.FieldPaidTill), paidTill),
 			sql.ColumnsLT(s.C(invoice.FieldRevokedAt), s.C(invoice.FieldPaidTill)),
