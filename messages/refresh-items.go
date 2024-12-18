@@ -8,4 +8,5 @@ type RefreshItems struct {
 	UserID   int64     `json:"user_id"`
 	TenantID int64     `json:"tenant_id"`
 	AppID    string    `json:"app_id"`
+	Metadata string    `json:"metadata"`
 }

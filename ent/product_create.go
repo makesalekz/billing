@@ -218,6 +218,20 @@ func (pc *ProductCreate) SetNillableExpiringTime(t *time.Time) *ProductCreate {
 	return pc
 }
 
+// SetMetadata sets the "metadata" field.
+func (pc *ProductCreate) SetMetadata(s string) *ProductCreate {
+	pc.mutation.SetMetadata(s)
+	return pc
+}
+
+// SetNillableMetadata sets the "metadata" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableMetadata(s *string) *ProductCreate {
+	if s != nil {
+		pc.SetMetadata(*s)
+	}
+	return pc
+}
+
 // SetID sets the "id" field.
 func (pc *ProductCreate) SetID(i int64) *ProductCreate {
 	pc.mutation.SetID(i)
@@ -492,6 +506,10 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.ExpiringTime(); ok {
 		_spec.SetField(product.FieldExpiringTime, field.TypeTime, value)
 		_node.ExpiringTime = &value
+	}
+	if value, ok := pc.mutation.Metadata(); ok {
+		_spec.SetField(product.FieldMetadata, field.TypeString, value)
+		_node.Metadata = &value
 	}
 	if nodes := pc.mutation.InvoicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -821,6 +839,24 @@ func (u *ProductUpsert) ClearExpiringTime() *ProductUpsert {
 	return u
 }
 
+// SetMetadata sets the "metadata" field.
+func (u *ProductUpsert) SetMetadata(v string) *ProductUpsert {
+	u.Set(product.FieldMetadata, v)
+	return u
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateMetadata() *ProductUpsert {
+	u.SetExcluded(product.FieldMetadata)
+	return u
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *ProductUpsert) ClearMetadata() *ProductUpsert {
+	u.SetNull(product.FieldMetadata)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1135,6 +1171,27 @@ func (u *ProductUpsertOne) UpdateExpiringTime() *ProductUpsertOne {
 func (u *ProductUpsertOne) ClearExpiringTime() *ProductUpsertOne {
 	return u.Update(func(s *ProductUpsert) {
 		s.ClearExpiringTime()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *ProductUpsertOne) SetMetadata(v string) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateMetadata() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *ProductUpsertOne) ClearMetadata() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.ClearMetadata()
 	})
 }
 
@@ -1618,6 +1675,27 @@ func (u *ProductUpsertBulk) UpdateExpiringTime() *ProductUpsertBulk {
 func (u *ProductUpsertBulk) ClearExpiringTime() *ProductUpsertBulk {
 	return u.Update(func(s *ProductUpsert) {
 		s.ClearExpiringTime()
+	})
+}
+
+// SetMetadata sets the "metadata" field.
+func (u *ProductUpsertBulk) SetMetadata(v string) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetMetadata(v)
+	})
+}
+
+// UpdateMetadata sets the "metadata" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateMetadata() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateMetadata()
+	})
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (u *ProductUpsertBulk) ClearMetadata() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.ClearMetadata()
 	})
 }
 

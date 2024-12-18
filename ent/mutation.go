@@ -3100,6 +3100,7 @@ type ProductMutation struct {
 	addunique_limit      *int64
 	is_expiring          *bool
 	expiring_time        *time.Time
+	metadata             *string
 	clearedFields        map[string]struct{}
 	invoices             map[int64]struct{}
 	removedinvoices      map[int64]struct{}
@@ -3920,6 +3921,55 @@ func (m *ProductMutation) ResetExpiringTime() {
 	delete(m.clearedFields, product.FieldExpiringTime)
 }
 
+// SetMetadata sets the "metadata" field.
+func (m *ProductMutation) SetMetadata(s string) {
+	m.metadata = &s
+}
+
+// Metadata returns the value of the "metadata" field in the mutation.
+func (m *ProductMutation) Metadata() (r string, exists bool) {
+	v := m.metadata
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetadata returns the old "metadata" field's value of the Product entity.
+// If the Product object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductMutation) OldMetadata(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetadata is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetadata requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetadata: %w", err)
+	}
+	return oldValue.Metadata, nil
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (m *ProductMutation) ClearMetadata() {
+	m.metadata = nil
+	m.clearedFields[product.FieldMetadata] = struct{}{}
+}
+
+// MetadataCleared returns if the "metadata" field was cleared in this mutation.
+func (m *ProductMutation) MetadataCleared() bool {
+	_, ok := m.clearedFields[product.FieldMetadata]
+	return ok
+}
+
+// ResetMetadata resets all changes to the "metadata" field.
+func (m *ProductMutation) ResetMetadata() {
+	m.metadata = nil
+	delete(m.clearedFields, product.FieldMetadata)
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by ids.
 func (m *ProductMutation) AddInvoiceIDs(ids ...int64) {
 	if m.invoices == nil {
@@ -4116,7 +4166,7 @@ func (m *ProductMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProductMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.created_at != nil {
 		fields = append(fields, product.FieldCreatedAt)
 	}
@@ -4165,6 +4215,9 @@ func (m *ProductMutation) Fields() []string {
 	if m.expiring_time != nil {
 		fields = append(fields, product.FieldExpiringTime)
 	}
+	if m.metadata != nil {
+		fields = append(fields, product.FieldMetadata)
+	}
 	return fields
 }
 
@@ -4205,6 +4258,8 @@ func (m *ProductMutation) Field(name string) (ent.Value, bool) {
 		return m.IsExpiring()
 	case product.FieldExpiringTime:
 		return m.ExpiringTime()
+	case product.FieldMetadata:
+		return m.Metadata()
 	}
 	return nil, false
 }
@@ -4246,6 +4301,8 @@ func (m *ProductMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldIsExpiring(ctx)
 	case product.FieldExpiringTime:
 		return m.OldExpiringTime(ctx)
+	case product.FieldMetadata:
+		return m.OldMetadata(ctx)
 	}
 	return nil, fmt.Errorf("unknown Product field %s", name)
 }
@@ -4367,6 +4424,13 @@ func (m *ProductMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetExpiringTime(v)
 		return nil
+	case product.FieldMetadata:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetadata(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Product field %s", name)
 }
@@ -4451,6 +4515,9 @@ func (m *ProductMutation) ClearedFields() []string {
 	if m.FieldCleared(product.FieldExpiringTime) {
 		fields = append(fields, product.FieldExpiringTime)
 	}
+	if m.FieldCleared(product.FieldMetadata) {
+		fields = append(fields, product.FieldMetadata)
+	}
 	return fields
 }
 
@@ -4479,6 +4546,9 @@ func (m *ProductMutation) ClearField(name string) error {
 		return nil
 	case product.FieldExpiringTime:
 		m.ClearExpiringTime()
+		return nil
+	case product.FieldMetadata:
+		m.ClearMetadata()
 		return nil
 	}
 	return fmt.Errorf("unknown Product nullable field %s", name)
@@ -4535,6 +4605,9 @@ func (m *ProductMutation) ResetField(name string) error {
 		return nil
 	case product.FieldExpiringTime:
 		m.ResetExpiringTime()
+		return nil
+	case product.FieldMetadata:
+		m.ResetMetadata()
 		return nil
 	}
 	return fmt.Errorf("unknown Product field %s", name)

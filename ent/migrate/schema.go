@@ -125,6 +125,7 @@ var (
 		{Name: "unique_limit", Type: field.TypeInt64, Default: 0},
 		{Name: "is_expiring", Type: field.TypeBool, Nullable: true, Default: false},
 		{Name: "expiring_time", Type: field.TypeTime, Nullable: true},
+		{Name: "metadata", Type: field.TypeString, Nullable: true},
 	}
 	// ProductsTable holds the schema information for the "products" table.
 	ProductsTable = &schema.Table{

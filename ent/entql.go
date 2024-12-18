@@ -114,6 +114,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			product.FieldUniqueLimit:  {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
 			product.FieldIsExpiring:   {Type: field.TypeBool, Column: product.FieldIsExpiring},
 			product.FieldExpiringTime: {Type: field.TypeTime, Column: product.FieldExpiringTime},
+			product.FieldMetadata:     {Type: field.TypeString, Column: product.FieldMetadata},
 		},
 	}
 	graph.Nodes[4] = &sqlgraph.Node{
@@ -715,6 +716,11 @@ func (f *ProductFilter) WhereIsExpiring(p entql.BoolP) {
 // WhereExpiringTime applies the entql time.Time predicate on the expiring_time field.
 func (f *ProductFilter) WhereExpiringTime(p entql.TimeP) {
 	f.Where(p.Field(product.FieldExpiringTime))
+}
+
+// WhereMetadata applies the entql string predicate on the metadata field.
+func (f *ProductFilter) WhereMetadata(p entql.StringP) {
+	f.Where(p.Field(product.FieldMetadata))
 }
 
 // WhereHasInvoices applies a predicate to check if query has an edge invoices.
