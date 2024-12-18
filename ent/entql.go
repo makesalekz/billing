@@ -66,6 +66,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			invoice.FieldIsPaidTillProcessed:     {Type: field.TypeBool, Column: invoice.FieldIsPaidTillProcessed},
 			invoice.FieldSubscriptionID:          {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
 			invoice.FieldAppleStoreTransactionID: {Type: field.TypeString, Column: invoice.FieldAppleStoreTransactionID},
+			invoice.FieldIsTrial:                 {Type: field.TypeBool, Column: invoice.FieldIsTrial},
 		},
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
@@ -483,6 +484,11 @@ func (f *InvoiceFilter) WhereSubscriptionID(p entql.Int64P) {
 // WhereAppleStoreTransactionID applies the entql string predicate on the apple_store_transaction_id field.
 func (f *InvoiceFilter) WhereAppleStoreTransactionID(p entql.StringP) {
 	f.Where(p.Field(invoice.FieldAppleStoreTransactionID))
+}
+
+// WhereIsTrial applies the entql bool predicate on the is_trial field.
+func (f *InvoiceFilter) WhereIsTrial(p entql.BoolP) {
+	f.Where(p.Field(invoice.FieldIsTrial))
 }
 
 // WhereHasProduct applies a predicate to check if query has an edge product.

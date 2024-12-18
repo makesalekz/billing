@@ -216,6 +216,20 @@ func (iu *InvoiceUpdate) ClearAppleStoreTransactionID() *InvoiceUpdate {
 	return iu
 }
 
+// SetIsTrial sets the "is_trial" field.
+func (iu *InvoiceUpdate) SetIsTrial(b bool) *InvoiceUpdate {
+	iu.mutation.SetIsTrial(b)
+	return iu
+}
+
+// SetNillableIsTrial sets the "is_trial" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableIsTrial(b *bool) *InvoiceUpdate {
+	if b != nil {
+		iu.SetIsTrial(*b)
+	}
+	return iu
+}
+
 // Mutation returns the InvoiceMutation object of the builder.
 func (iu *InvoiceUpdate) Mutation() *InvoiceMutation {
 	return iu.mutation
@@ -331,6 +345,9 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if iu.mutation.AppleStoreTransactionIDCleared() {
 		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
+	}
+	if value, ok := iu.mutation.IsTrial(); ok {
+		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
 	}
 	_spec.AddModifiers(iu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
@@ -539,6 +556,20 @@ func (iuo *InvoiceUpdateOne) ClearAppleStoreTransactionID() *InvoiceUpdateOne {
 	return iuo
 }
 
+// SetIsTrial sets the "is_trial" field.
+func (iuo *InvoiceUpdateOne) SetIsTrial(b bool) *InvoiceUpdateOne {
+	iuo.mutation.SetIsTrial(b)
+	return iuo
+}
+
+// SetNillableIsTrial sets the "is_trial" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableIsTrial(b *bool) *InvoiceUpdateOne {
+	if b != nil {
+		iuo.SetIsTrial(*b)
+	}
+	return iuo
+}
+
 // Mutation returns the InvoiceMutation object of the builder.
 func (iuo *InvoiceUpdateOne) Mutation() *InvoiceMutation {
 	return iuo.mutation
@@ -684,6 +715,9 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	}
 	if iuo.mutation.AppleStoreTransactionIDCleared() {
 		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
+	}
+	if value, ok := iuo.mutation.IsTrial(); ok {
+		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
 	}
 	_spec.AddModifiers(iuo.modifiers...)
 	_node = &Invoice{config: iuo.config}

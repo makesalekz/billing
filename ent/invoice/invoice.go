@@ -49,6 +49,8 @@ const (
 	FieldSubscriptionID = "subscription_id"
 	// FieldAppleStoreTransactionID holds the string denoting the apple_store_transaction_id field in the database.
 	FieldAppleStoreTransactionID = "apple_store_transaction_id"
+	// FieldIsTrial holds the string denoting the is_trial field in the database.
+	FieldIsTrial = "is_trial"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
 	EdgeProduct = "product"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
@@ -91,6 +93,7 @@ var Columns = []string{
 	FieldIsPaidTillProcessed,
 	FieldSubscriptionID,
 	FieldAppleStoreTransactionID,
+	FieldIsTrial,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -116,6 +119,8 @@ var (
 	DefaultIsPaidAtProcessed bool
 	// DefaultIsPaidTillProcessed holds the default value on creation for the "is_paid_till_processed" field.
 	DefaultIsPaidTillProcessed bool
+	// DefaultIsTrial holds the default value on creation for the "is_trial" field.
+	DefaultIsTrial bool
 )
 
 const DefaultStatus enum.InvoiceStatus = "CREATED"
@@ -221,6 +226,11 @@ func BySubscriptionID(opts ...sql.OrderTermOption) OrderOption {
 // ByAppleStoreTransactionID orders the results by the apple_store_transaction_id field.
 func ByAppleStoreTransactionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAppleStoreTransactionID, opts...).ToFunc()
+}
+
+// ByIsTrial orders the results by the is_trial field.
+func ByIsTrial(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsTrial, opts...).ToFunc()
 }
 
 // ByProductField orders the results by product field.

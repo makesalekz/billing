@@ -272,6 +272,7 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 			UserID:   invoice.UserID,
 			TenantID: invoice.TenantID,
 			AppID:    invoice.AppID,
+			IsTrial:  invoice.IsTrial,
 		}
 
 		uc.queryManager.GetLocal(*item.TopicName).Pub(refreshedItem)
@@ -359,6 +360,7 @@ func (uc *InvoicesUseCase) revokeResources(
 			UserID:   invoice.UserID,
 			TenantID: invoice.TenantID,
 			AppID:    invoice.AppID,
+			IsTrial:  invoice.IsTrial,
 		}
 
 		uc.queryManager.GetLocal(*item.TopicName + "_revoke").Pub(refreshedItem)

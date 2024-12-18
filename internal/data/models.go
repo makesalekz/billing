@@ -130,6 +130,7 @@ type InvoiceDto struct {
 	IsPaidTillProcessed *bool
 
 	AppleStoreTransactionID *string
+	IsTrial                 bool
 }
 
 type InvoiceFilter struct {

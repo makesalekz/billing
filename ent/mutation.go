@@ -822,6 +822,7 @@ type InvoiceMutation struct {
 	is_paid_at_processed       *bool
 	is_paid_till_processed     *bool
 	apple_store_transaction_id *string
+	is_trial                   *bool
 	clearedFields              map[string]struct{}
 	product                    *int64
 	clearedproduct             bool
@@ -1693,6 +1694,42 @@ func (m *InvoiceMutation) ResetAppleStoreTransactionID() {
 	delete(m.clearedFields, invoice.FieldAppleStoreTransactionID)
 }
 
+// SetIsTrial sets the "is_trial" field.
+func (m *InvoiceMutation) SetIsTrial(b bool) {
+	m.is_trial = &b
+}
+
+// IsTrial returns the value of the "is_trial" field in the mutation.
+func (m *InvoiceMutation) IsTrial() (r bool, exists bool) {
+	v := m.is_trial
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsTrial returns the old "is_trial" field's value of the Invoice entity.
+// If the Invoice object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InvoiceMutation) OldIsTrial(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsTrial is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsTrial requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsTrial: %w", err)
+	}
+	return oldValue.IsTrial, nil
+}
+
+// ResetIsTrial resets all changes to the "is_trial" field.
+func (m *InvoiceMutation) ResetIsTrial() {
+	m.is_trial = nil
+}
+
 // ClearProduct clears the "product" edge to the Product entity.
 func (m *InvoiceMutation) ClearProduct() {
 	m.clearedproduct = true
@@ -1794,7 +1831,7 @@ func (m *InvoiceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InvoiceMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 18)
 	if m.user_id != nil {
 		fields = append(fields, invoice.FieldUserID)
 	}
@@ -1846,6 +1883,9 @@ func (m *InvoiceMutation) Fields() []string {
 	if m.apple_store_transaction_id != nil {
 		fields = append(fields, invoice.FieldAppleStoreTransactionID)
 	}
+	if m.is_trial != nil {
+		fields = append(fields, invoice.FieldIsTrial)
+	}
 	return fields
 }
 
@@ -1888,6 +1928,8 @@ func (m *InvoiceMutation) Field(name string) (ent.Value, bool) {
 		return m.SubscriptionID()
 	case invoice.FieldAppleStoreTransactionID:
 		return m.AppleStoreTransactionID()
+	case invoice.FieldIsTrial:
+		return m.IsTrial()
 	}
 	return nil, false
 }
@@ -1931,6 +1973,8 @@ func (m *InvoiceMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldSubscriptionID(ctx)
 	case invoice.FieldAppleStoreTransactionID:
 		return m.OldAppleStoreTransactionID(ctx)
+	case invoice.FieldIsTrial:
+		return m.OldIsTrial(ctx)
 	}
 	return nil, fmt.Errorf("unknown Invoice field %s", name)
 }
@@ -2058,6 +2102,13 @@ func (m *InvoiceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAppleStoreTransactionID(v)
+		return nil
+	case invoice.FieldIsTrial:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsTrial(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice field %s", name)
@@ -2242,6 +2293,9 @@ func (m *InvoiceMutation) ResetField(name string) error {
 		return nil
 	case invoice.FieldAppleStoreTransactionID:
 		m.ResetAppleStoreTransactionID()
+		return nil
+	case invoice.FieldIsTrial:
+		m.ResetIsTrial()
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice field %s", name)
