@@ -216,6 +216,20 @@ func (ic *InvoiceCreate) SetNillableAppleStoreTransactionID(s *string) *InvoiceC
 	return ic
 }
 
+// SetIsTrial sets the "is_trial" field.
+func (ic *InvoiceCreate) SetIsTrial(b bool) *InvoiceCreate {
+	ic.mutation.SetIsTrial(b)
+	return ic
+}
+
+// SetNillableIsTrial sets the "is_trial" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableIsTrial(b *bool) *InvoiceCreate {
+	if b != nil {
+		ic.SetIsTrial(*b)
+	}
+	return ic
+}
+
 // SetID sets the "id" field.
 func (ic *InvoiceCreate) SetID(i int64) *InvoiceCreate {
 	ic.mutation.SetID(i)
@@ -305,6 +319,10 @@ func (ic *InvoiceCreate) defaults() {
 		v := invoice.DefaultIsPaidTillProcessed
 		ic.mutation.SetIsPaidTillProcessed(v)
 	}
+	if _, ok := ic.mutation.IsTrial(); !ok {
+		v := invoice.DefaultIsTrial
+		ic.mutation.SetIsTrial(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -354,6 +372,9 @@ func (ic *InvoiceCreate) check() error {
 	}
 	if _, ok := ic.mutation.IsPaidTillProcessed(); !ok {
 		return &ValidationError{Name: "is_paid_till_processed", err: errors.New(`ent: missing required field "Invoice.is_paid_till_processed"`)}
+	}
+	if _, ok := ic.mutation.IsTrial(); !ok {
+		return &ValidationError{Name: "is_trial", err: errors.New(`ent: missing required field "Invoice.is_trial"`)}
 	}
 	if len(ic.mutation.ProductIDs()) == 0 {
 		return &ValidationError{Name: "product", err: errors.New(`ent: missing required edge "Invoice.product"`)}
@@ -450,6 +471,10 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.AppleStoreTransactionID(); ok {
 		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
 		_node.AppleStoreTransactionID = &value
+	}
+	if value, ok := ic.mutation.IsTrial(); ok {
+		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+		_node.IsTrial = value
 	}
 	if nodes := ic.mutation.ProductIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -696,6 +721,18 @@ func (u *InvoiceUpsert) UpdateAppleStoreTransactionID() *InvoiceUpsert {
 // ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
 func (u *InvoiceUpsert) ClearAppleStoreTransactionID() *InvoiceUpsert {
 	u.SetNull(invoice.FieldAppleStoreTransactionID)
+	return u
+}
+
+// SetIsTrial sets the "is_trial" field.
+func (u *InvoiceUpsert) SetIsTrial(v bool) *InvoiceUpsert {
+	u.Set(invoice.FieldIsTrial, v)
+	return u
+}
+
+// UpdateIsTrial sets the "is_trial" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateIsTrial() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldIsTrial)
 	return u
 }
 
@@ -951,6 +988,20 @@ func (u *InvoiceUpsertOne) UpdateAppleStoreTransactionID() *InvoiceUpsertOne {
 func (u *InvoiceUpsertOne) ClearAppleStoreTransactionID() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearAppleStoreTransactionID()
+	})
+}
+
+// SetIsTrial sets the "is_trial" field.
+func (u *InvoiceUpsertOne) SetIsTrial(v bool) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsTrial(v)
+	})
+}
+
+// UpdateIsTrial sets the "is_trial" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateIsTrial() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsTrial()
 	})
 }
 
@@ -1372,6 +1423,20 @@ func (u *InvoiceUpsertBulk) UpdateAppleStoreTransactionID() *InvoiceUpsertBulk {
 func (u *InvoiceUpsertBulk) ClearAppleStoreTransactionID() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearAppleStoreTransactionID()
+	})
+}
+
+// SetIsTrial sets the "is_trial" field.
+func (u *InvoiceUpsertBulk) SetIsTrial(v bool) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetIsTrial(v)
+	})
+}
+
+// UpdateIsTrial sets the "is_trial" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateIsTrial() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateIsTrial()
 	})
 }
 

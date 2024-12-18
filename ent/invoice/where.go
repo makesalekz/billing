@@ -137,6 +137,11 @@ func AppleStoreTransactionID(v string) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldAppleStoreTransactionID, v))
 }
 
+// IsTrial applies equality check predicate on the "is_trial" field. It's identical to IsTrialEQ.
+func IsTrial(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsTrial, v))
+}
+
 // UserIDEQ applies the EQ predicate on the "user_id" field.
 func UserIDEQ(v int64) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldUserID, v))
@@ -770,6 +775,16 @@ func AppleStoreTransactionIDEqualFold(v string) predicate.Invoice {
 // AppleStoreTransactionIDContainsFold applies the ContainsFold predicate on the "apple_store_transaction_id" field.
 func AppleStoreTransactionIDContainsFold(v string) predicate.Invoice {
 	return predicate.Invoice(sql.FieldContainsFold(FieldAppleStoreTransactionID, v))
+}
+
+// IsTrialEQ applies the EQ predicate on the "is_trial" field.
+func IsTrialEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldIsTrial, v))
+}
+
+// IsTrialNEQ applies the NEQ predicate on the "is_trial" field.
+func IsTrialNEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldIsTrial, v))
 }
 
 // HasProduct applies the HasEdge predicate on the "product" edge.

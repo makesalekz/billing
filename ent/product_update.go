@@ -286,26 +286,6 @@ func (pu *ProductUpdate) ClearExpiringTime() *ProductUpdate {
 	return pu
 }
 
-// SetMetadata sets the "metadata" field.
-func (pu *ProductUpdate) SetMetadata(s string) *ProductUpdate {
-	pu.mutation.SetMetadata(s)
-	return pu
-}
-
-// SetNillableMetadata sets the "metadata" field if the given value is not nil.
-func (pu *ProductUpdate) SetNillableMetadata(s *string) *ProductUpdate {
-	if s != nil {
-		pu.SetMetadata(*s)
-	}
-	return pu
-}
-
-// ClearMetadata clears the value of the "metadata" field.
-func (pu *ProductUpdate) ClearMetadata() *ProductUpdate {
-	pu.mutation.ClearMetadata()
-	return pu
-}
-
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
 func (pu *ProductUpdate) AddInvoiceIDs(ids ...int64) *ProductUpdate {
 	pu.mutation.AddInvoiceIDs(ids...)
@@ -562,12 +542,6 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.ExpiringTimeCleared() {
 		_spec.ClearField(product.FieldExpiringTime, field.TypeTime)
-	}
-	if value, ok := pu.mutation.Metadata(); ok {
-		_spec.SetField(product.FieldMetadata, field.TypeString, value)
-	}
-	if pu.mutation.MetadataCleared() {
-		_spec.ClearField(product.FieldMetadata, field.TypeString)
 	}
 	if pu.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -979,26 +953,6 @@ func (puo *ProductUpdateOne) ClearExpiringTime() *ProductUpdateOne {
 	return puo
 }
 
-// SetMetadata sets the "metadata" field.
-func (puo *ProductUpdateOne) SetMetadata(s string) *ProductUpdateOne {
-	puo.mutation.SetMetadata(s)
-	return puo
-}
-
-// SetNillableMetadata sets the "metadata" field if the given value is not nil.
-func (puo *ProductUpdateOne) SetNillableMetadata(s *string) *ProductUpdateOne {
-	if s != nil {
-		puo.SetMetadata(*s)
-	}
-	return puo
-}
-
-// ClearMetadata clears the value of the "metadata" field.
-func (puo *ProductUpdateOne) ClearMetadata() *ProductUpdateOne {
-	puo.mutation.ClearMetadata()
-	return puo
-}
-
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
 func (puo *ProductUpdateOne) AddInvoiceIDs(ids ...int64) *ProductUpdateOne {
 	puo.mutation.AddInvoiceIDs(ids...)
@@ -1285,12 +1239,6 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 	}
 	if puo.mutation.ExpiringTimeCleared() {
 		_spec.ClearField(product.FieldExpiringTime, field.TypeTime)
-	}
-	if value, ok := puo.mutation.Metadata(); ok {
-		_spec.SetField(product.FieldMetadata, field.TypeString, value)
-	}
-	if puo.mutation.MetadataCleared() {
-		_spec.ClearField(product.FieldMetadata, field.TypeString)
 	}
 	if puo.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{

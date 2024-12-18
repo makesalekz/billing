@@ -55,6 +55,8 @@ type Invoice struct {
 	SubscriptionID *int64 `json:"subscription_id,omitempty"`
 	// AppleStoreTransactionID holds the value of the "apple_store_transaction_id" field.
 	AppleStoreTransactionID *string `json:"apple_store_transaction_id,omitempty"`
+	// IsTrial holds the value of the "is_trial" field.
+	IsTrial bool `json:"is_trial,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InvoiceQuery when eager-loading is set.
 	Edges        InvoiceEdges `json:"edges"`
@@ -101,7 +103,7 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case invoice.FieldPrice:
 			values[i] = new(decimal.Decimal)
-		case invoice.FieldIsRevoked, invoice.FieldIsRevokedProcessed, invoice.FieldIsPaidAtProcessed, invoice.FieldIsPaidTillProcessed:
+		case invoice.FieldIsRevoked, invoice.FieldIsRevokedProcessed, invoice.FieldIsPaidAtProcessed, invoice.FieldIsPaidTillProcessed, invoice.FieldIsTrial:
 			values[i] = new(sql.NullBool)
 		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID:
 			values[i] = new(sql.NullInt64)
@@ -237,6 +239,12 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 				i.AppleStoreTransactionID = new(string)
 				*i.AppleStoreTransactionID = value.String
 			}
+		case invoice.FieldIsTrial:
+			if value, ok := values[j].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_trial", values[j])
+			} else if value.Valid {
+				i.IsTrial = value.Bool
+			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
 		}
@@ -343,6 +351,9 @@ func (i *Invoice) String() string {
 		builder.WriteString("apple_store_transaction_id=")
 		builder.WriteString(*v)
 	}
+	builder.WriteString(", ")
+	builder.WriteString("is_trial=")
+	builder.WriteString(fmt.Sprintf("%v", i.IsTrial))
 	builder.WriteByte(')')
 	return builder.String()
 }

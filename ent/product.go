@@ -50,8 +50,6 @@ type Product struct {
 	IsExpiring bool `json:"is_expiring,omitempty"`
 	// Time when this product expires.
 	ExpiringTime *time.Time `json:"expiring_time,omitempty"`
-	// Metadata holds the value of the "metadata" field.
-	Metadata *string `json:"metadata,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProductQuery when eager-loading is set.
 	Edges        ProductEdges `json:"edges"`
@@ -109,7 +107,7 @@ func (*Product) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case product.FieldID, product.FieldLeft, product.FieldUniqueLimit:
 			values[i] = new(sql.NullInt64)
-		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency, product.FieldMetadata:
+		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency:
 			values[i] = new(sql.NullString)
 		case product.FieldCreatedAt, product.FieldUpdatedAt, product.FieldDeletedAt, product.FieldLimitedTill, product.FieldExpiringTime:
 			values[i] = new(sql.NullTime)
@@ -233,13 +231,6 @@ func (pr *Product) assignValues(columns []string, values []any) error {
 				pr.ExpiringTime = new(time.Time)
 				*pr.ExpiringTime = value.Time
 			}
-		case product.FieldMetadata:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field metadata", values[i])
-			} else if value.Valid {
-				pr.Metadata = new(string)
-				*pr.Metadata = value.String
-			}
 		default:
 			pr.selectValues.Set(columns[i], values[i])
 		}
@@ -343,11 +334,6 @@ func (pr *Product) String() string {
 	if v := pr.ExpiringTime; v != nil {
 		builder.WriteString("expiring_time=")
 		builder.WriteString(v.Format(time.ANSIC))
-	}
-	builder.WriteString(", ")
-	if v := pr.Metadata; v != nil {
-		builder.WriteString("metadata=")
-		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')
 	return builder.String()

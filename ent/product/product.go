@@ -47,8 +47,6 @@ const (
 	FieldIsExpiring = "is_expiring"
 	// FieldExpiringTime holds the string denoting the expiring_time field in the database.
 	FieldExpiringTime = "expiring_time"
-	// FieldMetadata holds the string denoting the metadata field in the database.
-	FieldMetadata = "metadata"
 	// EdgeInvoices holds the string denoting the invoices edge name in mutations.
 	EdgeInvoices = "invoices"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
@@ -99,7 +97,6 @@ var Columns = []string{
 	FieldUniqueLimit,
 	FieldIsExpiring,
 	FieldExpiringTime,
-	FieldMetadata,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -232,11 +229,6 @@ func ByIsExpiring(opts ...sql.OrderTermOption) OrderOption {
 // ByExpiringTime orders the results by the expiring_time field.
 func ByExpiringTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExpiringTime, opts...).ToFunc()
-}
-
-// ByMetadata orders the results by the metadata field.
-func ByMetadata(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldMetadata, opts...).ToFunc()
 }
 
 // ByInvoicesCount orders the results by invoices count.

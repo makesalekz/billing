@@ -66,6 +66,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			invoice.FieldIsPaidTillProcessed:     {Type: field.TypeBool, Column: invoice.FieldIsPaidTillProcessed},
 			invoice.FieldSubscriptionID:          {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
 			invoice.FieldAppleStoreTransactionID: {Type: field.TypeString, Column: invoice.FieldAppleStoreTransactionID},
+			invoice.FieldIsTrial:                 {Type: field.TypeBool, Column: invoice.FieldIsTrial},
 		},
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
@@ -114,7 +115,6 @@ var schemaGraph = func() *sqlgraph.Schema {
 			product.FieldUniqueLimit:  {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
 			product.FieldIsExpiring:   {Type: field.TypeBool, Column: product.FieldIsExpiring},
 			product.FieldExpiringTime: {Type: field.TypeTime, Column: product.FieldExpiringTime},
-			product.FieldMetadata:     {Type: field.TypeString, Column: product.FieldMetadata},
 		},
 	}
 	graph.Nodes[4] = &sqlgraph.Node{
@@ -486,6 +486,11 @@ func (f *InvoiceFilter) WhereAppleStoreTransactionID(p entql.StringP) {
 	f.Where(p.Field(invoice.FieldAppleStoreTransactionID))
 }
 
+// WhereIsTrial applies the entql bool predicate on the is_trial field.
+func (f *InvoiceFilter) WhereIsTrial(p entql.BoolP) {
+	f.Where(p.Field(invoice.FieldIsTrial))
+}
+
 // WhereHasProduct applies a predicate to check if query has an edge product.
 func (f *InvoiceFilter) WhereHasProduct() {
 	f.Where(entql.HasEdge("product"))
@@ -716,11 +721,6 @@ func (f *ProductFilter) WhereIsExpiring(p entql.BoolP) {
 // WhereExpiringTime applies the entql time.Time predicate on the expiring_time field.
 func (f *ProductFilter) WhereExpiringTime(p entql.TimeP) {
 	f.Where(p.Field(product.FieldExpiringTime))
-}
-
-// WhereMetadata applies the entql string predicate on the metadata field.
-func (f *ProductFilter) WhereMetadata(p entql.StringP) {
-	f.Where(p.Field(product.FieldMetadata))
 }
 
 // WhereHasInvoices applies a predicate to check if query has an edge invoices.

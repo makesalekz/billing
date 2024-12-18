@@ -35,7 +35,6 @@ func (Product) Fields() []ent.Field {
 		field.Int64("unique_limit").Default(0).Max(100).Comment("Number of times this product can be purchased."),
 		field.Bool("is_expiring").Optional().Default(false).Comment("Indicates that this product requires renewal."),
 		field.Time("expiring_time").Optional().Nillable().Comment("Time when this product expires."),
-		field.String("metadata").Optional().Nillable(),
 	}
 }
 

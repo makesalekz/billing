@@ -67,6 +67,7 @@ var (
 		{Name: "is_paid_at_processed", Type: field.TypeBool, Default: false},
 		{Name: "is_paid_till_processed", Type: field.TypeBool, Default: false},
 		{Name: "apple_store_transaction_id", Type: field.TypeString, Nullable: true},
+		{Name: "is_trial", Type: field.TypeBool, Default: false},
 		{Name: "product_id", Type: field.TypeInt64},
 		{Name: "subscription_id", Type: field.TypeInt64, Nullable: true},
 	}
@@ -78,13 +79,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "invoices_products_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[16]},
+				Columns:    []*schema.Column{InvoicesColumns[17]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "invoices_subscriptions_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[17]},
+				Columns:    []*schema.Column{InvoicesColumns[18]},
 				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -125,7 +126,6 @@ var (
 		{Name: "unique_limit", Type: field.TypeInt64, Default: 0},
 		{Name: "is_expiring", Type: field.TypeBool, Nullable: true, Default: false},
 		{Name: "expiring_time", Type: field.TypeTime, Nullable: true},
-		{Name: "metadata", Type: field.TypeString, Nullable: true},
 	}
 	// ProductsTable holds the schema information for the "products" table.
 	ProductsTable = &schema.Table{

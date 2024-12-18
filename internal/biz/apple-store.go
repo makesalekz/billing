@@ -127,6 +127,7 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 		PaidAt:                  &paidAt,
 		PaidTill:                &paidTill,
 		AppleStoreTransactionID: &transaction.OriginalTransactionID,
+		IsTrial:                 transaction.OfferDiscountType == "FREE_TRIAL",
 	})
 	if err != nil {
 		return err
