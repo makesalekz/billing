@@ -6,6 +6,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/item"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
@@ -18,7 +19,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 5)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 6)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   bundle.Table,
@@ -67,6 +68,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			invoice.FieldSubscriptionID:          {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
 			invoice.FieldAppleStoreTransactionID: {Type: field.TypeString, Column: invoice.FieldAppleStoreTransactionID},
 			invoice.FieldIsTrial:                 {Type: field.TypeBool, Column: invoice.FieldIsTrial},
+			invoice.FieldPaymentProfileID:        {Type: field.TypeInt64, Column: invoice.FieldPaymentProfileID},
 		},
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
@@ -89,6 +91,29 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 	}
 	graph.Nodes[3] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   paymentprofile.Table,
+			Columns: paymentprofile.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt64,
+				Column: paymentprofile.FieldID,
+			},
+		},
+		Type: "PaymentProfile",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			paymentprofile.FieldCreatedAt:      {Type: field.TypeTime, Column: paymentprofile.FieldCreatedAt},
+			paymentprofile.FieldUpdatedAt:      {Type: field.TypeTime, Column: paymentprofile.FieldUpdatedAt},
+			paymentprofile.FieldDeletedAt:      {Type: field.TypeTime, Column: paymentprofile.FieldDeletedAt},
+			paymentprofile.FieldUserID:         {Type: field.TypeInt64, Column: paymentprofile.FieldUserID},
+			paymentprofile.FieldPanMasked:      {Type: field.TypeString, Column: paymentprofile.FieldPanMasked},
+			paymentprofile.FieldHolder:         {Type: field.TypeString, Column: paymentprofile.FieldHolder},
+			paymentprofile.FieldEmail:          {Type: field.TypeString, Column: paymentprofile.FieldEmail},
+			paymentprofile.FieldPhone:          {Type: field.TypeString, Column: paymentprofile.FieldPhone},
+			paymentprofile.FieldUserToken:      {Type: field.TypeString, Column: paymentprofile.FieldUserToken},
+			paymentprofile.FieldRecurrentToken: {Type: field.TypeString, Column: paymentprofile.FieldRecurrentToken},
+		},
+	}
+	graph.Nodes[4] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   product.Table,
 			Columns: product.Columns,
@@ -117,7 +142,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			product.FieldExpiringTime: {Type: field.TypeTime, Column: product.FieldExpiringTime},
 		},
 	}
-	graph.Nodes[4] = &sqlgraph.Node{
+	graph.Nodes[5] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   subscriptions.Table,
 			Columns: subscriptions.Columns,
@@ -183,6 +208,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Subscriptions",
 	)
 	graph.MustAddE(
+		"payment_profile",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+		},
+		"Invoice",
+		"PaymentProfile",
+	)
+	graph.MustAddE(
 		"bundles",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -193,6 +230,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"Item",
 		"Bundle",
+	)
+	graph.MustAddE(
+		"invoices",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentprofile.InvoicesTable,
+			Columns: []string{paymentprofile.InvoicesColumn},
+			Bidi:    false,
+		},
+		"PaymentProfile",
+		"Invoice",
 	)
 	graph.MustAddE(
 		"invoices",
@@ -491,6 +540,11 @@ func (f *InvoiceFilter) WhereIsTrial(p entql.BoolP) {
 	f.Where(p.Field(invoice.FieldIsTrial))
 }
 
+// WherePaymentProfileID applies the entql int64 predicate on the payment_profile_id field.
+func (f *InvoiceFilter) WherePaymentProfileID(p entql.Int64P) {
+	f.Where(p.Field(invoice.FieldPaymentProfileID))
+}
+
 // WhereHasProduct applies a predicate to check if query has an edge product.
 func (f *InvoiceFilter) WhereHasProduct() {
 	f.Where(entql.HasEdge("product"))
@@ -513,6 +567,20 @@ func (f *InvoiceFilter) WhereHasSubscriptions() {
 // WhereHasSubscriptionsWith applies a predicate to check if query has an edge subscriptions with a given conditions (other predicates).
 func (f *InvoiceFilter) WhereHasSubscriptionsWith(preds ...predicate.Subscriptions) {
 	f.Where(entql.HasEdgeWith("subscriptions", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPaymentProfile applies a predicate to check if query has an edge payment_profile.
+func (f *InvoiceFilter) WhereHasPaymentProfile() {
+	f.Where(entql.HasEdge("payment_profile"))
+}
+
+// WhereHasPaymentProfileWith applies a predicate to check if query has an edge payment_profile with a given conditions (other predicates).
+func (f *InvoiceFilter) WhereHasPaymentProfileWith(preds ...predicate.PaymentProfile) {
+	f.Where(entql.HasEdgeWith("payment_profile", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -604,6 +672,110 @@ func (f *ItemFilter) WhereHasBundlesWith(preds ...predicate.Bundle) {
 }
 
 // addPredicate implements the predicateAdder interface.
+func (ppq *PaymentProfileQuery) addPredicate(pred func(s *sql.Selector)) {
+	ppq.predicates = append(ppq.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the PaymentProfileQuery builder.
+func (ppq *PaymentProfileQuery) Filter() *PaymentProfileFilter {
+	return &PaymentProfileFilter{config: ppq.config, predicateAdder: ppq}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *PaymentProfileMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the PaymentProfileMutation builder.
+func (m *PaymentProfileMutation) Filter() *PaymentProfileFilter {
+	return &PaymentProfileFilter{config: m.config, predicateAdder: m}
+}
+
+// PaymentProfileFilter provides a generic filtering capability at runtime for PaymentProfileQuery.
+type PaymentProfileFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *PaymentProfileFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int64 predicate on the id field.
+func (f *PaymentProfileFilter) WhereID(p entql.Int64P) {
+	f.Where(p.Field(paymentprofile.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *PaymentProfileFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(paymentprofile.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *PaymentProfileFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(paymentprofile.FieldUpdatedAt))
+}
+
+// WhereDeletedAt applies the entql time.Time predicate on the deleted_at field.
+func (f *PaymentProfileFilter) WhereDeletedAt(p entql.TimeP) {
+	f.Where(p.Field(paymentprofile.FieldDeletedAt))
+}
+
+// WhereUserID applies the entql int64 predicate on the user_id field.
+func (f *PaymentProfileFilter) WhereUserID(p entql.Int64P) {
+	f.Where(p.Field(paymentprofile.FieldUserID))
+}
+
+// WherePanMasked applies the entql string predicate on the pan_masked field.
+func (f *PaymentProfileFilter) WherePanMasked(p entql.StringP) {
+	f.Where(p.Field(paymentprofile.FieldPanMasked))
+}
+
+// WhereHolder applies the entql string predicate on the holder field.
+func (f *PaymentProfileFilter) WhereHolder(p entql.StringP) {
+	f.Where(p.Field(paymentprofile.FieldHolder))
+}
+
+// WhereEmail applies the entql string predicate on the email field.
+func (f *PaymentProfileFilter) WhereEmail(p entql.StringP) {
+	f.Where(p.Field(paymentprofile.FieldEmail))
+}
+
+// WherePhone applies the entql string predicate on the phone field.
+func (f *PaymentProfileFilter) WherePhone(p entql.StringP) {
+	f.Where(p.Field(paymentprofile.FieldPhone))
+}
+
+// WhereUserToken applies the entql string predicate on the user_token field.
+func (f *PaymentProfileFilter) WhereUserToken(p entql.StringP) {
+	f.Where(p.Field(paymentprofile.FieldUserToken))
+}
+
+// WhereRecurrentToken applies the entql string predicate on the recurrent_token field.
+func (f *PaymentProfileFilter) WhereRecurrentToken(p entql.StringP) {
+	f.Where(p.Field(paymentprofile.FieldRecurrentToken))
+}
+
+// WhereHasInvoices applies a predicate to check if query has an edge invoices.
+func (f *PaymentProfileFilter) WhereHasInvoices() {
+	f.Where(entql.HasEdge("invoices"))
+}
+
+// WhereHasInvoicesWith applies a predicate to check if query has an edge invoices with a given conditions (other predicates).
+func (f *PaymentProfileFilter) WhereHasInvoicesWith(preds ...predicate.Invoice) {
+	f.Where(entql.HasEdgeWith("invoices", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (pq *ProductQuery) addPredicate(pred func(s *sql.Selector)) {
 	pq.predicates = append(pq.predicates, pred)
 }
@@ -632,7 +804,7 @@ type ProductFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *ProductFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[4].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -794,7 +966,7 @@ type SubscriptionsFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SubscriptionsFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[4].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[5].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})

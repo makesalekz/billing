@@ -142,6 +142,11 @@ func IsTrial(v bool) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldIsTrial, v))
 }
 
+// PaymentProfileID applies equality check predicate on the "payment_profile_id" field. It's identical to PaymentProfileIDEQ.
+func PaymentProfileID(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldPaymentProfileID, v))
+}
+
 // UserIDEQ applies the EQ predicate on the "user_id" field.
 func UserIDEQ(v int64) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldUserID, v))
@@ -787,6 +792,36 @@ func IsTrialNEQ(v bool) predicate.Invoice {
 	return predicate.Invoice(sql.FieldNEQ(FieldIsTrial, v))
 }
 
+// PaymentProfileIDEQ applies the EQ predicate on the "payment_profile_id" field.
+func PaymentProfileIDEQ(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldPaymentProfileID, v))
+}
+
+// PaymentProfileIDNEQ applies the NEQ predicate on the "payment_profile_id" field.
+func PaymentProfileIDNEQ(v int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldPaymentProfileID, v))
+}
+
+// PaymentProfileIDIn applies the In predicate on the "payment_profile_id" field.
+func PaymentProfileIDIn(vs ...int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldPaymentProfileID, vs...))
+}
+
+// PaymentProfileIDNotIn applies the NotIn predicate on the "payment_profile_id" field.
+func PaymentProfileIDNotIn(vs ...int64) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldPaymentProfileID, vs...))
+}
+
+// PaymentProfileIDIsNil applies the IsNil predicate on the "payment_profile_id" field.
+func PaymentProfileIDIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldPaymentProfileID))
+}
+
+// PaymentProfileIDNotNil applies the NotNil predicate on the "payment_profile_id" field.
+func PaymentProfileIDNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldPaymentProfileID))
+}
+
 // HasProduct applies the HasEdge predicate on the "product" edge.
 func HasProduct() predicate.Invoice {
 	return predicate.Invoice(func(s *sql.Selector) {
@@ -825,6 +860,29 @@ func HasSubscriptions() predicate.Invoice {
 func HasSubscriptionsWith(preds ...predicate.Subscriptions) predicate.Invoice {
 	return predicate.Invoice(func(s *sql.Selector) {
 		step := newSubscriptionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPaymentProfile applies the HasEdge predicate on the "payment_profile" edge.
+func HasPaymentProfile() predicate.Invoice {
+	return predicate.Invoice(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, PaymentProfileTable, PaymentProfileColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPaymentProfileWith applies the HasEdge predicate on the "payment_profile" edge with a given conditions (other predicates).
+func HasPaymentProfileWith(preds ...predicate.PaymentProfile) predicate.Invoice {
+	return predicate.Invoice(func(s *sql.Selector) {
+		step := newPaymentProfileStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

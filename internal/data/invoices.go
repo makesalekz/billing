@@ -22,6 +22,7 @@ type InvoicesRepo interface {
 	) ([]*ent.Invoice, error)
 	GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoicesToRevoke(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
+	GetInvoiceById(ctx context.Context, id int64) (*ent.Invoice, error)
 }
 
 type invoicesRepo struct {
@@ -116,6 +117,10 @@ func (r *invoicesRepo) GetInvoice(
 			invoice.AppID(appID),
 		).
 		Only(ctx)
+}
+
+func (r *invoicesRepo) GetInvoiceById(ctx context.Context, id int64) (*ent.Invoice, error) {
+	return r.db.Invoice.Query().Where(invoice.ID(id)).Only(ctx)
 }
 
 func (r *invoicesRepo) CountInvoices(ctx context.Context, filter InvoiceFilter) (int32, error) {

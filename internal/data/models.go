@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"time"
 
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 )
 
 type NotificationType string
@@ -128,6 +129,7 @@ type InvoiceDto struct {
 	IsRevokedProcessed  *bool
 	IsPaidAtProcessed   *bool
 	IsPaidTillProcessed *bool
+	RecurrentProfileId  *int64
 
 	AppleStoreTransactionID *string
 	IsTrial                 bool
@@ -237,57 +239,75 @@ type RenewalInfo struct {
 }
 
 func ParseAppleSignedBody(signedBody string) (*jwt.Token, error) {
-	parse, err := jwt.Parse(signedBody, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodECDSA); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-		}
+	parse, err := jwt.Parse(
+		signedBody, func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodECDSA); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+			}
 
-		if t.Header["x5c"] == nil || len(t.Header["x5c"].([]interface{})) != 3 {
-			return nil, errors.New("invalid x5c header")
-		}
+			if t.Header["x5c"] == nil || len(t.Header["x5c"].([]interface{})) != 3 {
+				return nil, errors.New("invalid x5c header")
+			}
 
-		root := fmt.Sprintf("-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----",
-			t.Header["x5c"].([]interface{})[2].(string))
-		intermediate := fmt.Sprintf("-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----",
-			t.Header["x5c"].([]interface{})[1].(string))
-		cert := fmt.Sprintf("-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----",
-			t.Header["x5c"].([]interface{})[0].(string))
+			root := fmt.Sprintf(
+				"-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----",
+				t.Header["x5c"].([]interface{})[2].(string),
+			)
+			intermediate := fmt.Sprintf(
+				"-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----",
+				t.Header["x5c"].([]interface{})[1].(string),
+			)
+			cert := fmt.Sprintf(
+				"-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----",
+				t.Header["x5c"].([]interface{})[0].(string),
+			)
 
-		roots := x509.NewCertPool()
-		ok := roots.AppendCertsFromPEM([]byte(root))
-		if !ok {
-			return nil, errors.New("failed to parse root certificate")
-		}
+			roots := x509.NewCertPool()
+			ok := roots.AppendCertsFromPEM([]byte(root))
+			if !ok {
+				return nil, errors.New("failed to parse root certificate")
+			}
 
-		ok = roots.AppendCertsFromPEM([]byte(intermediate))
-		if !ok {
-			return nil, errors.New("failed to parse intermediate certificate")
-		}
+			ok = roots.AppendCertsFromPEM([]byte(intermediate))
+			if !ok {
+				return nil, errors.New("failed to parse intermediate certificate")
+			}
 
-		block, _ := pem.Decode([]byte(cert))
-		if block == nil {
-			return nil, errors.New("failed to parse PEM block")
-		}
+			block, _ := pem.Decode([]byte(cert))
+			if block == nil {
+				return nil, errors.New("failed to parse PEM block")
+			}
 
-		c, err := x509.ParseCertificate(block.Bytes)
-		if err != nil {
-			return nil, err
-		}
+			c, err := x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				return nil, err
+			}
 
-		opts := x509.VerifyOptions{
-			Roots: roots,
-		}
+			opts := x509.VerifyOptions{
+				Roots: roots,
+			}
 
-		_, err = c.Verify(opts)
-		if err != nil {
-			return nil, err
-		}
+			_, err = c.Verify(opts)
+			if err != nil {
+				return nil, err
+			}
 
-		return c.PublicKey, nil
-	})
+			return c.PublicKey, nil
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	return parse, nil
+}
+
+type PaymentProfileDto struct {
+	UserID         int64
+	PanMasked      string
+	Holder         string
+	Email          *string
+	Phone          *string
+	UserToken      string
+	RecurrentToken *string
 }

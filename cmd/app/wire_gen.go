@@ -61,8 +61,16 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
-	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService, productService, invoiceService, subscriptionService, appleStoreService)
-	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor)
+	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
+	paymentUsecase, err := biz.NewPaymentUsecase(configConfig, logger, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	paymentsService := service.NewPaymentsService(paymentUsecase)
+	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService, productService, invoiceService, subscriptionService, appleStoreService, paymentsService)
+	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor, paymentsService)
 	cronServer := server.NewCronServer(logger, invoicesUseCase)
 	app := newApp(logger, configConfig, grpcServer, httpServer, cronServer)
 	return app, func() {

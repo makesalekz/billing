@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package billing.v1;
+
+import "api/utils/v1/models.proto";
+import "google/api/annotations.proto";
+
+option go_package = "gitlab.calendaria.team/services/finance/billing/api/billing/v1;billing_v1";
+option java_multiple_files = true;
+option java_package = "billing.v1";
+
+service Payments {
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
+  rpc CancelSubscription(CancelSubscriptionRequest) returns (utils.v1.EmptyReply);
+  rpc PaymentCallback(PaymentCallbackRequest) returns (utils.v1.EmptyReply);
+}
+
+message CreatePaymentRequest {
+  int64 productId = 1;
+}
+
+message CreatePaymentResponse {
+  int64 invoiceId = 1;
+  string paymentUrl = 2;
+}
+
+message CancelSubscriptionRequest {
+  int64 userId = 1;
+  int64 subscriptionId = 2;
+}
+
+message RequestRefundRequest {
+  int64 invoiceId = 1;
+  int64 amount = 2;
+  string reason = 3;
+}
+
+message RequestRefundResponse {
+  string paymentUrl = 1;
+}
+
+message PayerInfo {
+  string panMasked = 1;
+  string holder = 2;
+  string email = 3;
+  string phone = 4;
+  string userToken = 5;
+}
+
+// PaymentCallbackRequest is a request to process a payment callback
+// https://docs.onevisionpay.com/ go to "Отправка callback-ов платежной системой после каждой операции"
+message PaymentCallbackRequest {
+  string data = 1;
+  string sign = 2;
+}

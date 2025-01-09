@@ -12,6 +12,7 @@ import (
 	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
@@ -57,6 +58,8 @@ type Invoice struct {
 	AppleStoreTransactionID *string `json:"apple_store_transaction_id,omitempty"`
 	// IsTrial holds the value of the "is_trial" field.
 	IsTrial bool `json:"is_trial,omitempty"`
+	// PaymentProfileID holds the value of the "payment_profile_id" field.
+	PaymentProfileID *int64 `json:"payment_profile_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InvoiceQuery when eager-loading is set.
 	Edges        InvoiceEdges `json:"edges"`
@@ -69,9 +72,11 @@ type InvoiceEdges struct {
 	Product *Product `json:"product,omitempty"`
 	// Subscriptions holds the value of the subscriptions edge.
 	Subscriptions *Subscriptions `json:"subscriptions,omitempty"`
+	// PaymentProfile holds the value of the payment_profile edge.
+	PaymentProfile *PaymentProfile `json:"payment_profile,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // ProductOrErr returns the Product value or an error if the edge
@@ -96,6 +101,17 @@ func (e InvoiceEdges) SubscriptionsOrErr() (*Subscriptions, error) {
 	return nil, &NotLoadedError{edge: "subscriptions"}
 }
 
+// PaymentProfileOrErr returns the PaymentProfile value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e InvoiceEdges) PaymentProfileOrErr() (*PaymentProfile, error) {
+	if e.PaymentProfile != nil {
+		return e.PaymentProfile, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: paymentprofile.Label}
+	}
+	return nil, &NotLoadedError{edge: "payment_profile"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Invoice) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -105,7 +121,7 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 			values[i] = new(decimal.Decimal)
 		case invoice.FieldIsRevoked, invoice.FieldIsRevokedProcessed, invoice.FieldIsPaidAtProcessed, invoice.FieldIsPaidTillProcessed, invoice.FieldIsTrial:
 			values[i] = new(sql.NullBool)
-		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID:
+		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID, invoice.FieldPaymentProfileID:
 			values[i] = new(sql.NullInt64)
 		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus, invoice.FieldAppleStoreTransactionID:
 			values[i] = new(sql.NullString)
@@ -245,6 +261,13 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.IsTrial = value.Bool
 			}
+		case invoice.FieldPaymentProfileID:
+			if value, ok := values[j].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field payment_profile_id", values[j])
+			} else if value.Valid {
+				i.PaymentProfileID = new(int64)
+				*i.PaymentProfileID = value.Int64
+			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
 		}
@@ -266,6 +289,11 @@ func (i *Invoice) QueryProduct() *ProductQuery {
 // QuerySubscriptions queries the "subscriptions" edge of the Invoice entity.
 func (i *Invoice) QuerySubscriptions() *SubscriptionsQuery {
 	return NewInvoiceClient(i.config).QuerySubscriptions(i)
+}
+
+// QueryPaymentProfile queries the "payment_profile" edge of the Invoice entity.
+func (i *Invoice) QueryPaymentProfile() *PaymentProfileQuery {
+	return NewInvoiceClient(i.config).QueryPaymentProfile(i)
 }
 
 // Update returns a builder for updating this Invoice.
@@ -354,6 +382,11 @@ func (i *Invoice) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_trial=")
 	builder.WriteString(fmt.Sprintf("%v", i.IsTrial))
+	builder.WriteString(", ")
+	if v := i.PaymentProfileID; v != nil {
+		builder.WriteString("payment_profile_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

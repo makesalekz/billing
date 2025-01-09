@@ -14,6 +14,7 @@ import (
 	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 )
 
@@ -230,9 +231,40 @@ func (iu *InvoiceUpdate) SetNillableIsTrial(b *bool) *InvoiceUpdate {
 	return iu
 }
 
+// SetPaymentProfileID sets the "payment_profile_id" field.
+func (iu *InvoiceUpdate) SetPaymentProfileID(i int64) *InvoiceUpdate {
+	iu.mutation.SetPaymentProfileID(i)
+	return iu
+}
+
+// SetNillablePaymentProfileID sets the "payment_profile_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillablePaymentProfileID(i *int64) *InvoiceUpdate {
+	if i != nil {
+		iu.SetPaymentProfileID(*i)
+	}
+	return iu
+}
+
+// ClearPaymentProfileID clears the value of the "payment_profile_id" field.
+func (iu *InvoiceUpdate) ClearPaymentProfileID() *InvoiceUpdate {
+	iu.mutation.ClearPaymentProfileID()
+	return iu
+}
+
+// SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
+func (iu *InvoiceUpdate) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdate {
+	return iu.SetPaymentProfileID(p.ID)
+}
+
 // Mutation returns the InvoiceMutation object of the builder.
 func (iu *InvoiceUpdate) Mutation() *InvoiceMutation {
 	return iu.mutation
+}
+
+// ClearPaymentProfile clears the "payment_profile" edge to the PaymentProfile entity.
+func (iu *InvoiceUpdate) ClearPaymentProfile() *InvoiceUpdate {
+	iu.mutation.ClearPaymentProfile()
+	return iu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -348,6 +380,35 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := iu.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+	}
+	if iu.mutation.PaymentProfileCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.PaymentProfileIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(iu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
@@ -570,9 +631,40 @@ func (iuo *InvoiceUpdateOne) SetNillableIsTrial(b *bool) *InvoiceUpdateOne {
 	return iuo
 }
 
+// SetPaymentProfileID sets the "payment_profile_id" field.
+func (iuo *InvoiceUpdateOne) SetPaymentProfileID(i int64) *InvoiceUpdateOne {
+	iuo.mutation.SetPaymentProfileID(i)
+	return iuo
+}
+
+// SetNillablePaymentProfileID sets the "payment_profile_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillablePaymentProfileID(i *int64) *InvoiceUpdateOne {
+	if i != nil {
+		iuo.SetPaymentProfileID(*i)
+	}
+	return iuo
+}
+
+// ClearPaymentProfileID clears the value of the "payment_profile_id" field.
+func (iuo *InvoiceUpdateOne) ClearPaymentProfileID() *InvoiceUpdateOne {
+	iuo.mutation.ClearPaymentProfileID()
+	return iuo
+}
+
+// SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
+func (iuo *InvoiceUpdateOne) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdateOne {
+	return iuo.SetPaymentProfileID(p.ID)
+}
+
 // Mutation returns the InvoiceMutation object of the builder.
 func (iuo *InvoiceUpdateOne) Mutation() *InvoiceMutation {
 	return iuo.mutation
+}
+
+// ClearPaymentProfile clears the "payment_profile" edge to the PaymentProfile entity.
+func (iuo *InvoiceUpdateOne) ClearPaymentProfile() *InvoiceUpdateOne {
+	iuo.mutation.ClearPaymentProfile()
+	return iuo
 }
 
 // Where appends a list predicates to the InvoiceUpdate builder.
@@ -718,6 +810,35 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	}
 	if value, ok := iuo.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+	}
+	if iuo.mutation.PaymentProfileCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.PaymentProfileIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(iuo.modifiers...)
 	_node = &Invoice{config: iuo.config}

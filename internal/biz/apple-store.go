@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
@@ -94,20 +95,24 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 		return v1.ErrorDatabaseQuery("failed to get product: %s", err.Error())
 	}
 
-	subscription, err := uc.subscriptions.GetSubscriptionByOriginalAppleTransactionID(ctx,
-		transaction.OriginalTransactionID, false)
+	subscription, err := uc.subscriptions.GetSubscriptionByOriginalAppleTransactionID(
+		ctx,
+		transaction.OriginalTransactionID, false,
+	)
 	if err != nil && !ent.IsNotFound(err) {
 		return v1.ErrorDatabaseQuery("failed to get subscription: %s", err.Error())
 	}
 
 	if ent.IsNotFound(err) {
-		subscription, err = uc.subscriptions.CreateSubscription(ctx, userID, tenantID, productEnt.AppID,
+		subscription, err = uc.subscriptions.CreateSubscription(
+			ctx, userID, tenantID, productEnt.AppID,
 			data.SubscriptionDto{
 				UserID:    userID,
 				TenantID:  tenantID,
 				AppID:     productEnt.AppID,
 				ProductID: productEnt.ID,
-			})
+			},
+		)
 		if err != nil {
 			return v1.ErrorDatabaseQuery("failed to create subscription: %s", err.Error())
 		}
@@ -159,8 +164,10 @@ func (uc *AppleStoreUsecase) processExpired(ctx context.Context, payload data.Pa
 		return v1.ErrorInvalidRequest("failed to parse signed transaction: %s", err.Error())
 	}
 
-	subscription, err := uc.subscriptions.GetSubscriptionByOriginalAppleTransactionID(ctx,
-		transaction.OriginalTransactionID, false)
+	subscription, err := uc.subscriptions.GetSubscriptionByOriginalAppleTransactionID(
+		ctx,
+		transaction.OriginalTransactionID, false,
+	)
 	if err != nil {
 		return v1.ErrorDatabaseQuery("failed to get subscription: %s", err.Error())
 	}

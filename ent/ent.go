@@ -15,6 +15,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/item"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
@@ -77,11 +78,12 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			bundle.Table:        bundle.ValidColumn,
-			invoice.Table:       invoice.ValidColumn,
-			item.Table:          item.ValidColumn,
-			product.Table:       product.ValidColumn,
-			subscriptions.Table: subscriptions.ValidColumn,
+			bundle.Table:         bundle.ValidColumn,
+			invoice.Table:        invoice.ValidColumn,
+			item.Table:           item.ValidColumn,
+			paymentprofile.Table: paymentprofile.ValidColumn,
+			product.Table:        product.ValidColumn,
+			subscriptions.Table:  subscriptions.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

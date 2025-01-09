@@ -8,6 +8,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/item"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
 	"gitlab.calendaria.team/services/finance/billing/ent/schema"
 )
@@ -86,6 +87,25 @@ func init() {
 	item.DefaultUpdatedAt = itemDescUpdatedAt.Default.(func() time.Time)
 	// item.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	item.UpdateDefaultUpdatedAt = itemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	paymentprofileMixin := schema.PaymentProfile{}.Mixin()
+	paymentprofileMixinHooks1 := paymentprofileMixin[1].Hooks()
+	paymentprofile.Hooks[0] = paymentprofileMixinHooks1[0]
+	paymentprofileMixinInters1 := paymentprofileMixin[1].Interceptors()
+	paymentprofile.Interceptors[0] = paymentprofileMixinInters1[0]
+	paymentprofileMixinFields0 := paymentprofileMixin[0].Fields()
+	_ = paymentprofileMixinFields0
+	paymentprofileFields := schema.PaymentProfile{}.Fields()
+	_ = paymentprofileFields
+	// paymentprofileDescCreatedAt is the schema descriptor for created_at field.
+	paymentprofileDescCreatedAt := paymentprofileMixinFields0[0].Descriptor()
+	// paymentprofile.DefaultCreatedAt holds the default value on creation for the created_at field.
+	paymentprofile.DefaultCreatedAt = paymentprofileDescCreatedAt.Default.(func() time.Time)
+	// paymentprofileDescUpdatedAt is the schema descriptor for updated_at field.
+	paymentprofileDescUpdatedAt := paymentprofileMixinFields0[1].Descriptor()
+	// paymentprofile.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	paymentprofile.DefaultUpdatedAt = paymentprofileDescUpdatedAt.Default.(func() time.Time)
+	// paymentprofile.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	paymentprofile.UpdateDefaultUpdatedAt = paymentprofileDescUpdatedAt.UpdateDefault.(func() time.Time)
 	productMixin := schema.Product{}.Mixin()
 	productMixinHooks1 := productMixin[1].Hooks()
 	product.Hooks[0] = productMixinHooks1[0]

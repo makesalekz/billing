@@ -18,6 +18,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/item"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
@@ -33,6 +34,8 @@ type Client struct {
 	Invoice *InvoiceClient
 	// Item is the client for interacting with the Item builders.
 	Item *ItemClient
+	// PaymentProfile is the client for interacting with the PaymentProfile builders.
+	PaymentProfile *PaymentProfileClient
 	// Product is the client for interacting with the Product builders.
 	Product *ProductClient
 	// Subscriptions is the client for interacting with the Subscriptions builders.
@@ -51,6 +54,7 @@ func (c *Client) init() {
 	c.Bundle = NewBundleClient(c.config)
 	c.Invoice = NewInvoiceClient(c.config)
 	c.Item = NewItemClient(c.config)
+	c.PaymentProfile = NewPaymentProfileClient(c.config)
 	c.Product = NewProductClient(c.config)
 	c.Subscriptions = NewSubscriptionsClient(c.config)
 }
@@ -143,13 +147,14 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		Bundle:        NewBundleClient(cfg),
-		Invoice:       NewInvoiceClient(cfg),
-		Item:          NewItemClient(cfg),
-		Product:       NewProductClient(cfg),
-		Subscriptions: NewSubscriptionsClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Bundle:         NewBundleClient(cfg),
+		Invoice:        NewInvoiceClient(cfg),
+		Item:           NewItemClient(cfg),
+		PaymentProfile: NewPaymentProfileClient(cfg),
+		Product:        NewProductClient(cfg),
+		Subscriptions:  NewSubscriptionsClient(cfg),
 	}, nil
 }
 
@@ -167,13 +172,14 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		Bundle:        NewBundleClient(cfg),
-		Invoice:       NewInvoiceClient(cfg),
-		Item:          NewItemClient(cfg),
-		Product:       NewProductClient(cfg),
-		Subscriptions: NewSubscriptionsClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Bundle:         NewBundleClient(cfg),
+		Invoice:        NewInvoiceClient(cfg),
+		Item:           NewItemClient(cfg),
+		PaymentProfile: NewPaymentProfileClient(cfg),
+		Product:        NewProductClient(cfg),
+		Subscriptions:  NewSubscriptionsClient(cfg),
 	}, nil
 }
 
@@ -202,21 +208,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Bundle.Use(hooks...)
-	c.Invoice.Use(hooks...)
-	c.Item.Use(hooks...)
-	c.Product.Use(hooks...)
-	c.Subscriptions.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Bundle, c.Invoice, c.Item, c.PaymentProfile, c.Product, c.Subscriptions,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Bundle.Intercept(interceptors...)
-	c.Invoice.Intercept(interceptors...)
-	c.Item.Intercept(interceptors...)
-	c.Product.Intercept(interceptors...)
-	c.Subscriptions.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Bundle, c.Invoice, c.Item, c.PaymentProfile, c.Product, c.Subscriptions,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -228,6 +234,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Invoice.mutate(ctx, m)
 	case *ItemMutation:
 		return c.Item.mutate(ctx, m)
+	case *PaymentProfileMutation:
+		return c.PaymentProfile.mutate(ctx, m)
 	case *ProductMutation:
 		return c.Product.mutate(ctx, m)
 	case *SubscriptionsMutation:
@@ -544,6 +552,22 @@ func (c *InvoiceClient) QuerySubscriptions(i *Invoice) *SubscriptionsQuery {
 	return query
 }
 
+// QueryPaymentProfile queries the payment_profile edge of a Invoice.
+func (c *InvoiceClient) QueryPaymentProfile(i *Invoice) *PaymentProfileQuery {
+	query := (&PaymentProfileClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invoice.Table, invoice.FieldID, id),
+			sqlgraph.To(paymentprofile.Table, paymentprofile.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invoice.PaymentProfileTable, invoice.PaymentProfileColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *InvoiceClient) Hooks() []Hook {
 	return c.hooks.Invoice
@@ -717,6 +741,157 @@ func (c *ItemClient) mutate(ctx context.Context, m *ItemMutation) (Value, error)
 		return (&ItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Item mutation op: %q", m.Op())
+	}
+}
+
+// PaymentProfileClient is a client for the PaymentProfile schema.
+type PaymentProfileClient struct {
+	config
+}
+
+// NewPaymentProfileClient returns a client for the PaymentProfile from the given config.
+func NewPaymentProfileClient(c config) *PaymentProfileClient {
+	return &PaymentProfileClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `paymentprofile.Hooks(f(g(h())))`.
+func (c *PaymentProfileClient) Use(hooks ...Hook) {
+	c.hooks.PaymentProfile = append(c.hooks.PaymentProfile, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `paymentprofile.Intercept(f(g(h())))`.
+func (c *PaymentProfileClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PaymentProfile = append(c.inters.PaymentProfile, interceptors...)
+}
+
+// Create returns a builder for creating a PaymentProfile entity.
+func (c *PaymentProfileClient) Create() *PaymentProfileCreate {
+	mutation := newPaymentProfileMutation(c.config, OpCreate)
+	return &PaymentProfileCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PaymentProfile entities.
+func (c *PaymentProfileClient) CreateBulk(builders ...*PaymentProfileCreate) *PaymentProfileCreateBulk {
+	return &PaymentProfileCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PaymentProfileClient) MapCreateBulk(slice any, setFunc func(*PaymentProfileCreate, int)) *PaymentProfileCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PaymentProfileCreateBulk{err: fmt.Errorf("calling to PaymentProfileClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PaymentProfileCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PaymentProfileCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PaymentProfile.
+func (c *PaymentProfileClient) Update() *PaymentProfileUpdate {
+	mutation := newPaymentProfileMutation(c.config, OpUpdate)
+	return &PaymentProfileUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PaymentProfileClient) UpdateOne(pp *PaymentProfile) *PaymentProfileUpdateOne {
+	mutation := newPaymentProfileMutation(c.config, OpUpdateOne, withPaymentProfile(pp))
+	return &PaymentProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PaymentProfileClient) UpdateOneID(id int64) *PaymentProfileUpdateOne {
+	mutation := newPaymentProfileMutation(c.config, OpUpdateOne, withPaymentProfileID(id))
+	return &PaymentProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PaymentProfile.
+func (c *PaymentProfileClient) Delete() *PaymentProfileDelete {
+	mutation := newPaymentProfileMutation(c.config, OpDelete)
+	return &PaymentProfileDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PaymentProfileClient) DeleteOne(pp *PaymentProfile) *PaymentProfileDeleteOne {
+	return c.DeleteOneID(pp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PaymentProfileClient) DeleteOneID(id int64) *PaymentProfileDeleteOne {
+	builder := c.Delete().Where(paymentprofile.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PaymentProfileDeleteOne{builder}
+}
+
+// Query returns a query builder for PaymentProfile.
+func (c *PaymentProfileClient) Query() *PaymentProfileQuery {
+	return &PaymentProfileQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePaymentProfile},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PaymentProfile entity by its id.
+func (c *PaymentProfileClient) Get(ctx context.Context, id int64) (*PaymentProfile, error) {
+	return c.Query().Where(paymentprofile.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PaymentProfileClient) GetX(ctx context.Context, id int64) *PaymentProfile {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryInvoices queries the invoices edge of a PaymentProfile.
+func (c *PaymentProfileClient) QueryInvoices(pp *PaymentProfile) *InvoiceQuery {
+	query := (&InvoiceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentprofile.Table, paymentprofile.FieldID, id),
+			sqlgraph.To(invoice.Table, invoice.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentprofile.InvoicesTable, paymentprofile.InvoicesColumn),
+		)
+		fromV = sqlgraph.Neighbors(pp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PaymentProfileClient) Hooks() []Hook {
+	hooks := c.hooks.PaymentProfile
+	return append(hooks[:len(hooks):len(hooks)], paymentprofile.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PaymentProfileClient) Interceptors() []Interceptor {
+	inters := c.inters.PaymentProfile
+	return append(inters[:len(inters):len(inters)], paymentprofile.Interceptors[:]...)
+}
+
+func (c *PaymentProfileClient) mutate(ctx context.Context, m *PaymentProfileMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PaymentProfileCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PaymentProfileUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PaymentProfileUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PaymentProfileDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PaymentProfile mutation op: %q", m.Op())
 	}
 }
 
@@ -1071,9 +1246,9 @@ func (c *SubscriptionsClient) mutate(ctx context.Context, m *SubscriptionsMutati
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Bundle, Invoice, Item, Product, Subscriptions []ent.Hook
+		Bundle, Invoice, Item, PaymentProfile, Product, Subscriptions []ent.Hook
 	}
 	inters struct {
-		Bundle, Invoice, Item, Product, Subscriptions []ent.Interceptor
+		Bundle, Invoice, Item, PaymentProfile, Product, Subscriptions []ent.Interceptor
 	}
 )

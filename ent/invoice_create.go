@@ -14,6 +14,7 @@ import (
 	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
@@ -230,6 +231,20 @@ func (ic *InvoiceCreate) SetNillableIsTrial(b *bool) *InvoiceCreate {
 	return ic
 }
 
+// SetPaymentProfileID sets the "payment_profile_id" field.
+func (ic *InvoiceCreate) SetPaymentProfileID(i int64) *InvoiceCreate {
+	ic.mutation.SetPaymentProfileID(i)
+	return ic
+}
+
+// SetNillablePaymentProfileID sets the "payment_profile_id" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillablePaymentProfileID(i *int64) *InvoiceCreate {
+	if i != nil {
+		ic.SetPaymentProfileID(*i)
+	}
+	return ic
+}
+
 // SetID sets the "id" field.
 func (ic *InvoiceCreate) SetID(i int64) *InvoiceCreate {
 	ic.mutation.SetID(i)
@@ -258,6 +273,11 @@ func (ic *InvoiceCreate) SetNillableSubscriptionsID(id *int64) *InvoiceCreate {
 // SetSubscriptions sets the "subscriptions" edge to the Subscriptions entity.
 func (ic *InvoiceCreate) SetSubscriptions(s *Subscriptions) *InvoiceCreate {
 	return ic.SetSubscriptionsID(s.ID)
+}
+
+// SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
+func (ic *InvoiceCreate) SetPaymentProfile(p *PaymentProfile) *InvoiceCreate {
+	return ic.SetPaymentProfileID(p.ID)
 }
 
 // Mutation returns the InvoiceMutation object of the builder.
@@ -510,6 +530,23 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 		_node.SubscriptionID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := ic.mutation.PaymentProfileIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.PaymentProfileID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -733,6 +770,24 @@ func (u *InvoiceUpsert) SetIsTrial(v bool) *InvoiceUpsert {
 // UpdateIsTrial sets the "is_trial" field to the value that was provided on create.
 func (u *InvoiceUpsert) UpdateIsTrial() *InvoiceUpsert {
 	u.SetExcluded(invoice.FieldIsTrial)
+	return u
+}
+
+// SetPaymentProfileID sets the "payment_profile_id" field.
+func (u *InvoiceUpsert) SetPaymentProfileID(v int64) *InvoiceUpsert {
+	u.Set(invoice.FieldPaymentProfileID, v)
+	return u
+}
+
+// UpdatePaymentProfileID sets the "payment_profile_id" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdatePaymentProfileID() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldPaymentProfileID)
+	return u
+}
+
+// ClearPaymentProfileID clears the value of the "payment_profile_id" field.
+func (u *InvoiceUpsert) ClearPaymentProfileID() *InvoiceUpsert {
+	u.SetNull(invoice.FieldPaymentProfileID)
 	return u
 }
 
@@ -1002,6 +1057,27 @@ func (u *InvoiceUpsertOne) SetIsTrial(v bool) *InvoiceUpsertOne {
 func (u *InvoiceUpsertOne) UpdateIsTrial() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.UpdateIsTrial()
+	})
+}
+
+// SetPaymentProfileID sets the "payment_profile_id" field.
+func (u *InvoiceUpsertOne) SetPaymentProfileID(v int64) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetPaymentProfileID(v)
+	})
+}
+
+// UpdatePaymentProfileID sets the "payment_profile_id" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdatePaymentProfileID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdatePaymentProfileID()
+	})
+}
+
+// ClearPaymentProfileID clears the value of the "payment_profile_id" field.
+func (u *InvoiceUpsertOne) ClearPaymentProfileID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearPaymentProfileID()
 	})
 }
 
@@ -1437,6 +1513,27 @@ func (u *InvoiceUpsertBulk) SetIsTrial(v bool) *InvoiceUpsertBulk {
 func (u *InvoiceUpsertBulk) UpdateIsTrial() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.UpdateIsTrial()
+	})
+}
+
+// SetPaymentProfileID sets the "payment_profile_id" field.
+func (u *InvoiceUpsertBulk) SetPaymentProfileID(v int64) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetPaymentProfileID(v)
+	})
+}
+
+// UpdatePaymentProfileID sets the "payment_profile_id" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdatePaymentProfileID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdatePaymentProfileID()
+	})
+}
+
+// ClearPaymentProfileID clears the value of the "payment_profile_id" field.
+func (u *InvoiceUpsertBulk) ClearPaymentProfileID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearPaymentProfileID()
 	})
 }
 

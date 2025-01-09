@@ -51,10 +51,14 @@ const (
 	FieldAppleStoreTransactionID = "apple_store_transaction_id"
 	// FieldIsTrial holds the string denoting the is_trial field in the database.
 	FieldIsTrial = "is_trial"
+	// FieldPaymentProfileID holds the string denoting the payment_profile_id field in the database.
+	FieldPaymentProfileID = "payment_profile_id"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
 	EdgeProduct = "product"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
 	EdgeSubscriptions = "subscriptions"
+	// EdgePaymentProfile holds the string denoting the payment_profile edge name in mutations.
+	EdgePaymentProfile = "payment_profile"
 	// Table holds the table name of the invoice in the database.
 	Table = "invoices"
 	// ProductTable is the table that holds the product relation/edge.
@@ -71,6 +75,13 @@ const (
 	SubscriptionsInverseTable = "subscriptions"
 	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
 	SubscriptionsColumn = "subscription_id"
+	// PaymentProfileTable is the table that holds the payment_profile relation/edge.
+	PaymentProfileTable = "invoices"
+	// PaymentProfileInverseTable is the table name for the PaymentProfile entity.
+	// It exists in this package in order to avoid circular dependency with the "paymentprofile" package.
+	PaymentProfileInverseTable = "payment_profiles"
+	// PaymentProfileColumn is the table column denoting the payment_profile relation/edge.
+	PaymentProfileColumn = "payment_profile_id"
 )
 
 // Columns holds all SQL columns for invoice fields.
@@ -94,6 +105,7 @@ var Columns = []string{
 	FieldSubscriptionID,
 	FieldAppleStoreTransactionID,
 	FieldIsTrial,
+	FieldPaymentProfileID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -233,6 +245,11 @@ func ByIsTrial(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsTrial, opts...).ToFunc()
 }
 
+// ByPaymentProfileID orders the results by the payment_profile_id field.
+func ByPaymentProfileID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPaymentProfileID, opts...).ToFunc()
+}
+
 // ByProductField orders the results by product field.
 func ByProductField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -244,6 +261,13 @@ func ByProductField(field string, opts ...sql.OrderTermOption) OrderOption {
 func BySubscriptionsField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newSubscriptionsStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByPaymentProfileField orders the results by payment_profile field.
+func ByPaymentProfileField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPaymentProfileStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newProductStep() *sqlgraph.Step {
@@ -258,5 +282,12 @@ func newSubscriptionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubscriptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, SubscriptionsTable, SubscriptionsColumn),
+	)
+}
+func newPaymentProfileStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PaymentProfileInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, PaymentProfileTable, PaymentProfileColumn),
 	)
 }

@@ -2,6 +2,7 @@ package biz
 
 import (
 	"github.com/google/wire"
+
 	"gitlab.calendaria.team/services/utils/v2/nats"
 )
 
@@ -15,4 +16,13 @@ var ProviderSet = wire.NewSet(
 	NewInvoicesUseCase,
 	NewSubscriptionUsecase,
 	NewAppleStoreUsecase,
+	NewPaymentUsecase,
+)
+
+const (
+	DefaultPaymentCurrency          = "KZT"
+	DefaultPaymentLifeTime          = 60 * 60 * 1            // 1 hour
+	DefaultRecurrentProfileLifeTime = 60 * 60 * 24 * 365 * 4 // 4 years
+	DefaultPaymentLang              = "ru"
+	DefaultPriceForCardLink         = 10
 )

@@ -5,10 +5,12 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/billing/messages"
 	"golang.org/x/exp/maps"
 
+	"gitlab.calendaria.team/services/finance/billing/messages"
+
 	"github.com/go-kratos/kratos/v2/log"
+
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
@@ -156,11 +158,13 @@ func (uc *InvoicesUseCase) ListInvoices(
 // checks if product was already used.
 func (uc *InvoicesUseCase) canProductBeUsedOneMoreTime(ctx context.Context, actorID int64, product *ent.Product) error {
 	if product.IsUnique {
-		count, err := uc.invoiceRepo.CountInvoices(ctx, data.InvoiceFilter{
-			UserID:    actorID,
-			ProductID: product.ID,
-			Status:    enum.Paid,
-		})
+		count, err := uc.invoiceRepo.CountInvoices(
+			ctx, data.InvoiceFilter{
+				UserID:    actorID,
+				ProductID: product.ID,
+				Status:    enum.Paid,
+			},
+		)
 		if err != nil {
 			return v1.ErrorDatabaseQuery("failed to list invoices: %s", err.Error())
 		}
@@ -188,10 +192,12 @@ func (uc *InvoicesUseCase) RevokeInvoice(
 	now := time.Now()
 	tvar := true
 
-	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoiceData, data.InvoiceDto{
-		IsRevoked: &tvar,
-		RevokedAt: &now,
-	})
+	_, err = uc.invoiceRepo.UpdateInvoice(
+		ctx, invoiceData, data.InvoiceDto{
+			IsRevoked: &tvar,
+			RevokedAt: &now,
+		},
+	)
 	if err != nil {
 		return v1.ErrorDatabaseQuery("failed to revoke invoice: %s", err.Error())
 	}
@@ -216,13 +222,15 @@ func (uc *InvoicesUseCase) checkProductLimit(amount int64, product *ent.Product)
 func (uc *InvoicesUseCase) UpdateResources(ctx context.Context) {
 	fvar := false
 	now := time.Now()
-	invoices, err := uc.invoiceRepo.ListInvoices(ctx, data.InvoiceFilter{
-		Status:        enum.Paid,
-		PaidProcesses: &fvar,
-		IsRevoked:     &fvar,
-		PaidTillProc:  &fvar,
-		PaidTill:      &now,
-	}, &utils_v1.PaginateRequest{Limit: data.BackgroundProcessPageSize, FromId: 0})
+	invoices, err := uc.invoiceRepo.ListInvoices(
+		ctx, data.InvoiceFilter{
+			Status:        enum.Paid,
+			PaidProcesses: &fvar,
+			IsRevoked:     &fvar,
+			PaidTillProc:  &fvar,
+			PaidTill:      &now,
+		}, &utils_v1.PaginateRequest{Limit: data.BackgroundProcessPageSize, FromId: 0},
+	)
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 
@@ -279,9 +287,11 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 	}
 
 	tvar := true
-	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoice, data.InvoiceDto{
-		IsPaidAtProcessed: &tvar,
-	})
+	_, err = uc.invoiceRepo.UpdateInvoice(
+		ctx, invoice, data.InvoiceDto{
+			IsPaidAtProcessed: &tvar,
+		},
+	)
 	if err != nil {
 		return v1.ErrorInternal("failed to update invoice: %s", err.Error())
 	}
