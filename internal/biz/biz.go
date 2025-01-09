@@ -25,4 +25,5 @@ const (
 	DefaultRecurrentProfileLifeTime = 60 * 60 * 24 * 365 * 4 // 4 years
 	DefaultPaymentLang              = "ru"
 	DefaultPriceForCardLink         = 10
+	PmsAppID                        = "pms"
 )

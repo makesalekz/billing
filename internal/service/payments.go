@@ -11,11 +11,11 @@ import (
 
 type PaymentsService struct {
 	v1.UnimplementedPaymentsServer
-	uc *biz.PaymentUsecase
+	uc *biz.PaymentUseCase
 }
 
 func NewPaymentsService(
-	uc *biz.PaymentUsecase,
+	uc *biz.PaymentUseCase,
 ) *PaymentsService {
 	return &PaymentsService{
 		uc: uc,
