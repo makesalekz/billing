@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
@@ -22,7 +23,7 @@ type InvoicesRepo interface {
 	) ([]*ent.Invoice, error)
 	GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoicesToRevoke(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
-	GetInvoiceById(ctx context.Context, id int64) (*ent.Invoice, error)
+	GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoice, error)
 }
 
 type invoicesRepo struct {
@@ -119,7 +120,7 @@ func (r *invoicesRepo) GetInvoice(
 		Only(ctx)
 }
 
-func (r *invoicesRepo) GetInvoiceById(ctx context.Context, id int64) (*ent.Invoice, error) {
+func (r *invoicesRepo) GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoice, error) {
 	return r.db.Invoice.Query().Where(invoice.ID(id)).Only(ctx)
 }
 
@@ -210,14 +211,16 @@ func (r *invoicesRepo) GetInvoicesToExpire(ctx context.Context, paidTill *time.T
 		invoice.IsRevoked(false),
 		invoice.IsPaidTillProcessed(false),
 		invoice.PaidTillLT(*paidTill),
-	).Modify(func(s *sql.Selector) {
-		invoicesT := sql.Table(invoice.Table).As("t2")
+	).Modify(
+		func(s *sql.Selector) {
+			invoicesT := sql.Table(invoice.Table).As("t2")
 
-		s.LeftJoin(invoicesT).
-			On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
-			OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
-		s.Where(sql.IsNull(invoicesT.C(invoice.FieldPaidTill)))
-	}).Limit(int(BackgroundProcessPageSize)).
+			s.LeftJoin(invoicesT).
+				On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
+				OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
+			s.Where(sql.IsNull(invoicesT.C(invoice.FieldPaidTill)))
+		},
+	).Limit(int(BackgroundProcessPageSize)).
 		All(ctx)
 }
 
@@ -228,19 +231,23 @@ func (r *invoicesRepo) GetInvoicesToRevoke(ctx context.Context, paidTill *time.T
 		invoice.IsRevoked(true),
 		invoice.IsRevokedProcessed(false),
 		invoice.IsPaidTillProcessed(false),
-	).Modify(func(s *sql.Selector) {
-		invoicesT := sql.Table(invoice.Table).As("t2")
+	).Modify(
+		func(s *sql.Selector) {
+			invoicesT := sql.Table(invoice.Table).As("t2")
 
-		s.LeftJoin(invoicesT).
-			On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
-			OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
+			s.LeftJoin(invoicesT).
+				On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
+				OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
 
-		s.Where(sql.And(
-			sql.IsNull(invoicesT.C(invoice.FieldPaidTill)),
-			sql.NotNull(s.C(invoice.FieldPaidTill)),
-			sql.GT(s.C(invoice.FieldPaidTill), paidTill),
-			sql.ColumnsLT(s.C(invoice.FieldRevokedAt), s.C(invoice.FieldPaidTill)),
-		))
-	}).Limit(int(BackgroundProcessPageSize)).
+			s.Where(
+				sql.And(
+					sql.IsNull(invoicesT.C(invoice.FieldPaidTill)),
+					sql.NotNull(s.C(invoice.FieldPaidTill)),
+					sql.GT(s.C(invoice.FieldPaidTill), paidTill),
+					sql.ColumnsLT(s.C(invoice.FieldRevokedAt), s.C(invoice.FieldPaidTill)),
+				),
+			)
+		},
+	).Limit(int(BackgroundProcessPageSize)).
 		All(ctx)
 }

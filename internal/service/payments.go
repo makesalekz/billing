@@ -43,25 +43,25 @@ func (s *PaymentsService) CreatePayment(ctx context.Context, req *v1.CreatePayme
 		appID = "pms"
 	}
 
-	if req.ProductId == 0 {
+	if req.GetProductId() == 0 {
 		return nil, v1.ErrorInvalidRequest("product id is empty")
 	}
 
-	invoiceID, paymentPageUrl, err := s.uc.CreatePayment(ctx, tenantID, actorID, req.ProductId, appID)
+	invoiceID, paymentPageURL, err := s.uc.CreatePayment(ctx, tenantID, actorID, req.GetProductId(), appID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &v1.CreatePaymentResponse{
 		InvoiceId:  invoiceID,
-		PaymentUrl: paymentPageUrl,
+		PaymentUrl: paymentPageURL,
 	}, nil
 }
 
 func (s *PaymentsService) CancelSubscription(
 	ctx context.Context, req *v1.CancelSubscriptionRequest,
 ) (*utils_v1.EmptyReply, error) {
-	err := s.uc.CancelSubscription(ctx, req.SubscriptionId)
+	err := s.uc.CancelSubscription(ctx, req.GetSubscriptionId())
 	if err != nil {
 		return nil, err
 	}

@@ -70,7 +70,7 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	}
 	paymentsService := service.NewPaymentsService(paymentUsecase)
 	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService, productService, invoiceService, subscriptionService, appleStoreService, paymentsService)
-	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor, paymentsService)
+	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor)
 	cronServer := server.NewCronServer(logger, invoicesUseCase)
 	app := newApp(logger, configConfig, grpcServer, httpServer, cronServer)
 	return app, func() {

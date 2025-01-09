@@ -129,7 +129,7 @@ type InvoiceDto struct {
 	IsRevokedProcessed  *bool
 	IsPaidAtProcessed   *bool
 	IsPaidTillProcessed *bool
-	RecurrentProfileId  *int64
+	RecurrentProfileID  *int64
 
 	AppleStoreTransactionID *string
 	IsTrial                 bool
