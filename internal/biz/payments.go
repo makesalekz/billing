@@ -342,6 +342,7 @@ func (uc *PaymentUseCase) processPartialRefund(
 
 		_, err := uc.invoicesRepo.UpdateInvoice(
 			ctx, invoice, data.InvoiceDto{
+				Status:                 enum.CanceledByUser,
 				OneVisionTransactionID: &transactionID,
 				RevokedAt:              &newRevokedAt,
 			},
