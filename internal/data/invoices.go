@@ -132,6 +132,10 @@ func (r *invoicesRepo) GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoi
 func (r *invoicesRepo) CountInvoices(ctx context.Context, filter InvoiceFilter) (int32, error) {
 	query := r.db.Invoice.Query()
 
+	if filter.TenantID != 0 {
+		query.Where(invoice.TenantID(filter.TenantID))
+	}
+
 	if filter.UserID != 0 {
 		query.Where(invoice.UserID(filter.UserID))
 	}
@@ -165,6 +169,10 @@ func (r *invoicesRepo) ListInvoices(
 	ctx context.Context, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
 ) ([]*ent.Invoice, error) {
 	query := r.db.Invoice.Query().Where(invoice.IDGT(paginate.GetFromId())).Limit(int(paginate.GetLimit()))
+
+	if filter.TenantID != 0 {
+		query.Where(invoice.TenantID(filter.TenantID))
+	}
 
 	if filter.UserID != 0 {
 		query.Where(invoice.UserID(filter.UserID))

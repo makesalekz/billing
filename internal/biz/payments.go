@@ -143,7 +143,7 @@ func (uc *PaymentUseCase) CreatePayment(
 		return 0, "", v1.ErrorDatabaseQuery("failed to get product: %v", err)
 	}
 
-	hasActive, isFirst, err := uc.checkSubscriptionStatus(ctx, tenantID, actorID, appID)
+	hasActive, isFirst, err := uc.checkSubscriptionStatus(ctx, tenantID, actorID, productID)
 	if err != nil {
 		return 0, "", err
 	}
@@ -223,13 +223,13 @@ func (uc *PaymentUseCase) HandlePaymentCallback(
 		return
 	}
 
-	paymentStatus, err := uc.getPaymentStatus(payload.PaymentID, payload.OrderID)
+	statusResponse, err := uc.getPaymentStatus(payload.PaymentID, payload.OrderID)
 	if err != nil {
 		uc.log.Errorf("Failed to check payment status: %v", err)
 		return
 	}
 
-	invoiceID, err := strconv.ParseInt(paymentStatus.OrderID, 10, 64)
+	invoiceID, err := strconv.ParseInt(statusResponse.OrderID, 10, 64)
 	if err != nil {
 		uc.log.Errorf("Failed to parse invoice ID: %v", err)
 		return
@@ -245,7 +245,7 @@ func (uc *PaymentUseCase) HandlePaymentCallback(
 		return
 	}
 
-	err = uc.processPaymentStatus(ctx, invoice, paymentStatus)
+	err = uc.processPaymentStatus(ctx, invoice, statusResponse)
 
 	if err != nil {
 		uc.log.Errorf("Failed to update invoice status: %v", err)
@@ -256,25 +256,24 @@ func (uc *PaymentUseCase) HandlePaymentCallback(
 }
 
 func (uc *PaymentUseCase) processPaymentStatus(
-	ctx context.Context, invoice *ent.Invoice, paymentStatus *onevisionpay.StatusResponse,
+	ctx context.Context, invoice *ent.Invoice, statusResponse *onevisionpay.StatusResponse,
 ) error {
-	transactionID := strconv.FormatInt(paymentStatus.PaymentID, 10)
-	switch paymentStatus.PaymentStatus {
+	switch statusResponse.PaymentStatus {
 	case onevisionpay.Created:
 		return uc.handleCreatedStatus(invoice)
 	case onevisionpay.Refunded:
-		return uc.handleRefundedStatus(ctx, invoice, &transactionID)
+		return uc.handleRefundedStatus(ctx, invoice, statusResponse)
 	case onevisionpay.Clearing, onevisionpay.Withdraw:
-		return uc.handleCompletedStatus(ctx, invoice, paymentStatus)
+		return uc.handleCompletedStatus(ctx, invoice, statusResponse)
 	case onevisionpay.Canceled, onevisionpay.Error, onevisionpay.Chargeback:
-		return uc.handleFailedOrCanceledStatus(ctx, invoice, &transactionID)
+		return uc.handleFailedOrCanceledStatus(ctx, invoice, statusResponse)
 	case onevisionpay.PartialRefund:
 		return uc.handlePartialRefundStatus(invoice)
 	case onevisionpay.Processing, onevisionpay.NeedApprove, onevisionpay.Hold,
 		onevisionpay.Refill, onevisionpay.Process, onevisionpay.PartialClearing:
-		return uc.handleNonWidgetStatus(paymentStatus, invoice)
+		return uc.handleNonWidgetStatus(statusResponse, invoice)
 	default:
-		uc.log.Warnf("Unknown payment status: %v for invoice: %v", paymentStatus.PaymentStatus, invoice.ID)
+		uc.log.Warnf("Unknown payment status: %v for invoice: %v", statusResponse.PaymentStatus, invoice.ID)
 		return nil
 	}
 }
@@ -284,15 +283,23 @@ func (uc *PaymentUseCase) handleCreatedStatus(invoice *ent.Invoice) error {
 	return nil
 }
 
-func (uc *PaymentUseCase) handleRefundedStatus(ctx context.Context, invoice *ent.Invoice, transactionID *string) error {
+func (uc *PaymentUseCase) handleRefundedStatus(
+	ctx context.Context, invoice *ent.Invoice,
+	payment *onevisionpay.StatusResponse,
+) error {
 	uc.log.Infof("Full refund processed for invoice: %v", invoice.ID)
+	// todo: если это полный возврат средств нужно отменить подписку на продукт по invoice
+	// todo: если это частичный возврат то нужно посчитать сколько дней осталось и revoked_at = paid_at + оставшееся количество дней
+
+	transactionID := strconv.FormatInt(payment.PaymentID, 10)
 
 	_, err := uc.invoicesRepo.UpdateInvoice(
 		ctx, invoice, data.InvoiceDto{
 			Status:                 enum.CanceledByUser,
-			OneVisionTransactionID: transactionID,
+			OneVisionTransactionID: &transactionID,
 		},
 	)
+
 	if err != nil {
 		uc.log.Errorf("Failed to update invoice %d status to %v: %v", invoice.ID, enum.CanceledByUser, err)
 		return err
@@ -316,82 +323,77 @@ func (uc *PaymentUseCase) handleCompletedStatus(
 	}
 
 	uc.log.Infof("Payment profile successfully saved for user %v", invoice.UserID)
-	if invoice.SubscriptionID != nil {
-		return uc.extendSubscription(ctx, invoice)
-	}
-	return uc.createNewSubscription(ctx, invoice, recurrentProfile)
-}
 
-// Продление подписки.
-func (uc *PaymentUseCase) extendSubscription(ctx context.Context, invoice *ent.Invoice) error {
-	uc.log.Infof("Extending subscription for invoice: %v, subscription ID: %v", invoice.ID, *invoice.SubscriptionID)
-	err := uc.createOrExtendSubscription(ctx, *invoice.SubscriptionID)
-	if err != nil {
-		uc.log.Errorf("Failed to extend subscription for subscription ID %v: %v", *invoice.SubscriptionID, err)
-		return err
-	}
-	uc.log.Infof("Subscription %v successfully extended for invoice %v", *invoice.SubscriptionID, invoice.ID)
-	return nil
-}
-
-func (uc *PaymentUseCase) createNewSubscription(
-	ctx context.Context, invoice *ent.Invoice, profile *ent.PaymentProfile,
-) error {
-	uc.log.Infof("No subscription linked to invoice %v. Creating a new subscription.", invoice.ID)
-
-	newSubscription, err := uc.subscriptionRepo.CreateSubscription(
-		ctx, invoice.UserID, invoice.TenantID, invoice.AppID, data.SubscriptionDto{
-			ProductID: invoice.ProductID,
-		},
-	)
-	if err != nil {
-		uc.log.Errorf("Failed to create subscription for invoice %v: %v", invoice.ID, err)
-		return err
+	if invoice.IsTrial {
+		uc.log.Infof("Trial payment completed for invoice: %v", invoice.ID)
+		return nil
 	}
 
-	now := time.Now()
-	paidTill := now.AddDate(0, 1, 0) // Добавляем 1 месяц к текущей дате (пример)
+	paidAt := time.Now()
+	paidTill := paidAt.AddDate(0, 1, 0) // 1 month
 
-	updateDto := data.InvoiceDto{
-		Amount:             invoice.Amount,
-		Price:              invoice.Price,
+	updateInvoiceDto := data.InvoiceDto{
 		Status:             enum.Paid,
-		SubscriptionID:     newSubscription.ID,
-		RecurrentProfileID: &profile.ID,
-		PaidAt:             &now,
+		RecurrentProfileID: &recurrentProfile.ID,
+		PaidAt:             &paidAt,
 		PaidTill:           &paidTill,
 	}
 
-	_, updateErr := uc.invoicesRepo.UpdateInvoice(
-		ctx, invoice, updateDto,
-	)
-	if updateErr != nil {
-		uc.log.Errorf(
-			"Failed to update invoice %v with new subscription ID %v: %v", invoice.ID, newSubscription.ID, updateErr,
+	if invoice.SubscriptionID == nil {
+		uc.log.Infof(
+			"Activating subscription for invoice: %v, subscription ID: %v", invoice.ID, *invoice.SubscriptionID,
 		)
-		return updateErr
+
+		newSubscription, createSubErr := uc.subscriptionRepo.CreateSubscription(
+			ctx, invoice.UserID, invoice.TenantID, invoice.AppID, data.SubscriptionDto{
+				TenantID:  invoice.TenantID,
+				UserID:    invoice.UserID,
+				AppID:     invoice.AppID,
+				ProductID: invoice.ProductID,
+			},
+		)
+
+		if createSubErr != nil {
+			uc.log.Errorf("Failed to create subscription for invoice %v: %v", invoice.ID, createSubErr)
+			return createSubErr
+		}
+
+		updateInvoiceDto.SubscriptionID = newSubscription.ID
+	} else {
+		uc.log.Infof(
+			"Extending subscription for invoice: %v, subscription ID: %v", invoice.ID, *invoice.SubscriptionID,
+		)
+
+		if invoice.PaidTill != nil {
+			paidTill = invoice.PaidTill.AddDate(0, 1, 0) // 1 month
+			updateInvoiceDto.PaidTill = &paidTill
+		}
 	}
 
-	uc.log.Infof(
-		"New subscription %v successfully created and linked to invoice %v", newSubscription.ID, invoice.ID,
-	)
+	_, err = uc.invoicesRepo.UpdateInvoice(ctx, invoice, updateInvoiceDto)
+	if err != nil {
+		uc.log.Errorf("Failed to update invoice status to Paid for invoice %v: %v", invoice.ID, err)
+		return err
+	}
+
 	return nil
 }
 
 func (uc *PaymentUseCase) handleFailedOrCanceledStatus(
 	ctx context.Context, invoice *ent.Invoice,
-	transactionID *string,
+	statusResponse *onevisionpay.StatusResponse,
 ) error {
 	uc.log.Infof("Payment failed or canceled for invoice: %v", invoice.ID)
 
 	now := time.Now()
 	isRevoked := true
+	transactionID := strconv.FormatInt(statusResponse.PaymentID, 10)
 
 	updateDto := data.InvoiceDto{
 		Status:                 enum.CanceledByUser,
 		RevokedAt:              &now,
 		IsRevoked:              &isRevoked,
-		OneVisionTransactionID: transactionID,
+		OneVisionTransactionID: &transactionID,
 	}
 
 	_, err := uc.invoicesRepo.UpdateInvoice(ctx, invoice, updateDto)
@@ -480,28 +482,35 @@ func (uc *PaymentUseCase) getPaymentPayload(
 }
 
 func (uc *PaymentUseCase) checkSubscriptionStatus(
-	ctx context.Context, tenantID, actorID int64, appID string,
+	ctx context.Context, tenantID, actorID, productID int64,
 ) (bool, bool, error) {
-	subscriptions, err := uc.subscriptionRepo.ListSubscriptions(ctx, actorID, true, nil)
+	// fetch all paid invoices for the user in the app
+	filter := data.InvoiceFilter{
+		TenantID:  tenantID,
+		UserID:    actorID,
+		Status:    enum.Paid,
+		Paid:      true,
+		ProductID: productID,
+	}
+
+	invoices, err := uc.invoicesRepo.ListInvoices(ctx, filter, nil)
 	if err != nil {
-		uc.log.Errorf("Failed to list subscriptions: %v", err)
+		uc.log.Errorf("Failed to list invoices: %v", err)
 		return false, false, err
 	}
 
 	hasActive := false
-	for _, sub := range subscriptions {
-		if sub.TenantID == tenantID && sub.AppID == appID {
-			for _, invoice := range sub.Edges.Invoices {
-				if invoice.IsRevoked {
-					continue
-				}
+
+	for _, invoice := range invoices {
+		if invoice.PaidTill != nil {
+			if invoice.PaidTill.After(time.Now()) {
 				hasActive = true
-				break
 			}
 		}
 	}
 
-	isFirst := len(subscriptions) == 0
+	isFirst := len(invoices) == 0
+
 	return hasActive, isFirst, nil
 }
 
@@ -562,15 +571,6 @@ func (uc *PaymentUseCase) getPaymentStatus(
 		return nil, err
 	}
 	return statusResponse, nil
-}
-
-func (uc *PaymentUseCase) createOrExtendSubscription(ctx context.Context, subscriptionID int64) error {
-	// todo: implement subscription extension
-	// err := uc.subscriptionRepo.CreateOrExtendSubscription(ctx, subscriptionID)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to create or extend subscription: %w", err)
-	// }
-	return nil
 }
 
 // ProcessExpiredPayments processes expired payments for recurrent profiles.

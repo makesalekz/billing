@@ -137,6 +137,7 @@ type InvoiceDto struct {
 }
 
 type InvoiceFilter struct {
+	TenantID       int64
 	UserID         int64
 	ProductID      int64
 	Status         enum.InvoiceStatus
