@@ -608,7 +608,7 @@ func (uc *PaymentUseCase) getPaymentStatus(
 }
 
 // ProcessExpiredPayments processes expired payments for recurrent profiles.
-func (uc *PaymentUseCase) ProcessExpiredPayments(ctx context.Context) error {
+func (uc *PaymentUseCase) ProcessExpiredPayments(ctx context.Context) {
 	uc.log.Info("Processing expired payments for recurrent profiles")
 
 	now := time.Now().Add(time.Hour) // give one hour to renew subscription
@@ -624,8 +624,6 @@ func (uc *PaymentUseCase) ProcessExpiredPayments(ctx context.Context) error {
 
 		uc.createRecurrentPayment(ctx, payment)
 	}
-
-	return nil
 }
 
 // createRecurrentPayment creates a recurrent payment for the given invoice.
