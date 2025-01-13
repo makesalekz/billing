@@ -301,8 +301,9 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 
 func (uc *InvoicesUseCase) ExpireResources(ctx context.Context) {
 	now := time.Now().Add(time.Hour) // give one hour to renew subscription
+	appID := "calendaria"
 
-	invoices, err := uc.invoiceRepo.GetInvoicesToExpire(ctx, &now)
+	invoices, err := uc.invoiceRepo.GetInvoicesToExpire(ctx, appID, &now)
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 	}

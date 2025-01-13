@@ -22,7 +22,7 @@ type InvoicesRepo interface {
 	ListInvoices(
 		ctx context.Context, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
 	) ([]*ent.Invoice, error)
-	GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
+	GetInvoicesToExpire(ctx context.Context, appID string, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoicesToRevoke(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoice, error)
 }
@@ -217,13 +217,16 @@ func (r *invoicesRepo) ListInvoices(
 	return query.All(ctx)
 }
 
-func (r *invoicesRepo) GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error) {
+func (r *invoicesRepo) GetInvoicesToExpire(ctx context.Context, appID string, paidTill *time.Time) (
+	[]*ent.Invoice, error,
+) {
 	return r.db.Invoice.Query().Where(
 		invoice.StatusEQ(enum.Paid),
 		invoice.IsPaidAtProcessed(true),
 		invoice.IsRevoked(false),
 		invoice.IsPaidTillProcessed(false),
 		invoice.PaidTillLT(*paidTill),
+		invoice.AppID(appID),
 	).Modify(
 		func(s *sql.Selector) {
 			invoicesT := sql.Table(invoice.Table).As("t2")

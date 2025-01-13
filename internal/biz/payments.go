@@ -608,8 +608,9 @@ func (uc *PaymentUseCase) ProcessExpiredPayments(ctx context.Context) error {
 	uc.log.Info("Processing expired payments for recurrent profiles")
 
 	now := time.Now().Add(time.Hour) // give one hour to renew subscription
+	appID := "pms"
 
-	expiredPayments, err := uc.invoicesRepo.GetInvoicesToExpire(ctx, &now)
+	expiredPayments, err := uc.invoicesRepo.GetInvoicesToExpire(ctx, appID, &now)
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 	}
