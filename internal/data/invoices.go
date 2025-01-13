@@ -9,6 +9,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 
@@ -219,6 +220,12 @@ func (r *invoicesRepo) GetInvoicesToExpire(ctx context.Context, paidTill *time.T
 				On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
 				OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
 			s.Where(sql.IsNull(invoicesT.C(invoice.FieldPaidTill)))
+		},
+		func(s *sql.Selector) {
+			paymentProfileT := sql.Table(paymentprofile.Table).As("t3")
+
+			s.LeftJoin(paymentProfileT).
+				On(paymentProfileT.C(paymentprofile.FieldID), s.C(invoice.FieldPaymentProfileID))
 		},
 	).Limit(int(BackgroundProcessPageSize)).
 		All(ctx)

@@ -572,7 +572,7 @@ func (uc *PaymentUseCase) createOrExtendSubscription(ctx context.Context, subscr
 	return nil
 }
 
-// ProcessExpiredPayments processes expired payments for recurrent profiles
+// ProcessExpiredPayments processes expired payments for recurrent profiles.
 func (uc *PaymentUseCase) ProcessExpiredPayments(ctx context.Context) error {
 	uc.log.Info("Processing expired payments for recurrent profiles")
 
@@ -592,7 +592,7 @@ func (uc *PaymentUseCase) ProcessExpiredPayments(ctx context.Context) error {
 	return nil
 }
 
-// createRecurrentPayment creates a recurrent payment for the given invoice
+// createRecurrentPayment creates a recurrent payment for the given invoice.
 func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *ent.Invoice) {
 	if invoice.AppID != PmsAppID {
 		uc.log.Infof("Skipping recurrent payment for app %v", invoice.AppID)
@@ -644,7 +644,7 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 		return
 	}
 
-	if err := recurrentRequest.Validate(); err != nil {
+	if err = recurrentRequest.Validate(); err != nil {
 		uc.log.Errorf("Invalid recurrent payment request: %v", err)
 		return
 	}
@@ -668,5 +668,4 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 	}
 
 	uc.log.Infof("Recurrent payment successfully created, payment ID: %v", response.PaymentID)
-	return
 }
