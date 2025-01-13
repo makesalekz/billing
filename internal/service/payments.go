@@ -27,20 +27,17 @@ func (s *PaymentsService) CreatePayment(ctx context.Context, req *v1.CreatePayme
 ) {
 	actorID := auth.GetActorIdFromContext(ctx)
 	if actorID == 0 {
-		// return nil, v1.ErrorEmptyActorId("actor id is empty")
-		actorID = 3
+		return nil, v1.ErrorEmptyActorId("actor id is empty")
 	}
 
 	tenantID := auth.GetTenantIdFromContext(ctx)
 	if tenantID == 0 {
-		// return nil, v1.ErrorEmptyTenantId("tenant id is empty")
-		tenantID = 3
+		return nil, v1.ErrorEmptyTenantId("tenant id is empty")
 	}
 
 	appID := auth.GetAppIdFromContext(ctx)
 	if appID == "" {
-		// return nil, v1.ErrorEmptyAppId("app id is empty")
-		appID = "pms"
+		return nil, v1.ErrorEmptyAppId("app id is empty")
 	}
 
 	if req.GetProductId() == 0 {
