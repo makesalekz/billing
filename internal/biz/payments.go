@@ -287,59 +287,71 @@ func (uc *PaymentUseCase) handleRefundedStatus(
 	ctx context.Context, invoice *ent.Invoice,
 	payment *onevisionpay.StatusResponse,
 ) error {
-	uc.log.Infof("Full refund processed for invoice: %v", invoice.ID)
+	uc.log.Infof("Processing refund for invoice: %v", invoice.ID)
 
 	transactionID := strconv.FormatInt(payment.PaymentID, 10)
 
 	if payment.Amount == invoice.Amount {
-		uc.log.Infof("Processing full refund for invoice: %v", invoice.ID)
+		return uc.processFullRefund(ctx, invoice, transactionID)
+	}
 
-		if invoice.SubscriptionID != nil {
-			err := uc.subscriptionRepo.RevokeActiveSubscription(ctx, *invoice.SubscriptionID, time.Now())
-			if err != nil {
-				uc.log.Errorf(
-					"Failed to revoke subscription %v for invoice %v: %v", *invoice.SubscriptionID, invoice.ID, err,
-				)
-				return err
-			}
-			uc.log.Infof("Subscription %v successfully revoked for invoice %v", *invoice.SubscriptionID, invoice.ID)
+	return uc.processPartialRefund(ctx, invoice, payment, transactionID)
+}
+
+func (uc *PaymentUseCase) processFullRefund(
+	ctx context.Context, invoice *ent.Invoice, transactionID string,
+) error {
+	uc.log.Infof("Processing full refund for invoice: %v", invoice.ID)
+
+	if invoice.SubscriptionID != nil {
+		if err := uc.subscriptionRepo.RevokeActiveSubscription(ctx, *invoice.SubscriptionID, time.Now()); err != nil {
+			uc.log.Errorf(
+				"Failed to revoke subscription %v for invoice %v: %v", *invoice.SubscriptionID, invoice.ID, err,
+			)
+			return err
 		}
+		uc.log.Infof("Subscription %v successfully revoked for invoice %v", *invoice.SubscriptionID, invoice.ID)
+	}
 
-		revokedAt := time.Now()
-		isRevoked := true
+	revokedAt := time.Now()
+
+	_, err := uc.invoicesRepo.UpdateInvoice(
+		ctx, invoice, data.InvoiceDto{
+			Status:                 enum.CanceledByUser,
+			OneVisionTransactionID: &transactionID,
+			RevokedAt:              &revokedAt,
+		},
+	)
+	if err != nil {
+		uc.log.Errorf("Failed to update invoice %d status to %v: %v", invoice.ID, enum.CanceledByUser, err)
+		return err
+	}
+
+	return nil
+}
+
+func (uc *PaymentUseCase) processPartialRefund(
+	ctx context.Context, invoice *ent.Invoice, payment *onevisionpay.StatusResponse, transactionID string,
+) error {
+	uc.log.Infof("Processing partial refund for invoice: %v", invoice.ID)
+
+	if invoice.PaidAt != nil && invoice.PaidTill != nil {
+		totalDuration := invoice.PaidTill.Sub(*invoice.PaidAt)
+		remainingDuration := time.Duration(float64(totalDuration) * float64(payment.Amount) / float64(invoice.Amount))
+		newRevokedAt := invoice.PaidAt.Add(remainingDuration)
+
 		_, err := uc.invoicesRepo.UpdateInvoice(
 			ctx, invoice, data.InvoiceDto{
-				Status:                 enum.CanceledByUser,
 				OneVisionTransactionID: &transactionID,
-				RevokedAt:              &revokedAt,
-				IsRevoked:              &isRevoked,
+				RevokedAt:              &newRevokedAt,
 			},
 		)
 		if err != nil {
-			uc.log.Errorf("Failed to update invoice %d status to %v: %v", invoice.ID, enum.CanceledByUser, err)
+			uc.log.Errorf("Failed to update invoice %d with partial refund: %v", invoice.ID, err)
 			return err
 		}
 	} else {
-		uc.log.Infof("Processing partial refund for invoice: %v", invoice.ID)
-
-		if invoice.PaidAt != nil && invoice.PaidTill != nil {
-			totalDuration := invoice.PaidTill.Sub(*invoice.PaidAt)
-			remainingDuration := time.Duration(float64(totalDuration) * float64(payment.Amount) / float64(invoice.Amount))
-			newRevokedAt := invoice.PaidAt.Add(remainingDuration)
-
-			_, err := uc.invoicesRepo.UpdateInvoice(
-				ctx, invoice, data.InvoiceDto{
-					OneVisionTransactionID: &transactionID,
-					RevokedAt:              &newRevokedAt,
-				},
-			)
-			if err != nil {
-				uc.log.Errorf("Failed to update invoice %d with partial refund: %v", invoice.ID, err)
-				return err
-			}
-		} else {
-			uc.log.Warnf("Invoice %v does not have valid PaidAt or PaidTill for partial refund calculation", invoice.ID)
-		}
+		uc.log.Warnf("Invoice %v does not have valid PaidAt or PaidTill for partial refund calculation", invoice.ID)
 	}
 
 	return nil
