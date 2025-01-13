@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"gitlab.calendaria.team/services/finance/billing/ent"
@@ -29,7 +28,6 @@ type SubscriptionsRepo interface {
 	ListSubscriptions(
 		ctx context.Context, actorID int64, withInvoices bool, paginate *utils_v1.PaginateRequest,
 	) ([]*ent.Subscriptions, error)
-	CreateOrExtendSubscription(ctx context.Context, id int64) error
 }
 
 type subscriptionsRepo struct {
@@ -127,42 +125,4 @@ func (r *subscriptionsRepo) ListSubscriptions(
 		WithInvoices().
 		Limit(int(paginate.GetLimit())).
 		All(ctx)
-}
-
-func (r *subscriptionsRepo) CreateOrExtendSubscription(ctx context.Context, subscriptionID int64) error {
-	_, err := r.db.Subscriptions.Get(ctx, subscriptionID)
-
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return fmt.Errorf("subscription not found: %d", subscriptionID)
-		}
-		return fmt.Errorf("failed to retrieve subscription: %w", err)
-	}
-
-	maxPaidTill, err := r.db.Invoice.Query().
-		Where(invoice.SubscriptionID(subscriptionID)).
-		Order(ent.Desc(invoice.FieldPaidTill)).
-		Select(invoice.FieldPaidTill).
-		Limit(1).
-		Only(ctx)
-	if err != nil && !ent.IsNotFound(err) {
-		return fmt.Errorf("failed to retrieve max PaidTill: %w", err)
-	}
-
-	var newPaidTill time.Time
-	if maxPaidTill != nil {
-		newPaidTill = maxPaidTill.PaidAt.AddDate(0, 1, 0) // Пример: продлеваем на 1 месяц
-	} else {
-		newPaidTill = time.Now().AddDate(0, 1, 0) // Если записи `invoice` нет, начинаем с текущей даты
-	}
-
-	_, err = r.db.Invoice.Create().
-		SetSubscriptionID(subscriptionID).
-		SetPaidTill(newPaidTill).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create or update invoice: %w", err)
-	}
-
-	return nil
 }

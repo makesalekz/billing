@@ -565,10 +565,11 @@ func (uc *PaymentUseCase) getPaymentStatus(
 }
 
 func (uc *PaymentUseCase) createOrExtendSubscription(ctx context.Context, subscriptionID int64) error {
-	err := uc.subscriptionRepo.CreateOrExtendSubscription(ctx, subscriptionID)
-	if err != nil {
-		return fmt.Errorf("failed to create or extend subscription: %w", err)
-	}
+	// todo: implement subscription extension
+	// err := uc.subscriptionRepo.CreateOrExtendSubscription(ctx, subscriptionID)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to create or extend subscription: %w", err)
+	// }
 	return nil
 }
 
