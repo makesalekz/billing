@@ -143,12 +143,16 @@ func (uc *PaymentUseCase) CreatePayment(
 		return 0, "", v1.ErrorDatabaseQuery("failed to get product: %v", err)
 	}
 
-	hasActive, isFirst, err := uc.checkSubscriptionStatus(ctx, tenantID, actorID, productID)
+	if !uc.isProductAvailable(product) {
+		return 0, "", v1.ErrorInvalidRequest("product is not available")
+	}
+
+	hasActiveSubscription, isFirst, err := uc.checkSubscriptionStatus(ctx, tenantID, actorID, productID)
 	if err != nil {
 		return 0, "", err
 	}
 
-	if hasActive {
+	if hasActiveSubscription {
 		return 0, "", v1.ErrorInvalidRequest("user already has active subscription")
 	}
 
@@ -651,7 +655,7 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 		AppID:              invoice.AppID,
 		ProductID:          invoice.ProductID,
 		Status:             enum.Created,
-		Amount:             product.Price.IntPart(),
+		Amount:             1,
 		Price:              product.Price,
 		RecurrentProfileID: invoice.PaymentProfileID,
 	}
@@ -700,4 +704,24 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 	}
 
 	uc.log.Infof("Recurrent payment successfully created, payment ID: %v", response.PaymentID)
+}
+
+func (uc *PaymentUseCase) isProductAvailable(product *ent.Product) bool {
+	if !product.IsActive {
+		return false
+	}
+
+	if product.LimitedTill != nil && time.Now().After(*product.LimitedTill) {
+		return false
+	}
+
+	if product.Left != 0 && product.Left <= 0 {
+		return false
+	}
+
+	if product.ExpiringTime != nil && time.Now().After(*product.ExpiringTime) {
+		return false
+	}
+
+	return true
 }
