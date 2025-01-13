@@ -65,7 +65,7 @@ func init() {
 	// invoice.DefaultIsPaidTillProcessed holds the default value on creation for the is_paid_till_processed field.
 	invoice.DefaultIsPaidTillProcessed = invoiceDescIsPaidTillProcessed.Default.(bool)
 	// invoiceDescIsTrial is the schema descriptor for is_trial field.
-	invoiceDescIsTrial := invoiceFields[18].Descriptor()
+	invoiceDescIsTrial := invoiceFields[19].Descriptor()
 	// invoice.DefaultIsTrial holds the default value on creation for the is_trial field.
 	invoice.DefaultIsTrial = invoiceDescIsTrial.Default.(bool)
 	itemMixin := schema.Item{}.Mixin()

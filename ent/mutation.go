@@ -824,6 +824,7 @@ type InvoiceMutation struct {
 	is_paid_at_processed       *bool
 	is_paid_till_processed     *bool
 	apple_store_transaction_id *string
+	one_vision_transaction_id  *string
 	is_trial                   *bool
 	clearedFields              map[string]struct{}
 	product                    *int64
@@ -1698,6 +1699,55 @@ func (m *InvoiceMutation) ResetAppleStoreTransactionID() {
 	delete(m.clearedFields, invoice.FieldAppleStoreTransactionID)
 }
 
+// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
+func (m *InvoiceMutation) SetOneVisionTransactionID(s string) {
+	m.one_vision_transaction_id = &s
+}
+
+// OneVisionTransactionID returns the value of the "one_vision_transaction_id" field in the mutation.
+func (m *InvoiceMutation) OneVisionTransactionID() (r string, exists bool) {
+	v := m.one_vision_transaction_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOneVisionTransactionID returns the old "one_vision_transaction_id" field's value of the Invoice entity.
+// If the Invoice object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InvoiceMutation) OldOneVisionTransactionID(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOneVisionTransactionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOneVisionTransactionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOneVisionTransactionID: %w", err)
+	}
+	return oldValue.OneVisionTransactionID, nil
+}
+
+// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
+func (m *InvoiceMutation) ClearOneVisionTransactionID() {
+	m.one_vision_transaction_id = nil
+	m.clearedFields[invoice.FieldOneVisionTransactionID] = struct{}{}
+}
+
+// OneVisionTransactionIDCleared returns if the "one_vision_transaction_id" field was cleared in this mutation.
+func (m *InvoiceMutation) OneVisionTransactionIDCleared() bool {
+	_, ok := m.clearedFields[invoice.FieldOneVisionTransactionID]
+	return ok
+}
+
+// ResetOneVisionTransactionID resets all changes to the "one_vision_transaction_id" field.
+func (m *InvoiceMutation) ResetOneVisionTransactionID() {
+	m.one_vision_transaction_id = nil
+	delete(m.clearedFields, invoice.FieldOneVisionTransactionID)
+}
+
 // SetIsTrial sets the "is_trial" field.
 func (m *InvoiceMutation) SetIsTrial(b bool) {
 	m.is_trial = &b
@@ -1911,7 +1961,7 @@ func (m *InvoiceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InvoiceMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.user_id != nil {
 		fields = append(fields, invoice.FieldUserID)
 	}
@@ -1963,6 +2013,9 @@ func (m *InvoiceMutation) Fields() []string {
 	if m.apple_store_transaction_id != nil {
 		fields = append(fields, invoice.FieldAppleStoreTransactionID)
 	}
+	if m.one_vision_transaction_id != nil {
+		fields = append(fields, invoice.FieldOneVisionTransactionID)
+	}
 	if m.is_trial != nil {
 		fields = append(fields, invoice.FieldIsTrial)
 	}
@@ -2011,6 +2064,8 @@ func (m *InvoiceMutation) Field(name string) (ent.Value, bool) {
 		return m.SubscriptionID()
 	case invoice.FieldAppleStoreTransactionID:
 		return m.AppleStoreTransactionID()
+	case invoice.FieldOneVisionTransactionID:
+		return m.OneVisionTransactionID()
 	case invoice.FieldIsTrial:
 		return m.IsTrial()
 	case invoice.FieldPaymentProfileID:
@@ -2058,6 +2113,8 @@ func (m *InvoiceMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldSubscriptionID(ctx)
 	case invoice.FieldAppleStoreTransactionID:
 		return m.OldAppleStoreTransactionID(ctx)
+	case invoice.FieldOneVisionTransactionID:
+		return m.OldOneVisionTransactionID(ctx)
 	case invoice.FieldIsTrial:
 		return m.OldIsTrial(ctx)
 	case invoice.FieldPaymentProfileID:
@@ -2190,6 +2247,13 @@ func (m *InvoiceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAppleStoreTransactionID(v)
 		return nil
+	case invoice.FieldOneVisionTransactionID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOneVisionTransactionID(v)
+		return nil
 	case invoice.FieldIsTrial:
 		v, ok := value.(bool)
 		if !ok {
@@ -2300,6 +2364,9 @@ func (m *InvoiceMutation) ClearedFields() []string {
 	if m.FieldCleared(invoice.FieldAppleStoreTransactionID) {
 		fields = append(fields, invoice.FieldAppleStoreTransactionID)
 	}
+	if m.FieldCleared(invoice.FieldOneVisionTransactionID) {
+		fields = append(fields, invoice.FieldOneVisionTransactionID)
+	}
 	if m.FieldCleared(invoice.FieldPaymentProfileID) {
 		fields = append(fields, invoice.FieldPaymentProfileID)
 	}
@@ -2331,6 +2398,9 @@ func (m *InvoiceMutation) ClearField(name string) error {
 		return nil
 	case invoice.FieldAppleStoreTransactionID:
 		m.ClearAppleStoreTransactionID()
+		return nil
+	case invoice.FieldOneVisionTransactionID:
+		m.ClearOneVisionTransactionID()
 		return nil
 	case invoice.FieldPaymentProfileID:
 		m.ClearPaymentProfileID()
@@ -2393,6 +2463,9 @@ func (m *InvoiceMutation) ResetField(name string) error {
 		return nil
 	case invoice.FieldAppleStoreTransactionID:
 		m.ResetAppleStoreTransactionID()
+		return nil
+	case invoice.FieldOneVisionTransactionID:
+		m.ResetOneVisionTransactionID()
 		return nil
 	case invoice.FieldIsTrial:
 		m.ResetIsTrial()

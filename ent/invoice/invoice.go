@@ -49,6 +49,8 @@ const (
 	FieldSubscriptionID = "subscription_id"
 	// FieldAppleStoreTransactionID holds the string denoting the apple_store_transaction_id field in the database.
 	FieldAppleStoreTransactionID = "apple_store_transaction_id"
+	// FieldOneVisionTransactionID holds the string denoting the one_vision_transaction_id field in the database.
+	FieldOneVisionTransactionID = "one_vision_transaction_id"
 	// FieldIsTrial holds the string denoting the is_trial field in the database.
 	FieldIsTrial = "is_trial"
 	// FieldPaymentProfileID holds the string denoting the payment_profile_id field in the database.
@@ -104,6 +106,7 @@ var Columns = []string{
 	FieldIsPaidTillProcessed,
 	FieldSubscriptionID,
 	FieldAppleStoreTransactionID,
+	FieldOneVisionTransactionID,
 	FieldIsTrial,
 	FieldPaymentProfileID,
 }
@@ -238,6 +241,11 @@ func BySubscriptionID(opts ...sql.OrderTermOption) OrderOption {
 // ByAppleStoreTransactionID orders the results by the apple_store_transaction_id field.
 func ByAppleStoreTransactionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAppleStoreTransactionID, opts...).ToFunc()
+}
+
+// ByOneVisionTransactionID orders the results by the one_vision_transaction_id field.
+func ByOneVisionTransactionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOneVisionTransactionID, opts...).ToFunc()
 }
 
 // ByIsTrial orders the results by the is_trial field.

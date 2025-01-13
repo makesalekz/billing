@@ -56,6 +56,8 @@ type Invoice struct {
 	SubscriptionID *int64 `json:"subscription_id,omitempty"`
 	// AppleStoreTransactionID holds the value of the "apple_store_transaction_id" field.
 	AppleStoreTransactionID *string `json:"apple_store_transaction_id,omitempty"`
+	// OneVisionTransactionID holds the value of the "one_vision_transaction_id" field.
+	OneVisionTransactionID *string `json:"one_vision_transaction_id,omitempty"`
 	// IsTrial holds the value of the "is_trial" field.
 	IsTrial bool `json:"is_trial,omitempty"`
 	// PaymentProfileID holds the value of the "payment_profile_id" field.
@@ -123,7 +125,7 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID, invoice.FieldPaymentProfileID:
 			values[i] = new(sql.NullInt64)
-		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus, invoice.FieldAppleStoreTransactionID:
+		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus, invoice.FieldAppleStoreTransactionID, invoice.FieldOneVisionTransactionID:
 			values[i] = new(sql.NullString)
 		case invoice.FieldPaidAt, invoice.FieldPaidTill, invoice.FieldRevokedAt:
 			values[i] = new(sql.NullTime)
@@ -255,6 +257,13 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 				i.AppleStoreTransactionID = new(string)
 				*i.AppleStoreTransactionID = value.String
 			}
+		case invoice.FieldOneVisionTransactionID:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field one_vision_transaction_id", values[j])
+			} else if value.Valid {
+				i.OneVisionTransactionID = new(string)
+				*i.OneVisionTransactionID = value.String
+			}
 		case invoice.FieldIsTrial:
 			if value, ok := values[j].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_trial", values[j])
@@ -377,6 +386,11 @@ func (i *Invoice) String() string {
 	builder.WriteString(", ")
 	if v := i.AppleStoreTransactionID; v != nil {
 		builder.WriteString("apple_store_transaction_id=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := i.OneVisionTransactionID; v != nil {
+		builder.WriteString("one_vision_transaction_id=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")

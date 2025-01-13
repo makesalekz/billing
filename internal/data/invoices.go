@@ -63,6 +63,10 @@ func (r *invoicesRepo) CreateInvoice(ctx context.Context, dto InvoiceDto) (*ent.
 		query = query.SetAppleStoreTransactionID(*dto.AppleStoreTransactionID)
 	}
 
+	if dto.OneVisionTransactionID != nil {
+		query = query.SetOneVisionTransactionID(*dto.OneVisionTransactionID)
+	}
+
 	return query.Save(ctx)
 }
 

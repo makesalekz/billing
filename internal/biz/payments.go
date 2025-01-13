@@ -192,7 +192,7 @@ func (uc *PaymentUseCase) CreatePayment(
 	paymentIDStr := strconv.FormatInt(payment.PaymentID, 10)
 	updatedInvoice, err := uc.invoicesRepo.UpdateInvoice(
 		ctx, invoice, data.InvoiceDto{
-			AppleStoreTransactionID: &paymentIDStr,
+			OneVisionTransactionID: &paymentIDStr,
 		},
 	)
 	if err != nil {
@@ -289,8 +289,8 @@ func (uc *PaymentUseCase) handleRefundedStatus(ctx context.Context, invoice *ent
 
 	_, err := uc.invoicesRepo.UpdateInvoice(
 		ctx, invoice, data.InvoiceDto{
-			Status:                  enum.CanceledByUser,
-			AppleStoreTransactionID: transactionID,
+			Status:                 enum.CanceledByUser,
+			OneVisionTransactionID: transactionID,
 		},
 	)
 	if err != nil {
@@ -388,10 +388,10 @@ func (uc *PaymentUseCase) handleFailedOrCanceledStatus(
 	isRevoked := true
 
 	updateDto := data.InvoiceDto{
-		Status:                  enum.CanceledByUser,
-		RevokedAt:               &now,
-		IsRevoked:               &isRevoked,
-		AppleStoreTransactionID: transactionID,
+		Status:                 enum.CanceledByUser,
+		RevokedAt:              &now,
+		IsRevoked:              &isRevoked,
+		OneVisionTransactionID: transactionID,
 	}
 
 	_, err := uc.invoicesRepo.UpdateInvoice(ctx, invoice, updateDto)
@@ -659,8 +659,8 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 
 	_, err = uc.invoicesRepo.UpdateInvoice(
 		ctx, invoice, data.InvoiceDto{
-			Status:                  enum.Created,
-			AppleStoreTransactionID: &transactionID,
+			Status:                 enum.Created,
+			OneVisionTransactionID: &transactionID,
 		},
 	)
 	if err != nil {

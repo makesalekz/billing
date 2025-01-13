@@ -132,6 +132,7 @@ type InvoiceDto struct {
 	RecurrentProfileID  *int64
 
 	AppleStoreTransactionID *string
+	OneVisionTransactionID  *string
 	IsTrial                 bool
 }
 

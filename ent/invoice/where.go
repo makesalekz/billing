@@ -137,6 +137,11 @@ func AppleStoreTransactionID(v string) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldAppleStoreTransactionID, v))
 }
 
+// OneVisionTransactionID applies equality check predicate on the "one_vision_transaction_id" field. It's identical to OneVisionTransactionIDEQ.
+func OneVisionTransactionID(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldOneVisionTransactionID, v))
+}
+
 // IsTrial applies equality check predicate on the "is_trial" field. It's identical to IsTrialEQ.
 func IsTrial(v bool) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldIsTrial, v))
@@ -780,6 +785,81 @@ func AppleStoreTransactionIDEqualFold(v string) predicate.Invoice {
 // AppleStoreTransactionIDContainsFold applies the ContainsFold predicate on the "apple_store_transaction_id" field.
 func AppleStoreTransactionIDContainsFold(v string) predicate.Invoice {
 	return predicate.Invoice(sql.FieldContainsFold(FieldAppleStoreTransactionID, v))
+}
+
+// OneVisionTransactionIDEQ applies the EQ predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDEQ(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDNEQ applies the NEQ predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDNEQ(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDIn applies the In predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDIn(vs ...string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldOneVisionTransactionID, vs...))
+}
+
+// OneVisionTransactionIDNotIn applies the NotIn predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDNotIn(vs ...string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldOneVisionTransactionID, vs...))
+}
+
+// OneVisionTransactionIDGT applies the GT predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDGT(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDGTE applies the GTE predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDGTE(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDLT applies the LT predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDLT(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDLTE applies the LTE predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDLTE(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDContains applies the Contains predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDContains(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldContains(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDHasPrefix applies the HasPrefix predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDHasPrefix(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldHasPrefix(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDHasSuffix applies the HasSuffix predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDHasSuffix(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldHasSuffix(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDIsNil applies the IsNil predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldOneVisionTransactionID))
+}
+
+// OneVisionTransactionIDNotNil applies the NotNil predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldOneVisionTransactionID))
+}
+
+// OneVisionTransactionIDEqualFold applies the EqualFold predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDEqualFold(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEqualFold(FieldOneVisionTransactionID, v))
+}
+
+// OneVisionTransactionIDContainsFold applies the ContainsFold predicate on the "one_vision_transaction_id" field.
+func OneVisionTransactionIDContainsFold(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldContainsFold(FieldOneVisionTransactionID, v))
 }
 
 // IsTrialEQ applies the EQ predicate on the "is_trial" field.

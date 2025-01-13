@@ -217,6 +217,20 @@ func (ic *InvoiceCreate) SetNillableAppleStoreTransactionID(s *string) *InvoiceC
 	return ic
 }
 
+// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
+func (ic *InvoiceCreate) SetOneVisionTransactionID(s string) *InvoiceCreate {
+	ic.mutation.SetOneVisionTransactionID(s)
+	return ic
+}
+
+// SetNillableOneVisionTransactionID sets the "one_vision_transaction_id" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableOneVisionTransactionID(s *string) *InvoiceCreate {
+	if s != nil {
+		ic.SetOneVisionTransactionID(*s)
+	}
+	return ic
+}
+
 // SetIsTrial sets the "is_trial" field.
 func (ic *InvoiceCreate) SetIsTrial(b bool) *InvoiceCreate {
 	ic.mutation.SetIsTrial(b)
@@ -492,6 +506,10 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
 		_node.AppleStoreTransactionID = &value
 	}
+	if value, ok := ic.mutation.OneVisionTransactionID(); ok {
+		_spec.SetField(invoice.FieldOneVisionTransactionID, field.TypeString, value)
+		_node.OneVisionTransactionID = &value
+	}
 	if value, ok := ic.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
 		_node.IsTrial = value
@@ -758,6 +776,24 @@ func (u *InvoiceUpsert) UpdateAppleStoreTransactionID() *InvoiceUpsert {
 // ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
 func (u *InvoiceUpsert) ClearAppleStoreTransactionID() *InvoiceUpsert {
 	u.SetNull(invoice.FieldAppleStoreTransactionID)
+	return u
+}
+
+// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
+func (u *InvoiceUpsert) SetOneVisionTransactionID(v string) *InvoiceUpsert {
+	u.Set(invoice.FieldOneVisionTransactionID, v)
+	return u
+}
+
+// UpdateOneVisionTransactionID sets the "one_vision_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateOneVisionTransactionID() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldOneVisionTransactionID)
+	return u
+}
+
+// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
+func (u *InvoiceUpsert) ClearOneVisionTransactionID() *InvoiceUpsert {
+	u.SetNull(invoice.FieldOneVisionTransactionID)
 	return u
 }
 
@@ -1043,6 +1079,27 @@ func (u *InvoiceUpsertOne) UpdateAppleStoreTransactionID() *InvoiceUpsertOne {
 func (u *InvoiceUpsertOne) ClearAppleStoreTransactionID() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearAppleStoreTransactionID()
+	})
+}
+
+// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
+func (u *InvoiceUpsertOne) SetOneVisionTransactionID(v string) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetOneVisionTransactionID(v)
+	})
+}
+
+// UpdateOneVisionTransactionID sets the "one_vision_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateOneVisionTransactionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateOneVisionTransactionID()
+	})
+}
+
+// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
+func (u *InvoiceUpsertOne) ClearOneVisionTransactionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearOneVisionTransactionID()
 	})
 }
 
@@ -1499,6 +1556,27 @@ func (u *InvoiceUpsertBulk) UpdateAppleStoreTransactionID() *InvoiceUpsertBulk {
 func (u *InvoiceUpsertBulk) ClearAppleStoreTransactionID() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearAppleStoreTransactionID()
+	})
+}
+
+// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
+func (u *InvoiceUpsertBulk) SetOneVisionTransactionID(v string) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetOneVisionTransactionID(v)
+	})
+}
+
+// UpdateOneVisionTransactionID sets the "one_vision_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateOneVisionTransactionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateOneVisionTransactionID()
+	})
+}
+
+// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
+func (u *InvoiceUpsertBulk) ClearOneVisionTransactionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearOneVisionTransactionID()
 	})
 }
 

@@ -42,6 +42,7 @@ func (Invoice) Fields() []ent.Field {
 		field.Bool("is_paid_till_processed").Default(false),
 		field.Int64("subscription_id").Optional().Nillable().Immutable(),
 		field.String("apple_store_transaction_id").Optional().Nillable(),
+		field.String("one_vision_transaction_id").Optional().Nillable(),
 		field.Bool("is_trial").Default(false),
 		field.Int64("payment_profile_id").Optional().Nillable(),
 	}

@@ -217,6 +217,26 @@ func (iu *InvoiceUpdate) ClearAppleStoreTransactionID() *InvoiceUpdate {
 	return iu
 }
 
+// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
+func (iu *InvoiceUpdate) SetOneVisionTransactionID(s string) *InvoiceUpdate {
+	iu.mutation.SetOneVisionTransactionID(s)
+	return iu
+}
+
+// SetNillableOneVisionTransactionID sets the "one_vision_transaction_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableOneVisionTransactionID(s *string) *InvoiceUpdate {
+	if s != nil {
+		iu.SetOneVisionTransactionID(*s)
+	}
+	return iu
+}
+
+// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
+func (iu *InvoiceUpdate) ClearOneVisionTransactionID() *InvoiceUpdate {
+	iu.mutation.ClearOneVisionTransactionID()
+	return iu
+}
+
 // SetIsTrial sets the "is_trial" field.
 func (iu *InvoiceUpdate) SetIsTrial(b bool) *InvoiceUpdate {
 	iu.mutation.SetIsTrial(b)
@@ -377,6 +397,12 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if iu.mutation.AppleStoreTransactionIDCleared() {
 		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
+	}
+	if value, ok := iu.mutation.OneVisionTransactionID(); ok {
+		_spec.SetField(invoice.FieldOneVisionTransactionID, field.TypeString, value)
+	}
+	if iu.mutation.OneVisionTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldOneVisionTransactionID, field.TypeString)
 	}
 	if value, ok := iu.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
@@ -617,6 +643,26 @@ func (iuo *InvoiceUpdateOne) ClearAppleStoreTransactionID() *InvoiceUpdateOne {
 	return iuo
 }
 
+// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
+func (iuo *InvoiceUpdateOne) SetOneVisionTransactionID(s string) *InvoiceUpdateOne {
+	iuo.mutation.SetOneVisionTransactionID(s)
+	return iuo
+}
+
+// SetNillableOneVisionTransactionID sets the "one_vision_transaction_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableOneVisionTransactionID(s *string) *InvoiceUpdateOne {
+	if s != nil {
+		iuo.SetOneVisionTransactionID(*s)
+	}
+	return iuo
+}
+
+// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
+func (iuo *InvoiceUpdateOne) ClearOneVisionTransactionID() *InvoiceUpdateOne {
+	iuo.mutation.ClearOneVisionTransactionID()
+	return iuo
+}
+
 // SetIsTrial sets the "is_trial" field.
 func (iuo *InvoiceUpdateOne) SetIsTrial(b bool) *InvoiceUpdateOne {
 	iuo.mutation.SetIsTrial(b)
@@ -807,6 +853,12 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	}
 	if iuo.mutation.AppleStoreTransactionIDCleared() {
 		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
+	}
+	if value, ok := iuo.mutation.OneVisionTransactionID(); ok {
+		_spec.SetField(invoice.FieldOneVisionTransactionID, field.TypeString, value)
+	}
+	if iuo.mutation.OneVisionTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldOneVisionTransactionID, field.TypeString)
 	}
 	if value, ok := iuo.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)

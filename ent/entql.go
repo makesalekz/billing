@@ -67,6 +67,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			invoice.FieldIsPaidTillProcessed:     {Type: field.TypeBool, Column: invoice.FieldIsPaidTillProcessed},
 			invoice.FieldSubscriptionID:          {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
 			invoice.FieldAppleStoreTransactionID: {Type: field.TypeString, Column: invoice.FieldAppleStoreTransactionID},
+			invoice.FieldOneVisionTransactionID:  {Type: field.TypeString, Column: invoice.FieldOneVisionTransactionID},
 			invoice.FieldIsTrial:                 {Type: field.TypeBool, Column: invoice.FieldIsTrial},
 			invoice.FieldPaymentProfileID:        {Type: field.TypeInt64, Column: invoice.FieldPaymentProfileID},
 		},
@@ -533,6 +534,11 @@ func (f *InvoiceFilter) WhereSubscriptionID(p entql.Int64P) {
 // WhereAppleStoreTransactionID applies the entql string predicate on the apple_store_transaction_id field.
 func (f *InvoiceFilter) WhereAppleStoreTransactionID(p entql.StringP) {
 	f.Where(p.Field(invoice.FieldAppleStoreTransactionID))
+}
+
+// WhereOneVisionTransactionID applies the entql string predicate on the one_vision_transaction_id field.
+func (f *InvoiceFilter) WhereOneVisionTransactionID(p entql.StringP) {
+	f.Where(p.Field(invoice.FieldOneVisionTransactionID))
 }
 
 // WhereIsTrial applies the entql bool predicate on the is_trial field.
