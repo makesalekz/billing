@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/shopspring/decimal"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 )
 
@@ -806,6 +807,36 @@ func ExpiringTimeNotNil() predicate.Product {
 	return predicate.Product(sql.FieldNotNull(FieldExpiringTime))
 }
 
+// PaymentModelEQ applies the EQ predicate on the "payment_model" field.
+func PaymentModelEQ(v enum.PaymentModel) predicate.Product {
+	vc := v
+	return predicate.Product(sql.FieldEQ(FieldPaymentModel, vc))
+}
+
+// PaymentModelNEQ applies the NEQ predicate on the "payment_model" field.
+func PaymentModelNEQ(v enum.PaymentModel) predicate.Product {
+	vc := v
+	return predicate.Product(sql.FieldNEQ(FieldPaymentModel, vc))
+}
+
+// PaymentModelIn applies the In predicate on the "payment_model" field.
+func PaymentModelIn(vs ...enum.PaymentModel) predicate.Product {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Product(sql.FieldIn(FieldPaymentModel, v...))
+}
+
+// PaymentModelNotIn applies the NotIn predicate on the "payment_model" field.
+func PaymentModelNotIn(vs ...enum.PaymentModel) predicate.Product {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Product(sql.FieldNotIn(FieldPaymentModel, v...))
+}
+
 // HasInvoices applies the HasEdge predicate on the "invoices" edge.
 func HasInvoices() predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
@@ -867,6 +898,29 @@ func HasBundles() predicate.Product {
 func HasBundlesWith(preds ...predicate.Bundle) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		step := newBundlesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasReservations applies the HasEdge predicate on the "reservations" edge.
+func HasReservations() predicate.Product {
+	return predicate.Product(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReservationsTable, ReservationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReservationsWith applies the HasEdge predicate on the "reservations" edge with a given conditions (other predicates).
+func HasReservationsWith(preds ...predicate.ProductReservation) predicate.Product {
+	return predicate.Product(func(s *sql.Selector) {
+		step := newReservationsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

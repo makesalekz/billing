@@ -16,6 +16,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 )
 
 // InvoiceUpdate is the builder for updating Invoice entities.
@@ -270,6 +271,21 @@ func (iu *InvoiceUpdate) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdate {
 	return iu.SetPaymentProfileID(p.ID)
 }
 
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by IDs.
+func (iu *InvoiceUpdate) AddReservationIDs(ids ...int64) *InvoiceUpdate {
+	iu.mutation.AddReservationIDs(ids...)
+	return iu
+}
+
+// AddReservations adds the "reservations" edges to the ProductReservation entity.
+func (iu *InvoiceUpdate) AddReservations(p ...*ProductReservation) *InvoiceUpdate {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iu.AddReservationIDs(ids...)
+}
+
 // Mutation returns the InvoiceMutation object of the builder.
 func (iu *InvoiceUpdate) Mutation() *InvoiceMutation {
 	return iu.mutation
@@ -279,6 +295,27 @@ func (iu *InvoiceUpdate) Mutation() *InvoiceMutation {
 func (iu *InvoiceUpdate) ClearPaymentProfile() *InvoiceUpdate {
 	iu.mutation.ClearPaymentProfile()
 	return iu
+}
+
+// ClearReservations clears all "reservations" edges to the ProductReservation entity.
+func (iu *InvoiceUpdate) ClearReservations() *InvoiceUpdate {
+	iu.mutation.ClearReservations()
+	return iu
+}
+
+// RemoveReservationIDs removes the "reservations" edge to ProductReservation entities by IDs.
+func (iu *InvoiceUpdate) RemoveReservationIDs(ids ...int64) *InvoiceUpdate {
+	iu.mutation.RemoveReservationIDs(ids...)
+	return iu
+}
+
+// RemoveReservations removes "reservations" edges to ProductReservation entities.
+func (iu *InvoiceUpdate) RemoveReservations(p ...*ProductReservation) *InvoiceUpdate {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iu.RemoveReservationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -425,6 +462,51 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedReservationsIDs(); len(nodes) > 0 && !iu.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.ReservationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -692,6 +774,21 @@ func (iuo *InvoiceUpdateOne) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdate
 	return iuo.SetPaymentProfileID(p.ID)
 }
 
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by IDs.
+func (iuo *InvoiceUpdateOne) AddReservationIDs(ids ...int64) *InvoiceUpdateOne {
+	iuo.mutation.AddReservationIDs(ids...)
+	return iuo
+}
+
+// AddReservations adds the "reservations" edges to the ProductReservation entity.
+func (iuo *InvoiceUpdateOne) AddReservations(p ...*ProductReservation) *InvoiceUpdateOne {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iuo.AddReservationIDs(ids...)
+}
+
 // Mutation returns the InvoiceMutation object of the builder.
 func (iuo *InvoiceUpdateOne) Mutation() *InvoiceMutation {
 	return iuo.mutation
@@ -701,6 +798,27 @@ func (iuo *InvoiceUpdateOne) Mutation() *InvoiceMutation {
 func (iuo *InvoiceUpdateOne) ClearPaymentProfile() *InvoiceUpdateOne {
 	iuo.mutation.ClearPaymentProfile()
 	return iuo
+}
+
+// ClearReservations clears all "reservations" edges to the ProductReservation entity.
+func (iuo *InvoiceUpdateOne) ClearReservations() *InvoiceUpdateOne {
+	iuo.mutation.ClearReservations()
+	return iuo
+}
+
+// RemoveReservationIDs removes the "reservations" edge to ProductReservation entities by IDs.
+func (iuo *InvoiceUpdateOne) RemoveReservationIDs(ids ...int64) *InvoiceUpdateOne {
+	iuo.mutation.RemoveReservationIDs(ids...)
+	return iuo
+}
+
+// RemoveReservations removes "reservations" edges to ProductReservation entities.
+func (iuo *InvoiceUpdateOne) RemoveReservations(p ...*ProductReservation) *InvoiceUpdateOne {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iuo.RemoveReservationIDs(ids...)
 }
 
 // Where appends a list predicates to the InvoiceUpdate builder.
@@ -877,6 +995,51 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedReservationsIDs(); len(nodes) > 0 && !iuo.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.ReservationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

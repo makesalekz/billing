@@ -19,6 +19,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
@@ -31,12 +32,13 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeBundle         = "Bundle"
-	TypeInvoice        = "Invoice"
-	TypeItem           = "Item"
-	TypePaymentProfile = "PaymentProfile"
-	TypeProduct        = "Product"
-	TypeSubscriptions  = "Subscriptions"
+	TypeBundle             = "Bundle"
+	TypeInvoice            = "Invoice"
+	TypeItem               = "Item"
+	TypePaymentProfile     = "PaymentProfile"
+	TypeProduct            = "Product"
+	TypeProductReservation = "ProductReservation"
+	TypeSubscriptions      = "Subscriptions"
 )
 
 // BundleMutation represents an operation that mutates the Bundle nodes in the graph.
@@ -833,6 +835,9 @@ type InvoiceMutation struct {
 	clearedsubscriptions    bool
 	payment_profile         *int64
 	clearedpayment_profile  bool
+	reservations            map[int64]struct{}
+	removedreservations     map[int64]struct{}
+	clearedreservations     bool
 	done                    bool
 	oldValue                func(context.Context) (*Invoice, error)
 	predicates              []predicate.Invoice
@@ -1914,6 +1919,60 @@ func (m *InvoiceMutation) ResetPaymentProfile() {
 	m.clearedpayment_profile = false
 }
 
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by ids.
+func (m *InvoiceMutation) AddReservationIDs(ids ...int64) {
+	if m.reservations == nil {
+		m.reservations = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.reservations[ids[i]] = struct{}{}
+	}
+}
+
+// ClearReservations clears the "reservations" edge to the ProductReservation entity.
+func (m *InvoiceMutation) ClearReservations() {
+	m.clearedreservations = true
+}
+
+// ReservationsCleared reports if the "reservations" edge to the ProductReservation entity was cleared.
+func (m *InvoiceMutation) ReservationsCleared() bool {
+	return m.clearedreservations
+}
+
+// RemoveReservationIDs removes the "reservations" edge to the ProductReservation entity by IDs.
+func (m *InvoiceMutation) RemoveReservationIDs(ids ...int64) {
+	if m.removedreservations == nil {
+		m.removedreservations = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.reservations, ids[i])
+		m.removedreservations[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedReservations returns the removed IDs of the "reservations" edge to the ProductReservation entity.
+func (m *InvoiceMutation) RemovedReservationsIDs() (ids []int64) {
+	for id := range m.removedreservations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ReservationsIDs returns the "reservations" edge IDs in the mutation.
+func (m *InvoiceMutation) ReservationsIDs() (ids []int64) {
+	for id := range m.reservations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetReservations resets all changes to the "reservations" edge.
+func (m *InvoiceMutation) ResetReservations() {
+	m.reservations = nil
+	m.clearedreservations = false
+	m.removedreservations = nil
+}
+
 // Where appends a list predicates to the InvoiceMutation builder.
 func (m *InvoiceMutation) Where(ps ...predicate.Invoice) {
 	m.predicates = append(m.predicates, ps...)
@@ -2460,7 +2519,7 @@ func (m *InvoiceMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *InvoiceMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.product != nil {
 		edges = append(edges, invoice.EdgeProduct)
 	}
@@ -2469,6 +2528,9 @@ func (m *InvoiceMutation) AddedEdges() []string {
 	}
 	if m.payment_profile != nil {
 		edges = append(edges, invoice.EdgePaymentProfile)
+	}
+	if m.reservations != nil {
+		edges = append(edges, invoice.EdgeReservations)
 	}
 	return edges
 }
@@ -2489,25 +2551,42 @@ func (m *InvoiceMutation) AddedIDs(name string) []ent.Value {
 		if id := m.payment_profile; id != nil {
 			return []ent.Value{*id}
 		}
+	case invoice.EdgeReservations:
+		ids := make([]ent.Value, 0, len(m.reservations))
+		for id := range m.reservations {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *InvoiceMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.removedreservations != nil {
+		edges = append(edges, invoice.EdgeReservations)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *InvoiceMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case invoice.EdgeReservations:
+		ids := make([]ent.Value, 0, len(m.removedreservations))
+		for id := range m.removedreservations {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *InvoiceMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedproduct {
 		edges = append(edges, invoice.EdgeProduct)
 	}
@@ -2516,6 +2595,9 @@ func (m *InvoiceMutation) ClearedEdges() []string {
 	}
 	if m.clearedpayment_profile {
 		edges = append(edges, invoice.EdgePaymentProfile)
+	}
+	if m.clearedreservations {
+		edges = append(edges, invoice.EdgeReservations)
 	}
 	return edges
 }
@@ -2530,6 +2612,8 @@ func (m *InvoiceMutation) EdgeCleared(name string) bool {
 		return m.clearedsubscriptions
 	case invoice.EdgePaymentProfile:
 		return m.clearedpayment_profile
+	case invoice.EdgeReservations:
+		return m.clearedreservations
 	}
 	return false
 }
@@ -2563,6 +2647,9 @@ func (m *InvoiceMutation) ResetEdge(name string) error {
 		return nil
 	case invoice.EdgePaymentProfile:
 		m.ResetPaymentProfile()
+		return nil
+	case invoice.EdgeReservations:
+		m.ResetReservations()
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice edge %s", name)
@@ -4317,6 +4404,7 @@ type ProductMutation struct {
 	addunique_limit      *int64
 	is_expiring          *bool
 	expiring_time        *time.Time
+	payment_model        *enum.PaymentModel
 	clearedFields        map[string]struct{}
 	invoices             map[int64]struct{}
 	removedinvoices      map[int64]struct{}
@@ -4327,6 +4415,9 @@ type ProductMutation struct {
 	bundles              map[int64]struct{}
 	removedbundles       map[int64]struct{}
 	clearedbundles       bool
+	reservations         map[int64]struct{}
+	removedreservations  map[int64]struct{}
+	clearedreservations  bool
 	done                 bool
 	oldValue             func(context.Context) (*Product, error)
 	predicates           []predicate.Product
@@ -5137,6 +5228,42 @@ func (m *ProductMutation) ResetExpiringTime() {
 	delete(m.clearedFields, product.FieldExpiringTime)
 }
 
+// SetPaymentModel sets the "payment_model" field.
+func (m *ProductMutation) SetPaymentModel(em enum.PaymentModel) {
+	m.payment_model = &em
+}
+
+// PaymentModel returns the value of the "payment_model" field in the mutation.
+func (m *ProductMutation) PaymentModel() (r enum.PaymentModel, exists bool) {
+	v := m.payment_model
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPaymentModel returns the old "payment_model" field's value of the Product entity.
+// If the Product object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductMutation) OldPaymentModel(ctx context.Context) (v enum.PaymentModel, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPaymentModel is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPaymentModel requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPaymentModel: %w", err)
+	}
+	return oldValue.PaymentModel, nil
+}
+
+// ResetPaymentModel resets all changes to the "payment_model" field.
+func (m *ProductMutation) ResetPaymentModel() {
+	m.payment_model = nil
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by ids.
 func (m *ProductMutation) AddInvoiceIDs(ids ...int64) {
 	if m.invoices == nil {
@@ -5299,6 +5426,60 @@ func (m *ProductMutation) ResetBundles() {
 	m.removedbundles = nil
 }
 
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by ids.
+func (m *ProductMutation) AddReservationIDs(ids ...int64) {
+	if m.reservations == nil {
+		m.reservations = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.reservations[ids[i]] = struct{}{}
+	}
+}
+
+// ClearReservations clears the "reservations" edge to the ProductReservation entity.
+func (m *ProductMutation) ClearReservations() {
+	m.clearedreservations = true
+}
+
+// ReservationsCleared reports if the "reservations" edge to the ProductReservation entity was cleared.
+func (m *ProductMutation) ReservationsCleared() bool {
+	return m.clearedreservations
+}
+
+// RemoveReservationIDs removes the "reservations" edge to the ProductReservation entity by IDs.
+func (m *ProductMutation) RemoveReservationIDs(ids ...int64) {
+	if m.removedreservations == nil {
+		m.removedreservations = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.reservations, ids[i])
+		m.removedreservations[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedReservations returns the removed IDs of the "reservations" edge to the ProductReservation entity.
+func (m *ProductMutation) RemovedReservationsIDs() (ids []int64) {
+	for id := range m.removedreservations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ReservationsIDs returns the "reservations" edge IDs in the mutation.
+func (m *ProductMutation) ReservationsIDs() (ids []int64) {
+	for id := range m.reservations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetReservations resets all changes to the "reservations" edge.
+func (m *ProductMutation) ResetReservations() {
+	m.reservations = nil
+	m.clearedreservations = false
+	m.removedreservations = nil
+}
+
 // Where appends a list predicates to the ProductMutation builder.
 func (m *ProductMutation) Where(ps ...predicate.Product) {
 	m.predicates = append(m.predicates, ps...)
@@ -5333,7 +5514,7 @@ func (m *ProductMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProductMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.created_at != nil {
 		fields = append(fields, product.FieldCreatedAt)
 	}
@@ -5382,6 +5563,9 @@ func (m *ProductMutation) Fields() []string {
 	if m.expiring_time != nil {
 		fields = append(fields, product.FieldExpiringTime)
 	}
+	if m.payment_model != nil {
+		fields = append(fields, product.FieldPaymentModel)
+	}
 	return fields
 }
 
@@ -5422,6 +5606,8 @@ func (m *ProductMutation) Field(name string) (ent.Value, bool) {
 		return m.IsExpiring()
 	case product.FieldExpiringTime:
 		return m.ExpiringTime()
+	case product.FieldPaymentModel:
+		return m.PaymentModel()
 	}
 	return nil, false
 }
@@ -5463,6 +5649,8 @@ func (m *ProductMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldIsExpiring(ctx)
 	case product.FieldExpiringTime:
 		return m.OldExpiringTime(ctx)
+	case product.FieldPaymentModel:
+		return m.OldPaymentModel(ctx)
 	}
 	return nil, fmt.Errorf("unknown Product field %s", name)
 }
@@ -5583,6 +5771,13 @@ func (m *ProductMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetExpiringTime(v)
+		return nil
+	case product.FieldPaymentModel:
+		v, ok := value.(enum.PaymentModel)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPaymentModel(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Product field %s", name)
@@ -5753,13 +5948,16 @@ func (m *ProductMutation) ResetField(name string) error {
 	case product.FieldExpiringTime:
 		m.ResetExpiringTime()
 		return nil
+	case product.FieldPaymentModel:
+		m.ResetPaymentModel()
+		return nil
 	}
 	return fmt.Errorf("unknown Product field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProductMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.invoices != nil {
 		edges = append(edges, product.EdgeInvoices)
 	}
@@ -5768,6 +5966,9 @@ func (m *ProductMutation) AddedEdges() []string {
 	}
 	if m.bundles != nil {
 		edges = append(edges, product.EdgeBundles)
+	}
+	if m.reservations != nil {
+		edges = append(edges, product.EdgeReservations)
 	}
 	return edges
 }
@@ -5794,13 +5995,19 @@ func (m *ProductMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case product.EdgeReservations:
+		ids := make([]ent.Value, 0, len(m.reservations))
+		for id := range m.reservations {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProductMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedinvoices != nil {
 		edges = append(edges, product.EdgeInvoices)
 	}
@@ -5809,6 +6016,9 @@ func (m *ProductMutation) RemovedEdges() []string {
 	}
 	if m.removedbundles != nil {
 		edges = append(edges, product.EdgeBundles)
+	}
+	if m.removedreservations != nil {
+		edges = append(edges, product.EdgeReservations)
 	}
 	return edges
 }
@@ -5835,13 +6045,19 @@ func (m *ProductMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case product.EdgeReservations:
+		ids := make([]ent.Value, 0, len(m.removedreservations))
+		for id := range m.removedreservations {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProductMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedinvoices {
 		edges = append(edges, product.EdgeInvoices)
 	}
@@ -5850,6 +6066,9 @@ func (m *ProductMutation) ClearedEdges() []string {
 	}
 	if m.clearedbundles {
 		edges = append(edges, product.EdgeBundles)
+	}
+	if m.clearedreservations {
+		edges = append(edges, product.EdgeReservations)
 	}
 	return edges
 }
@@ -5864,6 +6083,8 @@ func (m *ProductMutation) EdgeCleared(name string) bool {
 		return m.clearedsubscriptions
 	case product.EdgeBundles:
 		return m.clearedbundles
+	case product.EdgeReservations:
+		return m.clearedreservations
 	}
 	return false
 }
@@ -5889,8 +6110,950 @@ func (m *ProductMutation) ResetEdge(name string) error {
 	case product.EdgeBundles:
 		m.ResetBundles()
 		return nil
+	case product.EdgeReservations:
+		m.ResetReservations()
+		return nil
 	}
 	return fmt.Errorf("unknown Product edge %s", name)
+}
+
+// ProductReservationMutation represents an operation that mutates the ProductReservation nodes in the graph.
+type ProductReservationMutation struct {
+	config
+	op                   Op
+	typ                  string
+	id                   *int64
+	created_at           *time.Time
+	updated_at           *time.Time
+	product_id           *int64
+	addproduct_id        *int64
+	invoice_id           *int64
+	addinvoice_id        *int64
+	user_id              *int64
+	adduser_id           *int64
+	reserved_quantity    *int64
+	addreserved_quantity *int64
+	status               *enum.ReservationStatus
+	expiration_time      *time.Time
+	clearedFields        map[string]struct{}
+	product              *int64
+	clearedproduct       bool
+	invoice              *int64
+	clearedinvoice       bool
+	done                 bool
+	oldValue             func(context.Context) (*ProductReservation, error)
+	predicates           []predicate.ProductReservation
+}
+
+var _ ent.Mutation = (*ProductReservationMutation)(nil)
+
+// productreservationOption allows management of the mutation configuration using functional options.
+type productreservationOption func(*ProductReservationMutation)
+
+// newProductReservationMutation creates new mutation for the ProductReservation entity.
+func newProductReservationMutation(c config, op Op, opts ...productreservationOption) *ProductReservationMutation {
+	m := &ProductReservationMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeProductReservation,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withProductReservationID sets the ID field of the mutation.
+func withProductReservationID(id int64) productreservationOption {
+	return func(m *ProductReservationMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ProductReservation
+		)
+		m.oldValue = func(ctx context.Context) (*ProductReservation, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ProductReservation.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withProductReservation sets the old ProductReservation of the mutation.
+func withProductReservation(node *ProductReservation) productreservationOption {
+	return func(m *ProductReservationMutation) {
+		m.oldValue = func(context.Context) (*ProductReservation, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ProductReservationMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ProductReservationMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ProductReservationMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ProductReservationMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ProductReservation.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ProductReservationMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ProductReservationMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ProductReservation entity.
+// If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReservationMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ProductReservationMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ProductReservationMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ProductReservationMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ProductReservation entity.
+// If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReservationMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ProductReservationMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetProductID sets the "product_id" field.
+func (m *ProductReservationMutation) SetProductID(i int64) {
+	m.product_id = &i
+	m.addproduct_id = nil
+}
+
+// ProductID returns the value of the "product_id" field in the mutation.
+func (m *ProductReservationMutation) ProductID() (r int64, exists bool) {
+	v := m.product_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProductID returns the old "product_id" field's value of the ProductReservation entity.
+// If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReservationMutation) OldProductID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProductID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProductID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProductID: %w", err)
+	}
+	return oldValue.ProductID, nil
+}
+
+// AddProductID adds i to the "product_id" field.
+func (m *ProductReservationMutation) AddProductID(i int64) {
+	if m.addproduct_id != nil {
+		*m.addproduct_id += i
+	} else {
+		m.addproduct_id = &i
+	}
+}
+
+// AddedProductID returns the value that was added to the "product_id" field in this mutation.
+func (m *ProductReservationMutation) AddedProductID() (r int64, exists bool) {
+	v := m.addproduct_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetProductID resets all changes to the "product_id" field.
+func (m *ProductReservationMutation) ResetProductID() {
+	m.product_id = nil
+	m.addproduct_id = nil
+}
+
+// SetInvoiceID sets the "invoice_id" field.
+func (m *ProductReservationMutation) SetInvoiceID(i int64) {
+	m.invoice_id = &i
+	m.addinvoice_id = nil
+}
+
+// InvoiceID returns the value of the "invoice_id" field in the mutation.
+func (m *ProductReservationMutation) InvoiceID() (r int64, exists bool) {
+	v := m.invoice_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvoiceID returns the old "invoice_id" field's value of the ProductReservation entity.
+// If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReservationMutation) OldInvoiceID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvoiceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvoiceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvoiceID: %w", err)
+	}
+	return oldValue.InvoiceID, nil
+}
+
+// AddInvoiceID adds i to the "invoice_id" field.
+func (m *ProductReservationMutation) AddInvoiceID(i int64) {
+	if m.addinvoice_id != nil {
+		*m.addinvoice_id += i
+	} else {
+		m.addinvoice_id = &i
+	}
+}
+
+// AddedInvoiceID returns the value that was added to the "invoice_id" field in this mutation.
+func (m *ProductReservationMutation) AddedInvoiceID() (r int64, exists bool) {
+	v := m.addinvoice_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetInvoiceID resets all changes to the "invoice_id" field.
+func (m *ProductReservationMutation) ResetInvoiceID() {
+	m.invoice_id = nil
+	m.addinvoice_id = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *ProductReservationMutation) SetUserID(i int64) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *ProductReservationMutation) UserID() (r int64, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the ProductReservation entity.
+// If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReservationMutation) OldUserID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *ProductReservationMutation) AddUserID(i int64) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *ProductReservationMutation) AddedUserID() (r int64, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *ProductReservationMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetReservedQuantity sets the "reserved_quantity" field.
+func (m *ProductReservationMutation) SetReservedQuantity(i int64) {
+	m.reserved_quantity = &i
+	m.addreserved_quantity = nil
+}
+
+// ReservedQuantity returns the value of the "reserved_quantity" field in the mutation.
+func (m *ProductReservationMutation) ReservedQuantity() (r int64, exists bool) {
+	v := m.reserved_quantity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReservedQuantity returns the old "reserved_quantity" field's value of the ProductReservation entity.
+// If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReservationMutation) OldReservedQuantity(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReservedQuantity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReservedQuantity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReservedQuantity: %w", err)
+	}
+	return oldValue.ReservedQuantity, nil
+}
+
+// AddReservedQuantity adds i to the "reserved_quantity" field.
+func (m *ProductReservationMutation) AddReservedQuantity(i int64) {
+	if m.addreserved_quantity != nil {
+		*m.addreserved_quantity += i
+	} else {
+		m.addreserved_quantity = &i
+	}
+}
+
+// AddedReservedQuantity returns the value that was added to the "reserved_quantity" field in this mutation.
+func (m *ProductReservationMutation) AddedReservedQuantity() (r int64, exists bool) {
+	v := m.addreserved_quantity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReservedQuantity resets all changes to the "reserved_quantity" field.
+func (m *ProductReservationMutation) ResetReservedQuantity() {
+	m.reserved_quantity = nil
+	m.addreserved_quantity = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *ProductReservationMutation) SetStatus(es enum.ReservationStatus) {
+	m.status = &es
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ProductReservationMutation) Status() (r enum.ReservationStatus, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ProductReservation entity.
+// If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReservationMutation) OldStatus(ctx context.Context) (v enum.ReservationStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ProductReservationMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetExpirationTime sets the "expiration_time" field.
+func (m *ProductReservationMutation) SetExpirationTime(t time.Time) {
+	m.expiration_time = &t
+}
+
+// ExpirationTime returns the value of the "expiration_time" field in the mutation.
+func (m *ProductReservationMutation) ExpirationTime() (r time.Time, exists bool) {
+	v := m.expiration_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpirationTime returns the old "expiration_time" field's value of the ProductReservation entity.
+// If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductReservationMutation) OldExpirationTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpirationTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpirationTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpirationTime: %w", err)
+	}
+	return oldValue.ExpirationTime, nil
+}
+
+// ResetExpirationTime resets all changes to the "expiration_time" field.
+func (m *ProductReservationMutation) ResetExpirationTime() {
+	m.expiration_time = nil
+}
+
+// ClearProduct clears the "product" edge to the Product entity.
+func (m *ProductReservationMutation) ClearProduct() {
+	m.clearedproduct = true
+}
+
+// ProductCleared reports if the "product" edge to the Product entity was cleared.
+func (m *ProductReservationMutation) ProductCleared() bool {
+	return m.clearedproduct
+}
+
+// ProductIDs returns the "product" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProductID instead. It exists only for internal usage by the builders.
+func (m *ProductReservationMutation) ProductIDs() (ids []int64) {
+	if id := m.product; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProduct resets all changes to the "product" edge.
+func (m *ProductReservationMutation) ResetProduct() {
+	m.product = nil
+	m.clearedproduct = false
+}
+
+// ClearInvoice clears the "invoice" edge to the Invoice entity.
+func (m *ProductReservationMutation) ClearInvoice() {
+	m.clearedinvoice = true
+}
+
+// InvoiceCleared reports if the "invoice" edge to the Invoice entity was cleared.
+func (m *ProductReservationMutation) InvoiceCleared() bool {
+	return m.clearedinvoice
+}
+
+// InvoiceIDs returns the "invoice" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// InvoiceID instead. It exists only for internal usage by the builders.
+func (m *ProductReservationMutation) InvoiceIDs() (ids []int64) {
+	if id := m.invoice; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetInvoice resets all changes to the "invoice" edge.
+func (m *ProductReservationMutation) ResetInvoice() {
+	m.invoice = nil
+	m.clearedinvoice = false
+}
+
+// Where appends a list predicates to the ProductReservationMutation builder.
+func (m *ProductReservationMutation) Where(ps ...predicate.ProductReservation) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ProductReservationMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ProductReservationMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ProductReservation, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ProductReservationMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ProductReservationMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ProductReservation).
+func (m *ProductReservationMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ProductReservationMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.created_at != nil {
+		fields = append(fields, productreservation.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, productreservation.FieldUpdatedAt)
+	}
+	if m.product_id != nil {
+		fields = append(fields, productreservation.FieldProductID)
+	}
+	if m.invoice_id != nil {
+		fields = append(fields, productreservation.FieldInvoiceID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, productreservation.FieldUserID)
+	}
+	if m.reserved_quantity != nil {
+		fields = append(fields, productreservation.FieldReservedQuantity)
+	}
+	if m.status != nil {
+		fields = append(fields, productreservation.FieldStatus)
+	}
+	if m.expiration_time != nil {
+		fields = append(fields, productreservation.FieldExpirationTime)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ProductReservationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case productreservation.FieldCreatedAt:
+		return m.CreatedAt()
+	case productreservation.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case productreservation.FieldProductID:
+		return m.ProductID()
+	case productreservation.FieldInvoiceID:
+		return m.InvoiceID()
+	case productreservation.FieldUserID:
+		return m.UserID()
+	case productreservation.FieldReservedQuantity:
+		return m.ReservedQuantity()
+	case productreservation.FieldStatus:
+		return m.Status()
+	case productreservation.FieldExpirationTime:
+		return m.ExpirationTime()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ProductReservationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case productreservation.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case productreservation.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case productreservation.FieldProductID:
+		return m.OldProductID(ctx)
+	case productreservation.FieldInvoiceID:
+		return m.OldInvoiceID(ctx)
+	case productreservation.FieldUserID:
+		return m.OldUserID(ctx)
+	case productreservation.FieldReservedQuantity:
+		return m.OldReservedQuantity(ctx)
+	case productreservation.FieldStatus:
+		return m.OldStatus(ctx)
+	case productreservation.FieldExpirationTime:
+		return m.OldExpirationTime(ctx)
+	}
+	return nil, fmt.Errorf("unknown ProductReservation field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProductReservationMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case productreservation.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case productreservation.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case productreservation.FieldProductID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProductID(v)
+		return nil
+	case productreservation.FieldInvoiceID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvoiceID(v)
+		return nil
+	case productreservation.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case productreservation.FieldReservedQuantity:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReservedQuantity(v)
+		return nil
+	case productreservation.FieldStatus:
+		v, ok := value.(enum.ReservationStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case productreservation.FieldExpirationTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpirationTime(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProductReservation field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ProductReservationMutation) AddedFields() []string {
+	var fields []string
+	if m.addproduct_id != nil {
+		fields = append(fields, productreservation.FieldProductID)
+	}
+	if m.addinvoice_id != nil {
+		fields = append(fields, productreservation.FieldInvoiceID)
+	}
+	if m.adduser_id != nil {
+		fields = append(fields, productreservation.FieldUserID)
+	}
+	if m.addreserved_quantity != nil {
+		fields = append(fields, productreservation.FieldReservedQuantity)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ProductReservationMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case productreservation.FieldProductID:
+		return m.AddedProductID()
+	case productreservation.FieldInvoiceID:
+		return m.AddedInvoiceID()
+	case productreservation.FieldUserID:
+		return m.AddedUserID()
+	case productreservation.FieldReservedQuantity:
+		return m.AddedReservedQuantity()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProductReservationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case productreservation.FieldProductID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddProductID(v)
+		return nil
+	case productreservation.FieldInvoiceID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddInvoiceID(v)
+		return nil
+	case productreservation.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	case productreservation.FieldReservedQuantity:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReservedQuantity(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProductReservation numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ProductReservationMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ProductReservationMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ProductReservationMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ProductReservation nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ProductReservationMutation) ResetField(name string) error {
+	switch name {
+	case productreservation.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case productreservation.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case productreservation.FieldProductID:
+		m.ResetProductID()
+		return nil
+	case productreservation.FieldInvoiceID:
+		m.ResetInvoiceID()
+		return nil
+	case productreservation.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case productreservation.FieldReservedQuantity:
+		m.ResetReservedQuantity()
+		return nil
+	case productreservation.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case productreservation.FieldExpirationTime:
+		m.ResetExpirationTime()
+		return nil
+	}
+	return fmt.Errorf("unknown ProductReservation field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ProductReservationMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.product != nil {
+		edges = append(edges, productreservation.EdgeProduct)
+	}
+	if m.invoice != nil {
+		edges = append(edges, productreservation.EdgeInvoice)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ProductReservationMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case productreservation.EdgeProduct:
+		if id := m.product; id != nil {
+			return []ent.Value{*id}
+		}
+	case productreservation.EdgeInvoice:
+		if id := m.invoice; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ProductReservationMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ProductReservationMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ProductReservationMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedproduct {
+		edges = append(edges, productreservation.EdgeProduct)
+	}
+	if m.clearedinvoice {
+		edges = append(edges, productreservation.EdgeInvoice)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ProductReservationMutation) EdgeCleared(name string) bool {
+	switch name {
+	case productreservation.EdgeProduct:
+		return m.clearedproduct
+	case productreservation.EdgeInvoice:
+		return m.clearedinvoice
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ProductReservationMutation) ClearEdge(name string) error {
+	switch name {
+	case productreservation.EdgeProduct:
+		m.ClearProduct()
+		return nil
+	case productreservation.EdgeInvoice:
+		m.ClearInvoice()
+		return nil
+	}
+	return fmt.Errorf("unknown ProductReservation unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ProductReservationMutation) ResetEdge(name string) error {
+	switch name {
+	case productreservation.EdgeProduct:
+		m.ResetProduct()
+		return nil
+	case productreservation.EdgeInvoice:
+		m.ResetInvoice()
+		return nil
+	}
+	return fmt.Errorf("unknown ProductReservation edge %s", name)
 }
 
 // SubscriptionsMutation represents an operation that mutates the Subscriptions nodes in the graph.

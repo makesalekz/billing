@@ -9,6 +9,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 
 	"entgo.io/ent/dialect/sql"
@@ -19,7 +20,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 6)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 7)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   bundle.Table,
@@ -141,9 +142,31 @@ var schemaGraph = func() *sqlgraph.Schema {
 			product.FieldUniqueLimit:  {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
 			product.FieldIsExpiring:   {Type: field.TypeBool, Column: product.FieldIsExpiring},
 			product.FieldExpiringTime: {Type: field.TypeTime, Column: product.FieldExpiringTime},
+			product.FieldPaymentModel: {Type: field.TypeEnum, Column: product.FieldPaymentModel},
 		},
 	}
 	graph.Nodes[5] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   productreservation.Table,
+			Columns: productreservation.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt64,
+				Column: productreservation.FieldID,
+			},
+		},
+		Type: "ProductReservation",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			productreservation.FieldCreatedAt:        {Type: field.TypeTime, Column: productreservation.FieldCreatedAt},
+			productreservation.FieldUpdatedAt:        {Type: field.TypeTime, Column: productreservation.FieldUpdatedAt},
+			productreservation.FieldProductID:        {Type: field.TypeInt64, Column: productreservation.FieldProductID},
+			productreservation.FieldInvoiceID:        {Type: field.TypeInt64, Column: productreservation.FieldInvoiceID},
+			productreservation.FieldUserID:           {Type: field.TypeInt64, Column: productreservation.FieldUserID},
+			productreservation.FieldReservedQuantity: {Type: field.TypeInt64, Column: productreservation.FieldReservedQuantity},
+			productreservation.FieldStatus:           {Type: field.TypeEnum, Column: productreservation.FieldStatus},
+			productreservation.FieldExpirationTime:   {Type: field.TypeTime, Column: productreservation.FieldExpirationTime},
+		},
+	}
+	graph.Nodes[6] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   subscriptions.Table,
 			Columns: subscriptions.Columns,
@@ -221,6 +244,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"PaymentProfile",
 	)
 	graph.MustAddE(
+		"reservations",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+		},
+		"Invoice",
+		"ProductReservation",
+	)
+	graph.MustAddE(
 		"bundles",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -279,6 +314,42 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"Product",
 		"Bundle",
+	)
+	graph.MustAddE(
+		"reservations",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.ReservationsTable,
+			Columns: []string{product.ReservationsColumn},
+			Bidi:    false,
+		},
+		"Product",
+		"ProductReservation",
+	)
+	graph.MustAddE(
+		"product",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   productreservation.ProductTable,
+			Columns: []string{productreservation.ProductColumn},
+			Bidi:    false,
+		},
+		"ProductReservation",
+		"Product",
+	)
+	graph.MustAddE(
+		"invoice",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   productreservation.InvoiceTable,
+			Columns: []string{productreservation.InvoiceColumn},
+			Bidi:    false,
+		},
+		"ProductReservation",
+		"Invoice",
 	)
 	graph.MustAddE(
 		"invoices",
@@ -593,6 +664,20 @@ func (f *InvoiceFilter) WhereHasPaymentProfileWith(preds ...predicate.PaymentPro
 	})))
 }
 
+// WhereHasReservations applies a predicate to check if query has an edge reservations.
+func (f *InvoiceFilter) WhereHasReservations() {
+	f.Where(entql.HasEdge("reservations"))
+}
+
+// WhereHasReservationsWith applies a predicate to check if query has an edge reservations with a given conditions (other predicates).
+func (f *InvoiceFilter) WhereHasReservationsWith(preds ...predicate.ProductReservation) {
+	f.Where(entql.HasEdgeWith("reservations", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (iq *ItemQuery) addPredicate(pred func(s *sql.Selector)) {
 	iq.predicates = append(iq.predicates, pred)
@@ -901,6 +986,11 @@ func (f *ProductFilter) WhereExpiringTime(p entql.TimeP) {
 	f.Where(p.Field(product.FieldExpiringTime))
 }
 
+// WherePaymentModel applies the entql string predicate on the payment_model field.
+func (f *ProductFilter) WherePaymentModel(p entql.StringP) {
+	f.Where(p.Field(product.FieldPaymentModel))
+}
+
 // WhereHasInvoices applies a predicate to check if query has an edge invoices.
 func (f *ProductFilter) WhereHasInvoices() {
 	f.Where(entql.HasEdge("invoices"))
@@ -943,6 +1033,128 @@ func (f *ProductFilter) WhereHasBundlesWith(preds ...predicate.Bundle) {
 	})))
 }
 
+// WhereHasReservations applies a predicate to check if query has an edge reservations.
+func (f *ProductFilter) WhereHasReservations() {
+	f.Where(entql.HasEdge("reservations"))
+}
+
+// WhereHasReservationsWith applies a predicate to check if query has an edge reservations with a given conditions (other predicates).
+func (f *ProductFilter) WhereHasReservationsWith(preds ...predicate.ProductReservation) {
+	f.Where(entql.HasEdgeWith("reservations", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (prq *ProductReservationQuery) addPredicate(pred func(s *sql.Selector)) {
+	prq.predicates = append(prq.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the ProductReservationQuery builder.
+func (prq *ProductReservationQuery) Filter() *ProductReservationFilter {
+	return &ProductReservationFilter{config: prq.config, predicateAdder: prq}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *ProductReservationMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the ProductReservationMutation builder.
+func (m *ProductReservationMutation) Filter() *ProductReservationFilter {
+	return &ProductReservationFilter{config: m.config, predicateAdder: m}
+}
+
+// ProductReservationFilter provides a generic filtering capability at runtime for ProductReservationQuery.
+type ProductReservationFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *ProductReservationFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[5].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int64 predicate on the id field.
+func (f *ProductReservationFilter) WhereID(p entql.Int64P) {
+	f.Where(p.Field(productreservation.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *ProductReservationFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(productreservation.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *ProductReservationFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(productreservation.FieldUpdatedAt))
+}
+
+// WhereProductID applies the entql int64 predicate on the product_id field.
+func (f *ProductReservationFilter) WhereProductID(p entql.Int64P) {
+	f.Where(p.Field(productreservation.FieldProductID))
+}
+
+// WhereInvoiceID applies the entql int64 predicate on the invoice_id field.
+func (f *ProductReservationFilter) WhereInvoiceID(p entql.Int64P) {
+	f.Where(p.Field(productreservation.FieldInvoiceID))
+}
+
+// WhereUserID applies the entql int64 predicate on the user_id field.
+func (f *ProductReservationFilter) WhereUserID(p entql.Int64P) {
+	f.Where(p.Field(productreservation.FieldUserID))
+}
+
+// WhereReservedQuantity applies the entql int64 predicate on the reserved_quantity field.
+func (f *ProductReservationFilter) WhereReservedQuantity(p entql.Int64P) {
+	f.Where(p.Field(productreservation.FieldReservedQuantity))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *ProductReservationFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(productreservation.FieldStatus))
+}
+
+// WhereExpirationTime applies the entql time.Time predicate on the expiration_time field.
+func (f *ProductReservationFilter) WhereExpirationTime(p entql.TimeP) {
+	f.Where(p.Field(productreservation.FieldExpirationTime))
+}
+
+// WhereHasProduct applies a predicate to check if query has an edge product.
+func (f *ProductReservationFilter) WhereHasProduct() {
+	f.Where(entql.HasEdge("product"))
+}
+
+// WhereHasProductWith applies a predicate to check if query has an edge product with a given conditions (other predicates).
+func (f *ProductReservationFilter) WhereHasProductWith(preds ...predicate.Product) {
+	f.Where(entql.HasEdgeWith("product", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasInvoice applies a predicate to check if query has an edge invoice.
+func (f *ProductReservationFilter) WhereHasInvoice() {
+	f.Where(entql.HasEdge("invoice"))
+}
+
+// WhereHasInvoiceWith applies a predicate to check if query has an edge invoice with a given conditions (other predicates).
+func (f *ProductReservationFilter) WhereHasInvoiceWith(preds ...predicate.Invoice) {
+	f.Where(entql.HasEdgeWith("invoice", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // addPredicate implements the predicateAdder interface.
 func (sq *SubscriptionsQuery) addPredicate(pred func(s *sql.Selector)) {
 	sq.predicates = append(sq.predicates, pred)
@@ -972,7 +1184,7 @@ type SubscriptionsFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *SubscriptionsFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[5].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[6].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})

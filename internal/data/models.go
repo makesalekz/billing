@@ -313,3 +313,13 @@ type PaymentProfileDto struct {
 	UserToken      string
 	RecurrentToken *string
 }
+
+type ProductReservationDto struct {
+	UserID              int64
+	InvoiceID           int64
+	ProductID           int64
+	ReservationQuantity int64
+	Status              enum.ReservationStatus
+
+	ExpirationTime *time.Time
+}

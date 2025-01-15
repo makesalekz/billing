@@ -16,6 +16,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
@@ -292,6 +293,21 @@ func (ic *InvoiceCreate) SetSubscriptions(s *Subscriptions) *InvoiceCreate {
 // SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
 func (ic *InvoiceCreate) SetPaymentProfile(p *PaymentProfile) *InvoiceCreate {
 	return ic.SetPaymentProfileID(p.ID)
+}
+
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by IDs.
+func (ic *InvoiceCreate) AddReservationIDs(ids ...int64) *InvoiceCreate {
+	ic.mutation.AddReservationIDs(ids...)
+	return ic
+}
+
+// AddReservations adds the "reservations" edges to the ProductReservation entity.
+func (ic *InvoiceCreate) AddReservations(p ...*ProductReservation) *InvoiceCreate {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return ic.AddReservationIDs(ids...)
 }
 
 // Mutation returns the InvoiceMutation object of the builder.
@@ -575,6 +591,22 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.PaymentProfileID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.ReservationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

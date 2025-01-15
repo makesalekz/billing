@@ -37,37 +37,39 @@ VALUES
 (213, 'AI assistant', 'AI tools for automation', 'ai-assistant', NOW(), NOW());
 
 -- Map tariff plans to features in the bundles table
-INSERT INTO bundles (amount, item_id, product_id, created_at, updated_at)
+INSERT INTO bundles (id, amount, item_id, product_id, created_at, updated_at)
 VALUES
 -- Basic plan
-(1, 201, 12, NOW(), NOW()),
-(1, 203, 12, NOW(), NOW()),
-(1, 205, 12, NOW(), NOW()),
-(1, 207, 12, NOW(), NOW()),
+(2, 50, 201, 12, NOW(), NOW()),
+(3, 25, 202, 12, NOW(), NOW()),
+(4, 5, 203, 12, NOW(), NOW()),
+(5, 5, 205, 12, NOW(), NOW()),
+(6, 1, 207, 12, NOW(), NOW()),
 
 -- Pro plan
-(1, 201, 13, NOW(), NOW()),
-(1, 202, 13, NOW(), NOW()),
-(1, 203, 13, NOW(), NOW()),
-(1, 204, 13, NOW(), NOW()),
-(1, 205, 13, NOW(), NOW()),
-(1, 206, 13, NOW(), NOW()),
-(1, 207, 13, NOW(), NOW()),
-(1, 208, 13, NOW(), NOW()),
-(1, 209, 13, NOW(), NOW()),
-(1, 211, 13, NOW(), NOW()),
+(7, 100, 201, 13, NOW(), NOW()),
+(8, 50, 202, 13, NOW(), NOW()),
+(9, 10, 203, 13, NOW(), NOW()),
+(10, 1, 204, 13, NOW(), NOW()),
+(11, 1, 205, 13, NOW(), NOW()),
+(12, 1, 206, 13, NOW(), NOW()),
+(13, 1, 207, 13, NOW(), NOW()),
+(14, 1, 208, 13, NOW(), NOW()),
+(15, 1, 209, 13, NOW(), NOW()),
+(16, 1, 211, 13, NOW(), NOW()),
 
 -- Expert plan
-(1, 201, 14, NOW(), NOW()),
-(1, 202, 14, NOW(), NOW()),
-(1, 203, 14, NOW(), NOW()),
-(1, 204, 14, NOW(), NOW()),
-(1, 205, 14, NOW(), NOW()),
-(1, 206, 14, NOW(), NOW()),
-(1, 207, 14, NOW(), NOW()),
-(1, 208, 14, NOW(), NOW()),
-(1, 209, 14, NOW(), NOW()),
-(1, 210, 14, NOW(), NOW()),
-(1, 211, 14, NOW(), NOW()),
-(1, 212, 14, NOW(), NOW()),
-(1, 213, 14, NOW(), NOW());
+(17, 200, 201, 14, NOW(), NOW()),
+(18, 50, 202, 14, NOW(), NOW()),
+(19, 100, 203, 14, NOW(), NOW()),
+(20, 1, 204, 14, NOW(), NOW()),
+(21, 1, 205, 14, NOW(), NOW()),
+(22, 1, 206, 14, NOW(), NOW()),
+(23, 1, 207, 14, NOW(), NOW()),
+(24, 1, 208, 14, NOW(), NOW()),
+(25, 1, 209, 14, NOW(), NOW()),
+(26, 1, 210, 14, NOW(), NOW()),
+(27, 1, 211, 14, NOW(), NOW()),
+(28, 1, 212, 14, NOW(), NOW()),
+(29, 1, 213, 14, NOW(), NOW());
+

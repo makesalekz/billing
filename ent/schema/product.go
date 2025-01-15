@@ -1,12 +1,14 @@
 package schema
 
 import (
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
+	"gitlab.calendaria.team/services/finance/billing/ent/mixins"
+
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/billing/ent/mixins"
 )
 
 // Product holds the schema definition for the Product entity.
@@ -23,9 +25,11 @@ func (Product) Fields() []ent.Field {
 		field.String("description"),
 		field.Float("price").
 			GoType(decimal.Decimal{}).
-			SchemaType(map[string]string{
-				dialect.Postgres: "numeric",
-			}),
+			SchemaType(
+				map[string]string{
+					dialect.Postgres: "numeric",
+				},
+			),
 		field.String("currency").Default("KZT").MaxLen(3),
 		field.Bool("is_active").Default(true).Comment("Indicates that this product is active."),
 		field.Bool("is_limited").Default(false).Comment("Indicates that this product is limited."),
@@ -35,6 +39,8 @@ func (Product) Fields() []ent.Field {
 		field.Int64("unique_limit").Default(0).Max(100).Comment("Number of times this product can be purchased."),
 		field.Bool("is_expiring").Optional().Default(false).Comment("Indicates that this product requires renewal."),
 		field.Time("expiring_time").Optional().Nillable().Comment("Time when this product expires."),
+		field.Enum("payment_model").GoType(enum.PaymentModel("")).Default(enum.Recurrent.Value()).
+			Comment("Payment model for this product."),
 	}
 }
 
@@ -44,6 +50,7 @@ func (Product) Edges() []ent.Edge {
 		edge.To("invoices", Invoice.Type),
 		edge.To("subscriptions", Subscriptions.Type),
 		edge.To("bundles", Bundle.Type),
+		edge.To("reservations", ProductReservation.Type),
 	}
 }
 

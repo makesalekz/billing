@@ -154,12 +154,47 @@ var (
 		{Name: "unique_limit", Type: field.TypeInt64, Default: 0},
 		{Name: "is_expiring", Type: field.TypeBool, Nullable: true, Default: false},
 		{Name: "expiring_time", Type: field.TypeTime, Nullable: true},
+		{Name: "payment_model", Type: field.TypeEnum, Enums: []string{"ONE_TIME", "RECURRENT"}, Default: "RECURRENT"},
 	}
 	// ProductsTable holds the schema information for the "products" table.
 	ProductsTable = &schema.Table{
 		Name:       "products",
 		Columns:    ProductsColumns,
 		PrimaryKey: []*schema.Column{ProductsColumns[0]},
+	}
+	// ProductReservationsColumns holds the columns for the "product_reservations" table.
+	ProductReservationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "product_id", Type: field.TypeInt64},
+		{Name: "invoice_id", Type: field.TypeInt64},
+		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "reserved_quantity", Type: field.TypeInt64, Default: 1},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"PENDING", "COMPLETED", "EXPIRED", "CANCELLED"}, Default: "PENDING"},
+		{Name: "expiration_time", Type: field.TypeTime},
+		{Name: "invoice_reservations", Type: field.TypeInt64},
+		{Name: "product_reservations", Type: field.TypeInt64},
+	}
+	// ProductReservationsTable holds the schema information for the "product_reservations" table.
+	ProductReservationsTable = &schema.Table{
+		Name:       "product_reservations",
+		Columns:    ProductReservationsColumns,
+		PrimaryKey: []*schema.Column{ProductReservationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "product_reservations_invoices_reservations",
+				Columns:    []*schema.Column{ProductReservationsColumns[9]},
+				RefColumns: []*schema.Column{InvoicesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "product_reservations_products_reservations",
+				Columns:    []*schema.Column{ProductReservationsColumns[10]},
+				RefColumns: []*schema.Column{ProductsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// SubscriptionsColumns holds the columns for the "subscriptions" table.
 	SubscriptionsColumns = []*schema.Column{
@@ -190,6 +225,7 @@ var (
 		ItemsTable,
 		PaymentProfilesTable,
 		ProductsTable,
+		ProductReservationsTable,
 		SubscriptionsTable,
 	}
 )
@@ -200,5 +236,7 @@ func init() {
 	InvoicesTable.ForeignKeys[0].RefTable = PaymentProfilesTable
 	InvoicesTable.ForeignKeys[1].RefTable = ProductsTable
 	InvoicesTable.ForeignKeys[2].RefTable = SubscriptionsTable
+	ProductReservationsTable.ForeignKeys[0].RefTable = InvoicesTable
+	ProductReservationsTable.ForeignKeys[1].RefTable = ProductsTable
 	SubscriptionsTable.ForeignKeys[0].RefTable = ProductsTable
 }

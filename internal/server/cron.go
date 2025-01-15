@@ -38,6 +38,7 @@ func (cs *CronServer) processInvoices(uc *biz.InvoicesUseCase, pc *biz.PaymentUs
 			uc.ExpireResources(context.Background())
 
 			pc.ProcessExpiredPayments(context.Background())
+			pc.CancelReservations(context.Background())
 		},
 	)
 	if err != nil {

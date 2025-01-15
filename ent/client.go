@@ -20,6 +20,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/item"
 	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
@@ -38,6 +39,8 @@ type Client struct {
 	PaymentProfile *PaymentProfileClient
 	// Product is the client for interacting with the Product builders.
 	Product *ProductClient
+	// ProductReservation is the client for interacting with the ProductReservation builders.
+	ProductReservation *ProductReservationClient
 	// Subscriptions is the client for interacting with the Subscriptions builders.
 	Subscriptions *SubscriptionsClient
 }
@@ -56,6 +59,7 @@ func (c *Client) init() {
 	c.Item = NewItemClient(c.config)
 	c.PaymentProfile = NewPaymentProfileClient(c.config)
 	c.Product = NewProductClient(c.config)
+	c.ProductReservation = NewProductReservationClient(c.config)
 	c.Subscriptions = NewSubscriptionsClient(c.config)
 }
 
@@ -147,14 +151,15 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		Bundle:         NewBundleClient(cfg),
-		Invoice:        NewInvoiceClient(cfg),
-		Item:           NewItemClient(cfg),
-		PaymentProfile: NewPaymentProfileClient(cfg),
-		Product:        NewProductClient(cfg),
-		Subscriptions:  NewSubscriptionsClient(cfg),
+		ctx:                ctx,
+		config:             cfg,
+		Bundle:             NewBundleClient(cfg),
+		Invoice:            NewInvoiceClient(cfg),
+		Item:               NewItemClient(cfg),
+		PaymentProfile:     NewPaymentProfileClient(cfg),
+		Product:            NewProductClient(cfg),
+		ProductReservation: NewProductReservationClient(cfg),
+		Subscriptions:      NewSubscriptionsClient(cfg),
 	}, nil
 }
 
@@ -172,14 +177,15 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		Bundle:         NewBundleClient(cfg),
-		Invoice:        NewInvoiceClient(cfg),
-		Item:           NewItemClient(cfg),
-		PaymentProfile: NewPaymentProfileClient(cfg),
-		Product:        NewProductClient(cfg),
-		Subscriptions:  NewSubscriptionsClient(cfg),
+		ctx:                ctx,
+		config:             cfg,
+		Bundle:             NewBundleClient(cfg),
+		Invoice:            NewInvoiceClient(cfg),
+		Item:               NewItemClient(cfg),
+		PaymentProfile:     NewPaymentProfileClient(cfg),
+		Product:            NewProductClient(cfg),
+		ProductReservation: NewProductReservationClient(cfg),
+		Subscriptions:      NewSubscriptionsClient(cfg),
 	}, nil
 }
 
@@ -209,7 +215,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Bundle, c.Invoice, c.Item, c.PaymentProfile, c.Product, c.Subscriptions,
+		c.Bundle, c.Invoice, c.Item, c.PaymentProfile, c.Product, c.ProductReservation,
+		c.Subscriptions,
 	} {
 		n.Use(hooks...)
 	}
@@ -219,7 +226,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Bundle, c.Invoice, c.Item, c.PaymentProfile, c.Product, c.Subscriptions,
+		c.Bundle, c.Invoice, c.Item, c.PaymentProfile, c.Product, c.ProductReservation,
+		c.Subscriptions,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -238,6 +246,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PaymentProfile.mutate(ctx, m)
 	case *ProductMutation:
 		return c.Product.mutate(ctx, m)
+	case *ProductReservationMutation:
+		return c.ProductReservation.mutate(ctx, m)
 	case *SubscriptionsMutation:
 		return c.Subscriptions.mutate(ctx, m)
 	default:
@@ -561,6 +571,22 @@ func (c *InvoiceClient) QueryPaymentProfile(i *Invoice) *PaymentProfileQuery {
 			sqlgraph.From(invoice.Table, invoice.FieldID, id),
 			sqlgraph.To(paymentprofile.Table, paymentprofile.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, invoice.PaymentProfileTable, invoice.PaymentProfileColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReservations queries the reservations edge of a Invoice.
+func (c *InvoiceClient) QueryReservations(i *Invoice) *ProductReservationQuery {
+	query := (&ProductReservationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invoice.Table, invoice.FieldID, id),
+			sqlgraph.To(productreservation.Table, productreservation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, invoice.ReservationsTable, invoice.ReservationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil
@@ -1051,6 +1077,22 @@ func (c *ProductClient) QueryBundles(pr *Product) *BundleQuery {
 	return query
 }
 
+// QueryReservations queries the reservations edge of a Product.
+func (c *ProductClient) QueryReservations(pr *Product) *ProductReservationQuery {
+	query := (&ProductReservationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(product.Table, product.FieldID, id),
+			sqlgraph.To(productreservation.Table, productreservation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, product.ReservationsTable, product.ReservationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ProductClient) Hooks() []Hook {
 	hooks := c.hooks.Product
@@ -1075,6 +1117,171 @@ func (c *ProductClient) mutate(ctx context.Context, m *ProductMutation) (Value, 
 		return (&ProductDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Product mutation op: %q", m.Op())
+	}
+}
+
+// ProductReservationClient is a client for the ProductReservation schema.
+type ProductReservationClient struct {
+	config
+}
+
+// NewProductReservationClient returns a client for the ProductReservation from the given config.
+func NewProductReservationClient(c config) *ProductReservationClient {
+	return &ProductReservationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `productreservation.Hooks(f(g(h())))`.
+func (c *ProductReservationClient) Use(hooks ...Hook) {
+	c.hooks.ProductReservation = append(c.hooks.ProductReservation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `productreservation.Intercept(f(g(h())))`.
+func (c *ProductReservationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProductReservation = append(c.inters.ProductReservation, interceptors...)
+}
+
+// Create returns a builder for creating a ProductReservation entity.
+func (c *ProductReservationClient) Create() *ProductReservationCreate {
+	mutation := newProductReservationMutation(c.config, OpCreate)
+	return &ProductReservationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProductReservation entities.
+func (c *ProductReservationClient) CreateBulk(builders ...*ProductReservationCreate) *ProductReservationCreateBulk {
+	return &ProductReservationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProductReservationClient) MapCreateBulk(slice any, setFunc func(*ProductReservationCreate, int)) *ProductReservationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProductReservationCreateBulk{err: fmt.Errorf("calling to ProductReservationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProductReservationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProductReservationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProductReservation.
+func (c *ProductReservationClient) Update() *ProductReservationUpdate {
+	mutation := newProductReservationMutation(c.config, OpUpdate)
+	return &ProductReservationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProductReservationClient) UpdateOne(pr *ProductReservation) *ProductReservationUpdateOne {
+	mutation := newProductReservationMutation(c.config, OpUpdateOne, withProductReservation(pr))
+	return &ProductReservationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProductReservationClient) UpdateOneID(id int64) *ProductReservationUpdateOne {
+	mutation := newProductReservationMutation(c.config, OpUpdateOne, withProductReservationID(id))
+	return &ProductReservationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProductReservation.
+func (c *ProductReservationClient) Delete() *ProductReservationDelete {
+	mutation := newProductReservationMutation(c.config, OpDelete)
+	return &ProductReservationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProductReservationClient) DeleteOne(pr *ProductReservation) *ProductReservationDeleteOne {
+	return c.DeleteOneID(pr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProductReservationClient) DeleteOneID(id int64) *ProductReservationDeleteOne {
+	builder := c.Delete().Where(productreservation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProductReservationDeleteOne{builder}
+}
+
+// Query returns a query builder for ProductReservation.
+func (c *ProductReservationClient) Query() *ProductReservationQuery {
+	return &ProductReservationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProductReservation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProductReservation entity by its id.
+func (c *ProductReservationClient) Get(ctx context.Context, id int64) (*ProductReservation, error) {
+	return c.Query().Where(productreservation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProductReservationClient) GetX(ctx context.Context, id int64) *ProductReservation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryProduct queries the product edge of a ProductReservation.
+func (c *ProductReservationClient) QueryProduct(pr *ProductReservation) *ProductQuery {
+	query := (&ProductClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(productreservation.Table, productreservation.FieldID, id),
+			sqlgraph.To(product.Table, product.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, productreservation.ProductTable, productreservation.ProductColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvoice queries the invoice edge of a ProductReservation.
+func (c *ProductReservationClient) QueryInvoice(pr *ProductReservation) *InvoiceQuery {
+	query := (&InvoiceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(productreservation.Table, productreservation.FieldID, id),
+			sqlgraph.To(invoice.Table, invoice.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, productreservation.InvoiceTable, productreservation.InvoiceColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ProductReservationClient) Hooks() []Hook {
+	return c.hooks.ProductReservation
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProductReservationClient) Interceptors() []Interceptor {
+	return c.inters.ProductReservation
+}
+
+func (c *ProductReservationClient) mutate(ctx context.Context, m *ProductReservationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProductReservationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProductReservationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProductReservationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProductReservationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProductReservation mutation op: %q", m.Op())
 	}
 }
 
@@ -1246,9 +1453,11 @@ func (c *SubscriptionsClient) mutate(ctx context.Context, m *SubscriptionsMutati
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Bundle, Invoice, Item, PaymentProfile, Product, Subscriptions []ent.Hook
+		Bundle, Invoice, Item, PaymentProfile, Product, ProductReservation,
+		Subscriptions []ent.Hook
 	}
 	inters struct {
-		Bundle, Invoice, Item, PaymentProfile, Product, Subscriptions []ent.Interceptor
+		Bundle, Invoice, Item, PaymentProfile, Product, ProductReservation,
+		Subscriptions []ent.Interceptor
 	}
 )

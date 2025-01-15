@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/shopspring/decimal"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
 )
 
@@ -50,6 +51,8 @@ type Product struct {
 	IsExpiring bool `json:"is_expiring,omitempty"`
 	// Time when this product expires.
 	ExpiringTime *time.Time `json:"expiring_time,omitempty"`
+	// Payment model for this product.
+	PaymentModel enum.PaymentModel `json:"payment_model,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProductQuery when eager-loading is set.
 	Edges        ProductEdges `json:"edges"`
@@ -64,9 +67,11 @@ type ProductEdges struct {
 	Subscriptions []*Subscriptions `json:"subscriptions,omitempty"`
 	// Bundles holds the value of the bundles edge.
 	Bundles []*Bundle `json:"bundles,omitempty"`
+	// Reservations holds the value of the reservations edge.
+	Reservations []*ProductReservation `json:"reservations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // InvoicesOrErr returns the Invoices value or an error if the edge
@@ -96,6 +101,15 @@ func (e ProductEdges) BundlesOrErr() ([]*Bundle, error) {
 	return nil, &NotLoadedError{edge: "bundles"}
 }
 
+// ReservationsOrErr returns the Reservations value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProductEdges) ReservationsOrErr() ([]*ProductReservation, error) {
+	if e.loadedTypes[3] {
+		return e.Reservations, nil
+	}
+	return nil, &NotLoadedError{edge: "reservations"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Product) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -107,7 +121,7 @@ func (*Product) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case product.FieldID, product.FieldLeft, product.FieldUniqueLimit:
 			values[i] = new(sql.NullInt64)
-		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency:
+		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency, product.FieldPaymentModel:
 			values[i] = new(sql.NullString)
 		case product.FieldCreatedAt, product.FieldUpdatedAt, product.FieldDeletedAt, product.FieldLimitedTill, product.FieldExpiringTime:
 			values[i] = new(sql.NullTime)
@@ -231,6 +245,12 @@ func (pr *Product) assignValues(columns []string, values []any) error {
 				pr.ExpiringTime = new(time.Time)
 				*pr.ExpiringTime = value.Time
 			}
+		case product.FieldPaymentModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field payment_model", values[i])
+			} else if value.Valid {
+				pr.PaymentModel = enum.PaymentModel(value.String)
+			}
 		default:
 			pr.selectValues.Set(columns[i], values[i])
 		}
@@ -257,6 +277,11 @@ func (pr *Product) QuerySubscriptions() *SubscriptionsQuery {
 // QueryBundles queries the "bundles" edge of the Product entity.
 func (pr *Product) QueryBundles() *BundleQuery {
 	return NewProductClient(pr.config).QueryBundles(pr)
+}
+
+// QueryReservations queries the "reservations" edge of the Product entity.
+func (pr *Product) QueryReservations() *ProductReservationQuery {
+	return NewProductClient(pr.config).QueryReservations(pr)
 }
 
 // Update returns a builder for updating this Product.
@@ -335,6 +360,9 @@ func (pr *Product) String() string {
 		builder.WriteString("expiring_time=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("payment_model=")
+	builder.WriteString(fmt.Sprintf("%v", pr.PaymentModel))
 	builder.WriteByte(')')
 	return builder.String()
 }

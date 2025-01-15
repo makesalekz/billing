@@ -21,5 +21,8 @@ type PaymentProfile func(*sql.Selector)
 // Product is the predicate function for product builders.
 type Product func(*sql.Selector)
 
+// ProductReservation is the predicate function for productreservation builders.
+type ProductReservation func(*sql.Selector)
+
 // Subscriptions is the predicate function for subscriptions builders.
 type Subscriptions func(*sql.Selector)

@@ -23,7 +23,6 @@ func NewPaymentProfileRepo(d *Data) PaymentProfileRepo {
 	}
 }
 
-// Создание нового профиля.
 func (r *paymentProfileRepo) CreateProfile(ctx context.Context, dto PaymentProfileDto) (*ent.PaymentProfile, error) {
 	return r.db.PaymentProfile.Create().
 		SetUserID(dto.UserID).
@@ -36,14 +35,12 @@ func (r *paymentProfileRepo) CreateProfile(ctx context.Context, dto PaymentProfi
 		Save(ctx)
 }
 
-// Получение профиля по ID пользователя.
 func (r *paymentProfileRepo) GetProfileByUserID(ctx context.Context, userID int64) (*ent.PaymentProfile, error) {
 	return r.db.PaymentProfile.Query().
 		Where(paymentprofile.UserID(userID)).
 		Only(ctx)
 }
 
-// Обновление существующего профиля.
 func (r *paymentProfileRepo) UpdateProfile(ctx context.Context, profileID int64, dto PaymentProfileDto) error {
 	update := r.db.PaymentProfile.UpdateOneID(profileID)
 	if dto.Email != nil {

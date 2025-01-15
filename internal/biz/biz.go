@@ -21,9 +21,9 @@ var ProviderSet = wire.NewSet(
 
 const (
 	DefaultPaymentCurrency          = "KZT"
-	DefaultPaymentLifeTime          = 60 * 60 * 1            // 1 hour
+	DefaultPaymentLifeTime          = 60 * 15 * 1            // 15min
 	DefaultRecurrentProfileLifeTime = 60 * 60 * 24 * 365 * 4 // 4 years
 	DefaultPaymentLang              = "ru"
-	DefaultPriceForCardLink         = 10
+	DefaultPriceForCardLink         = 0
 	PmsAppID                        = "pms"
 )

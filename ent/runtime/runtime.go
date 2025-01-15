@@ -10,6 +10,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/item"
 	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/schema"
 )
 
@@ -157,6 +158,31 @@ func init() {
 	productDescIsExpiring := productFields[12].Descriptor()
 	// product.DefaultIsExpiring holds the default value on creation for the is_expiring field.
 	product.DefaultIsExpiring = productDescIsExpiring.Default.(bool)
+	productreservationMixin := schema.ProductReservation{}.Mixin()
+	productreservationMixinFields0 := productreservationMixin[0].Fields()
+	_ = productreservationMixinFields0
+	productreservationFields := schema.ProductReservation{}.Fields()
+	_ = productreservationFields
+	// productreservationDescCreatedAt is the schema descriptor for created_at field.
+	productreservationDescCreatedAt := productreservationMixinFields0[0].Descriptor()
+	// productreservation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	productreservation.DefaultCreatedAt = productreservationDescCreatedAt.Default.(func() time.Time)
+	// productreservationDescUpdatedAt is the schema descriptor for updated_at field.
+	productreservationDescUpdatedAt := productreservationMixinFields0[1].Descriptor()
+	// productreservation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	productreservation.DefaultUpdatedAt = productreservationDescUpdatedAt.Default.(func() time.Time)
+	// productreservation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	productreservation.UpdateDefaultUpdatedAt = productreservationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// productreservationDescReservedQuantity is the schema descriptor for reserved_quantity field.
+	productreservationDescReservedQuantity := productreservationFields[3].Descriptor()
+	// productreservation.DefaultReservedQuantity holds the default value on creation for the reserved_quantity field.
+	productreservation.DefaultReservedQuantity = productreservationDescReservedQuantity.Default.(int64)
+	// productreservation.ReservedQuantityValidator is a validator for the "reserved_quantity" field. It is called by the builders before save.
+	productreservation.ReservedQuantityValidator = productreservationDescReservedQuantity.Validators[0].(func(int64) error)
+	// productreservationDescExpirationTime is the schema descriptor for expiration_time field.
+	productreservationDescExpirationTime := productreservationFields[5].Descriptor()
+	// productreservation.DefaultExpirationTime holds the default value on creation for the expiration_time field.
+	productreservation.DefaultExpirationTime = productreservationDescExpirationTime.Default.(func() time.Time)
 }
 
 const (

@@ -76,9 +76,11 @@ type InvoiceEdges struct {
 	Subscriptions *Subscriptions `json:"subscriptions,omitempty"`
 	// PaymentProfile holds the value of the payment_profile edge.
 	PaymentProfile *PaymentProfile `json:"payment_profile,omitempty"`
+	// Reservations holds the value of the reservations edge.
+	Reservations []*ProductReservation `json:"reservations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // ProductOrErr returns the Product value or an error if the edge
@@ -112,6 +114,15 @@ func (e InvoiceEdges) PaymentProfileOrErr() (*PaymentProfile, error) {
 		return nil, &NotFoundError{label: paymentprofile.Label}
 	}
 	return nil, &NotLoadedError{edge: "payment_profile"}
+}
+
+// ReservationsOrErr returns the Reservations value or an error if the edge
+// was not loaded in eager-loading.
+func (e InvoiceEdges) ReservationsOrErr() ([]*ProductReservation, error) {
+	if e.loadedTypes[3] {
+		return e.Reservations, nil
+	}
+	return nil, &NotLoadedError{edge: "reservations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -302,6 +313,11 @@ func (i *Invoice) QuerySubscriptions() *SubscriptionsQuery {
 // QueryPaymentProfile queries the "payment_profile" edge of the Invoice entity.
 func (i *Invoice) QueryPaymentProfile() *PaymentProfileQuery {
 	return NewInvoiceClient(i.config).QueryPaymentProfile(i)
+}
+
+// QueryReservations queries the "reservations" edge of the Invoice entity.
+func (i *Invoice) QueryReservations() *ProductReservationQuery {
+	return NewInvoiceClient(i.config).QueryReservations(i)
 }
 
 // Update returns a builder for updating this Invoice.

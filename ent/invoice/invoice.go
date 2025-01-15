@@ -61,6 +61,8 @@ const (
 	EdgeSubscriptions = "subscriptions"
 	// EdgePaymentProfile holds the string denoting the payment_profile edge name in mutations.
 	EdgePaymentProfile = "payment_profile"
+	// EdgeReservations holds the string denoting the reservations edge name in mutations.
+	EdgeReservations = "reservations"
 	// Table holds the table name of the invoice in the database.
 	Table = "invoices"
 	// ProductTable is the table that holds the product relation/edge.
@@ -84,6 +86,13 @@ const (
 	PaymentProfileInverseTable = "payment_profiles"
 	// PaymentProfileColumn is the table column denoting the payment_profile relation/edge.
 	PaymentProfileColumn = "payment_profile_id"
+	// ReservationsTable is the table that holds the reservations relation/edge.
+	ReservationsTable = "product_reservations"
+	// ReservationsInverseTable is the table name for the ProductReservation entity.
+	// It exists in this package in order to avoid circular dependency with the "productreservation" package.
+	ReservationsInverseTable = "product_reservations"
+	// ReservationsColumn is the table column denoting the reservations relation/edge.
+	ReservationsColumn = "invoice_reservations"
 )
 
 // Columns holds all SQL columns for invoice fields.
@@ -290,6 +299,20 @@ func ByPaymentProfileField(field string, opts ...sql.OrderTermOption) OrderOptio
 		sqlgraph.OrderByNeighborTerms(s, newPaymentProfileStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByReservationsCount orders the results by reservations count.
+func ByReservationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReservationsStep(), opts...)
+	}
+}
+
+// ByReservations orders the results by reservations terms.
+func ByReservations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReservationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newProductStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -309,5 +332,12 @@ func newPaymentProfileStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PaymentProfileInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, PaymentProfileTable, PaymentProfileColumn),
+	)
+}
+func newReservationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReservationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReservationsTable, ReservationsColumn),
 	)
 }

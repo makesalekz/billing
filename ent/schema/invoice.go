@@ -66,5 +66,6 @@ func (Invoice) Edges() []ent.Edge {
 			Ref("invoices").
 			Unique().
 			Field("payment_profile_id"),
+		edge.To("reservations", ProductReservation.Type),
 	}
 }
