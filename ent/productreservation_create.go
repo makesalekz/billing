@@ -53,18 +53,6 @@ func (prc *ProductReservationCreate) SetNillableUpdatedAt(t *time.Time) *Product
 	return prc
 }
 
-// SetProductID sets the "product_id" field.
-func (prc *ProductReservationCreate) SetProductID(i int64) *ProductReservationCreate {
-	prc.mutation.SetProductID(i)
-	return prc
-}
-
-// SetInvoiceID sets the "invoice_id" field.
-func (prc *ProductReservationCreate) SetInvoiceID(i int64) *ProductReservationCreate {
-	prc.mutation.SetInvoiceID(i)
-	return prc
-}
-
 // SetUserID sets the "user_id" field.
 func (prc *ProductReservationCreate) SetUserID(i int64) *ProductReservationCreate {
 	prc.mutation.SetUserID(i)
@@ -113,9 +101,27 @@ func (prc *ProductReservationCreate) SetNillableExpirationTime(t *time.Time) *Pr
 	return prc
 }
 
+// SetID sets the "id" field.
+func (prc *ProductReservationCreate) SetID(i int64) *ProductReservationCreate {
+	prc.mutation.SetID(i)
+	return prc
+}
+
+// SetProductID sets the "product" edge to the Product entity by ID.
+func (prc *ProductReservationCreate) SetProductID(id int64) *ProductReservationCreate {
+	prc.mutation.SetProductID(id)
+	return prc
+}
+
 // SetProduct sets the "product" edge to the Product entity.
 func (prc *ProductReservationCreate) SetProduct(p *Product) *ProductReservationCreate {
 	return prc.SetProductID(p.ID)
+}
+
+// SetInvoiceID sets the "invoice" edge to the Invoice entity by ID.
+func (prc *ProductReservationCreate) SetInvoiceID(id int64) *ProductReservationCreate {
+	prc.mutation.SetInvoiceID(id)
+	return prc
 }
 
 // SetInvoice sets the "invoice" edge to the Invoice entity.
@@ -236,8 +242,10 @@ func (prc *ProductReservationCreate) sqlSave(ctx context.Context) (*ProductReser
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int64(id)
+	if _spec.ID.Value != _node.ID {
+		id := _spec.ID.Value.(int64)
+		_node.ID = int64(id)
+	}
 	prc.mutation.id = &_node.ID
 	prc.mutation.done = true
 	return _node, nil
@@ -249,6 +257,10 @@ func (prc *ProductReservationCreate) createSpec() (*ProductReservation, *sqlgrap
 		_spec = sqlgraph.NewCreateSpec(productreservation.Table, sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64))
 	)
 	_spec.OnConflict = prc.conflict
+	if id, ok := prc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := prc.mutation.CreatedAt(); ok {
 		_spec.SetField(productreservation.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -421,17 +433,23 @@ func (u *ProductReservationUpsert) UpdateExpirationTime() *ProductReservationUps
 	return u
 }
 
-// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
 //	client.ProductReservation.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(productreservation.FieldID)
+//			}),
 //		).
 //		Exec(ctx)
 func (u *ProductReservationUpsertOne) UpdateNewValues() *ProductReservationUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(productreservation.FieldID)
+		}
 		if _, exists := u.create.mutation.CreatedAt(); exists {
 			s.SetIgnore(productreservation.FieldCreatedAt)
 		}
@@ -618,7 +636,7 @@ func (prcb *ProductReservationCreateBulk) Save(ctx context.Context) ([]*ProductR
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
+				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
 					id := specs[i].ID.Value.(int64)
 					nodes[i].ID = int64(id)
 				}
@@ -708,12 +726,18 @@ type ProductReservationUpsertBulk struct {
 //	client.ProductReservation.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(productreservation.FieldID)
+//			}),
 //		).
 //		Exec(ctx)
 func (u *ProductReservationUpsertBulk) UpdateNewValues() *ProductReservationUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(productreservation.FieldID)
+			}
 			if _, exists := b.mutation.CreatedAt(); exists {
 				s.SetIgnore(productreservation.FieldCreatedAt)
 			}

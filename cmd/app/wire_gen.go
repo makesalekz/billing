@@ -62,7 +62,8 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
 	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
-	paymentUseCase, err := biz.NewPaymentUsecase(configConfig, logger, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo)
+	productReservationRepo := data.NewProductReservationRepo(dataData)
+	paymentUseCase, err := biz.NewPaymentUsecase(configConfig, logger, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo)
 	if err != nil {
 		cleanup2()
 		cleanup()

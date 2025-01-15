@@ -19,6 +19,7 @@ type ProductReservation struct {
 // Fields of the ProductReservation.
 func (ProductReservation) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int64("id"),
 		field.Int64("product_id").Immutable().
 			Comment("References the product being reserved."),
 		field.Int64("invoice_id").Immutable().

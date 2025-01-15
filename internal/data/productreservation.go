@@ -11,19 +11,27 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 )
 
-type ProductReservationRepo struct {
+type ProductReservationRepo interface {
+	CreateReservation(ctx context.Context, reservationDto ProductReservationDto) (*ent.ProductReservation, error)
+	GetReservation(ctx context.Context, id int64) (*ent.ProductReservation, error)
+	UpdateReservationStatusByInvoiceID(ctx context.Context, invoiceID int64, status enum.ReservationStatus) error
+	CancelReservationByInvoiceID(ctx context.Context, invoiceID int64) error
+	ProcessExpiredReservations(ctx context.Context) error
+}
+
+type productReservationRepo struct {
 	db *ent.Client
 }
 
 // NewProductReservationRepo creates a new repository instance.
-func NewProductReservationRepo(d *Data) *ProductReservationRepo {
-	return &ProductReservationRepo{
+func NewProductReservationRepo(d *Data) ProductReservationRepo {
+	return &productReservationRepo{
 		db: d.db,
 	}
 }
 
 // CreateReservation creates a new product reservation within a transaction and updates the product stock.
-func (r *ProductReservationRepo) CreateReservation(
+func (r *productReservationRepo) CreateReservation(
 	ctx context.Context, reservationDto ProductReservationDto,
 ) (*ent.ProductReservation, error) {
 	var reservation *ent.ProductReservation
@@ -50,7 +58,7 @@ func (r *ProductReservationRepo) CreateReservation(
 		return nil, errors.New("insufficient stock")
 	}
 
-	if _, err := tx.Product.
+	if _, err = tx.Product.
 		UpdateOneID(reservationDto.ProductID).
 		AddLeft(-reservationDto.ReservationQuantity).
 		Save(ctx); err != nil {
@@ -78,12 +86,12 @@ func (r *ProductReservationRepo) CreateReservation(
 }
 
 // GetReservation retrieves a reservation by its ID.
-func (r *ProductReservationRepo) GetReservation(ctx context.Context, id int64) (*ent.ProductReservation, error) {
+func (r *productReservationRepo) GetReservation(ctx context.Context, id int64) (*ent.ProductReservation, error) {
 	return r.db.ProductReservation.Get(ctx, id)
 }
 
 // UpdateReservationStatusByInvoiceID updates the status of a reservation.
-func (r *ProductReservationRepo) UpdateReservationStatusByInvoiceID(
+func (r *productReservationRepo) UpdateReservationStatusByInvoiceID(
 	ctx context.Context, invoiceID int64, status enum.ReservationStatus,
 ) error {
 	_, err := r.db.ProductReservation.
@@ -98,7 +106,7 @@ func (r *ProductReservationRepo) UpdateReservationStatusByInvoiceID(
 }
 
 // CancelReservationByInvoiceID cancels a reservation by invoice ID and restores the product stock.
-func (r *ProductReservationRepo) CancelReservationByInvoiceID(ctx context.Context, invoiceID int64) error {
+func (r *productReservationRepo) CancelReservationByInvoiceID(ctx context.Context, invoiceID int64) error {
 	tx, err := r.db.Tx(ctx)
 	if err != nil {
 		return err
@@ -134,14 +142,14 @@ func (r *ProductReservationRepo) CancelReservationByInvoiceID(ctx context.Contex
 	}
 
 	for _, reservation := range reservations {
-		if _, err := tx.Product.
+		if _, err = tx.Product.
 			UpdateOneID(reservation.ProductID).
 			AddLeft(reservation.ReservedQuantity).
 			Save(ctx); err != nil {
 			return err
 		}
 
-		if _, err := tx.ProductReservation.
+		if _, err = tx.ProductReservation.
 			UpdateOneID(reservation.ID).
 			SetStatus(enum.Cancelled).
 			Save(ctx); err != nil {
@@ -156,8 +164,9 @@ func (r *ProductReservationRepo) CancelReservationByInvoiceID(ctx context.Contex
 	return nil
 }
 
-// ProcessExpiredReservations processes all reservations that have expired by restoring product stock and updating reservation statuses.
-func (r *ProductReservationRepo) ProcessExpiredReservations(ctx context.Context) error {
+// ProcessExpiredReservations processes all reservations that have expired by
+// restoring product stock and updating reservation statuses.
+func (r *productReservationRepo) ProcessExpiredReservations(ctx context.Context) error {
 	tx, err := r.db.Tx(ctx)
 	if err != nil {
 		return err
@@ -171,26 +180,26 @@ func (r *ProductReservationRepo) ProcessExpiredReservations(ctx context.Context)
 		}
 	}()
 
-	reservations, err := tx.ProductReservation.
+	reservations, queryErr := tx.ProductReservation.
 		Query().
 		Where(
 			productreservation.StatusEQ(enum.Pending),
 			productreservation.ExpirationTimeLT(time.Now()),
 		).
 		All(ctx)
-	if err != nil {
+	if queryErr != nil {
 		return err
 	}
 
 	for _, reservation := range reservations {
-		if _, err := tx.Product.
+		if _, err = tx.Product.
 			UpdateOneID(reservation.ProductID).
 			AddLeft(reservation.ReservedQuantity).
 			Save(ctx); err != nil {
 			return err
 		}
 
-		if _, err := tx.ProductReservation.
+		if _, err = tx.ProductReservation.
 			UpdateOneID(reservation.ID).
 			SetStatus(enum.Expired).
 			Save(ctx); err != nil {
