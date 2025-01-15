@@ -20,18 +20,19 @@ import (
 )
 
 type PaymentUseCase struct {
-	paymentClient      *onevisionpay.Client
-	invoicesRepo       data.InvoicesRepo
-	productRepo        data.ProductRepo
-	subscriptionRepo   data.SubscriptionsRepo
-	paymentProfileRepo data.PaymentProfileRepo
-	log                *log.Helper
-	PaymentSuccessURL  string
-	PaymentFailureURL  string
-	PaymentCallbackURL string
-	MerchantID         string
-	MerchantName       string
-	ServiceID          string
+	paymentClient          *onevisionpay.Client
+	invoicesRepo           data.InvoicesRepo
+	productRepo            data.ProductRepo
+	subscriptionRepo       data.SubscriptionsRepo
+	paymentProfileRepo     data.PaymentProfileRepo
+	productReservationRepo data.ProductReservationRepo
+	log                    *log.Helper
+	PaymentSuccessURL      string
+	PaymentFailureURL      string
+	PaymentCallbackURL     string
+	MerchantID             string
+	MerchantName           string
+	ServiceID              string
 }
 
 func NewPaymentUsecase(
@@ -41,16 +42,18 @@ func NewPaymentUsecase(
 	productRepo data.ProductRepo,
 	subscriptionRepo data.SubscriptionsRepo,
 	paymentProfileRepo data.PaymentProfileRepo,
+	productReservationRepo data.ProductReservationRepo,
 ) (*PaymentUseCase, error) {
 	helper := log.NewHelper(log.With(logger, "module", "usecase/payment"))
 	helper.Info("creating onevisionpay client")
 
 	uc := &PaymentUseCase{
-		log:                helper,
-		invoicesRepo:       invoicesRepo,
-		productRepo:        productRepo,
-		subscriptionRepo:   subscriptionRepo,
-		paymentProfileRepo: paymentProfileRepo,
+		log:                    helper,
+		invoicesRepo:           invoicesRepo,
+		productRepo:            productRepo,
+		subscriptionRepo:       subscriptionRepo,
+		paymentProfileRepo:     paymentProfileRepo,
+		productReservationRepo: productReservationRepo,
 	}
 
 	if err := uc.loadConfig(config); err != nil {
@@ -155,7 +158,7 @@ func (uc *PaymentUseCase) CreatePayment(
 		return 0, "", err
 	}
 
-	if hasActiveSubscription {
+	if hasActiveSubscription && product.PaymentModel == enum.Recurrent {
 		return 0, "", v1.ErrorInvalidRequest("user already has active subscription")
 	}
 
@@ -169,9 +172,9 @@ func (uc *PaymentUseCase) CreatePayment(
 		Price:     product.Price,
 	}
 
-	if isFirst {
-		invoiceDTO.Amount = 0
-		invoiceDTO.Price = decimal.NewFromInt(0)
+	if isFirst && product.PaymentModel == enum.Recurrent {
+		invoiceDTO.Amount = amount
+		invoiceDTO.Price = decimal.NewFromInt(DefaultPriceForCardLink)
 		invoiceDTO.IsTrial = true
 	}
 
@@ -181,7 +184,7 @@ func (uc *PaymentUseCase) CreatePayment(
 		return 0, "", v1.ErrorDatabaseQuery("failed to create invoice: %v", err)
 	}
 
-	paymentRequest := uc.getPaymentPayload(actorID, invoice, product, invoiceDTO.Price)
+	paymentRequest := uc.getPaymentPayload(actorID, invoice, product, invoiceDTO.Price, amount)
 	if err = paymentRequest.Validate(); err != nil {
 		return 0, "", v1.ErrorInvalidRequest("invalid payment payload: %v", err)
 	}
@@ -210,6 +213,11 @@ func (uc *PaymentUseCase) CreatePayment(
 	)
 	if err != nil {
 		return 0, "", v1.ErrorDatabaseQuery("failed to update invoice: %v", err)
+	}
+
+	err = uc.reserveProduct(ctx, product, invoice, amount)
+	if err != nil {
+		return 0, "", err
 	}
 
 	return updatedInvoice.ID, payment.PaymentPageURL, nil
@@ -380,11 +388,12 @@ func (uc *PaymentUseCase) handleCompletedStatus(
 ) error {
 	uc.log.Infof("Payment completed for invoice: %v", invoice.ID)
 
-	recurrentProfile, err := uc.saveRecurrentProfile(
-		ctx, invoice.UserID, paymentStatus.PayerInfo.PanMasked, paymentStatus.PayerInfo.Holder,
-		paymentStatus.PayerInfo.Email, paymentStatus.PayerInfo.Phone,
-		paymentStatus.PayerInfo.UserToken, paymentStatus.RecurrentToken,
-	)
+	if invoice.Status == enum.Paid && invoice.SubscriptionID != nil {
+		uc.log.Infof("Invoice %v already paid", invoice.ID)
+		return nil
+	}
+
+	recurrentProfile, err := uc.saveRecurrentProfile(ctx, invoice.UserID, paymentStatus)
 	if err != nil {
 		uc.log.Errorf("Failed to save payment profile for user %v: %v", invoice.UserID, err)
 		return err
@@ -424,12 +433,8 @@ func (uc *PaymentUseCase) handleCompletedStatus(
 		updateInvoiceDto.SubscriptionID = newSubscription.ID
 	} else {
 		uc.log.Infof(
-			"Extending subscription for invoice: %v, subscription ID: %v", invoice.ID, *invoice.SubscriptionID,
+			"User alrady had subscription for invoice: %v, subscription ID: %v", invoice.ID, *invoice.SubscriptionID,
 		)
-
-		if invoice.PaidTill != nil {
-			updateInvoiceDto.PaidTill = invoice.PaidTill
-		}
 	}
 
 	_, err = uc.invoicesRepo.UpdateInvoice(ctx, invoice, updateInvoiceDto)
@@ -437,6 +442,14 @@ func (uc *PaymentUseCase) handleCompletedStatus(
 		uc.log.Errorf("Failed to update invoice status to Paid for invoice %v: %v", invoice.ID, err)
 		return err
 	}
+
+	err = uc.productReservationRepo.UpdateReservationStatusByInvoiceID(ctx, invoice.ID, enum.Completed)
+	if err != nil {
+		uc.log.Errorf("Failed to update reservation status for invoice %v: %v", invoice.ID, err)
+		return err
+	}
+
+	uc.log.Infof("Invoice %v successfully updated with status Paid", invoice.ID)
 
 	return nil
 }
@@ -466,6 +479,12 @@ func (uc *PaymentUseCase) handleFailedOrCanceledStatus(
 
 	uc.log.Infof("Invoice %v successfully updated with status Canceled", invoice.ID)
 
+	err = uc.productReservationRepo.CancelReservationByInvoiceID(ctx, invoice.ID)
+	if err != nil {
+		uc.log.Errorf("Failed to update reservation status for invoice %v: %v", invoice.ID, err)
+		return err
+	}
+
 	return nil
 }
 
@@ -490,8 +509,9 @@ func (uc *PaymentUseCase) CancelSubscription(
 }
 
 func (uc *PaymentUseCase) getPaymentPayload(
-	actorID int64, invoice *ent.Invoice, product *ent.Product, price decimal.Decimal,
+	actorID int64, invoice *ent.Invoice, product *ent.Product, price decimal.Decimal, amount int64,
 ) onevisionpay.PaymentRequest {
+	quantity := int(amount)
 	paymentRequest := onevisionpay.PaymentRequest{
 		Amount:      price.IntPart(),
 		OrderID:     strconv.FormatInt(invoice.ID, 10),
@@ -503,22 +523,27 @@ func (uc *PaymentUseCase) getPaymentPayload(
 				ServiceID:    uc.ServiceID,
 				MerchantName: uc.MerchantName,
 				Name:         product.Name,
-				Quantity:     1,
+				Quantity:     quantity,
 				AmountOnePcs: price.IntPart(),
 				AmountSum:    price.IntPart(),
 			},
 		},
-		PaymentType:              onevisionpay.Pay,
-		PaymentMethod:            onevisionpay.Ecom,
-		Currency:                 DefaultPaymentCurrency,
-		PaymentLifetime:          DefaultPaymentLifeTime,
-		RecurrentProfileLifetime: DefaultRecurrentProfileLifeTime,
-		Lang:                     DefaultPaymentLang,
-		CreateRecurrentProfile:   true,
-		SuccessURL:               uc.PaymentSuccessURL,
-		CallbackURL:              uc.PaymentCallbackURL,
-		FailureURL:               uc.PaymentFailureURL,
+		PaymentType:            onevisionpay.Pay,
+		PaymentMethod:          onevisionpay.Ecom,
+		Currency:               product.Currency,
+		PaymentLifetime:        DefaultPaymentLifeTime,
+		Lang:                   DefaultPaymentLang,
+		CreateRecurrentProfile: false,
+		SuccessURL:             uc.PaymentSuccessURL,
+		CallbackURL:            uc.PaymentCallbackURL,
+		FailureURL:             uc.PaymentFailureURL,
 	}
+
+	if product.PaymentModel == enum.Recurrent {
+		paymentRequest.CreateRecurrentProfile = true
+		paymentRequest.RecurrentProfileLifetime = DefaultRecurrentProfileLifeTime
+	}
+
 	return paymentRequest
 }
 
@@ -556,8 +581,15 @@ func (uc *PaymentUseCase) checkSubscriptionStatus(
 }
 
 func (uc *PaymentUseCase) saveRecurrentProfile(
-	ctx context.Context, userID int64, panMasked, holder, email, phone, userToken, recurrentToken string,
+	ctx context.Context, userID int64, statusResponse *onevisionpay.StatusResponse,
 ) (*ent.PaymentProfile, error) {
+	panMasked := statusResponse.PayerInfo.PanMasked
+	holder := statusResponse.PayerInfo.Holder
+	email := statusResponse.PayerInfo.Email
+	phone := statusResponse.PayerInfo.Phone
+	userToken := statusResponse.PayerInfo.UserToken
+	recurrentToken := statusResponse.RecurrentToken
+
 	existingProfile, err := uc.paymentProfileRepo.GetProfileByUserID(ctx, userID)
 	if err != nil && !ent.IsNotFound(err) {
 		return nil, fmt.Errorf("failed to check existing payment profile: %w", err)
@@ -584,9 +616,9 @@ func (uc *PaymentUseCase) saveRecurrentProfile(
 				UserID:         userID,
 				PanMasked:      panMasked,
 				Holder:         holder,
+				UserToken:      userToken,
 				Email:          &email,
 				Phone:          &phone,
-				UserToken:      userToken,
 				RecurrentToken: &recurrentToken,
 			},
 		)
@@ -734,4 +766,34 @@ func (uc *PaymentUseCase) isProductAvailable(product *ent.Product, amount int64)
 	}
 
 	return nil
+}
+
+func (uc *PaymentUseCase) reserveProduct(
+	ctx context.Context, product *ent.Product, invoice *ent.Invoice, amount int64,
+) error {
+	if product.IsLimited && product.Left > amount {
+		_, err := uc.productReservationRepo.CreateReservation(
+			ctx, data.ProductReservationDto{
+				ProductID:           product.ID,
+				InvoiceID:           invoice.ID,
+				UserID:              invoice.UserID,
+				ReservationQuantity: amount,
+				Status:              enum.Pending,
+			},
+		)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (uc *PaymentUseCase) CancelReservations(ctx context.Context) {
+	uc.log.Info("Processing expired reservations")
+	err := uc.productReservationRepo.ProcessExpiredReservations(ctx)
+	if err != nil {
+		uc.log.Errorf("Failed to process expired reservations: %v", err)
+	}
+	uc.log.Info("Expired reservations processed")
 }
