@@ -301,9 +301,8 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 
 func (uc *InvoicesUseCase) ExpireResources(ctx context.Context) {
 	now := time.Now().Add(time.Hour) // give one hour to renew subscription
-	appID := "calendaria"
 
-	invoices, err := uc.invoiceRepo.GetInvoicesToExpire(ctx, appID, &now)
+	invoices, err := uc.invoiceRepo.GetInvoicesToExpire(ctx, &now)
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 	}
@@ -426,8 +425,8 @@ func ReplyInvoice(invoice *ent.Invoice) *v1.Invoice {
 		reply.RevokedAt = invoice.RevokedAt.Format(time.RFC3339)
 	}
 
-	if invoice.AppleStoreTransactionID != nil {
-		reply.AppleStoreTransactionId = *invoice.AppleStoreTransactionID
+	if invoice.ExternalTransactionID != nil {
+		reply.AppleStoreTransactionId = *invoice.ExternalTransactionID
 	}
 
 	return reply

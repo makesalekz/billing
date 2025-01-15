@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gitlab.calendaria.team/services/finance/billing/ent"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
@@ -74,7 +75,10 @@ func (r *subscriptionsRepo) GetSubscriptionByOriginalAppleTransactionID(
 ) (*ent.Subscriptions, error) {
 	query := r.db.Subscriptions.Query().
 		Where(
-			subscriptions.HasInvoicesWith(invoice.AppleStoreTransactionID(originalTransactionID)),
+			subscriptions.HasInvoicesWith(
+				invoice.ExternalTransactionID(originalTransactionID),
+				invoice.PaymentProviderEQ(enum.AppStore),
+			),
 		)
 
 	if withInvoices {

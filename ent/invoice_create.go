@@ -203,30 +203,30 @@ func (ic *InvoiceCreate) SetNillableSubscriptionID(i *int64) *InvoiceCreate {
 	return ic
 }
 
-// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
-func (ic *InvoiceCreate) SetAppleStoreTransactionID(s string) *InvoiceCreate {
-	ic.mutation.SetAppleStoreTransactionID(s)
+// SetExternalTransactionID sets the "external_transaction_id" field.
+func (ic *InvoiceCreate) SetExternalTransactionID(s string) *InvoiceCreate {
+	ic.mutation.SetExternalTransactionID(s)
 	return ic
 }
 
-// SetNillableAppleStoreTransactionID sets the "apple_store_transaction_id" field if the given value is not nil.
-func (ic *InvoiceCreate) SetNillableAppleStoreTransactionID(s *string) *InvoiceCreate {
+// SetNillableExternalTransactionID sets the "external_transaction_id" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableExternalTransactionID(s *string) *InvoiceCreate {
 	if s != nil {
-		ic.SetAppleStoreTransactionID(*s)
+		ic.SetExternalTransactionID(*s)
 	}
 	return ic
 }
 
-// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
-func (ic *InvoiceCreate) SetOneVisionTransactionID(s string) *InvoiceCreate {
-	ic.mutation.SetOneVisionTransactionID(s)
+// SetPaymentProvider sets the "payment_provider" field.
+func (ic *InvoiceCreate) SetPaymentProvider(ep enum.PaymentProvider) *InvoiceCreate {
+	ic.mutation.SetPaymentProvider(ep)
 	return ic
 }
 
-// SetNillableOneVisionTransactionID sets the "one_vision_transaction_id" field if the given value is not nil.
-func (ic *InvoiceCreate) SetNillableOneVisionTransactionID(s *string) *InvoiceCreate {
-	if s != nil {
-		ic.SetOneVisionTransactionID(*s)
+// SetNillablePaymentProvider sets the "payment_provider" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillablePaymentProvider(ep *enum.PaymentProvider) *InvoiceCreate {
+	if ep != nil {
+		ic.SetPaymentProvider(*ep)
 	}
 	return ic
 }
@@ -353,6 +353,10 @@ func (ic *InvoiceCreate) defaults() {
 		v := invoice.DefaultIsPaidTillProcessed
 		ic.mutation.SetIsPaidTillProcessed(v)
 	}
+	if _, ok := ic.mutation.PaymentProvider(); !ok {
+		v := invoice.DefaultPaymentProvider
+		ic.mutation.SetPaymentProvider(v)
+	}
 	if _, ok := ic.mutation.IsTrial(); !ok {
 		v := invoice.DefaultIsTrial
 		ic.mutation.SetIsTrial(v)
@@ -406,6 +410,14 @@ func (ic *InvoiceCreate) check() error {
 	}
 	if _, ok := ic.mutation.IsPaidTillProcessed(); !ok {
 		return &ValidationError{Name: "is_paid_till_processed", err: errors.New(`ent: missing required field "Invoice.is_paid_till_processed"`)}
+	}
+	if _, ok := ic.mutation.PaymentProvider(); !ok {
+		return &ValidationError{Name: "payment_provider", err: errors.New(`ent: missing required field "Invoice.payment_provider"`)}
+	}
+	if v, ok := ic.mutation.PaymentProvider(); ok {
+		if err := invoice.PaymentProviderValidator(v); err != nil {
+			return &ValidationError{Name: "payment_provider", err: fmt.Errorf(`ent: validator failed for field "Invoice.payment_provider": %w`, err)}
+		}
 	}
 	if _, ok := ic.mutation.IsTrial(); !ok {
 		return &ValidationError{Name: "is_trial", err: errors.New(`ent: missing required field "Invoice.is_trial"`)}
@@ -502,13 +514,13 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
 		_node.IsPaidTillProcessed = value
 	}
-	if value, ok := ic.mutation.AppleStoreTransactionID(); ok {
-		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
-		_node.AppleStoreTransactionID = &value
+	if value, ok := ic.mutation.ExternalTransactionID(); ok {
+		_spec.SetField(invoice.FieldExternalTransactionID, field.TypeString, value)
+		_node.ExternalTransactionID = &value
 	}
-	if value, ok := ic.mutation.OneVisionTransactionID(); ok {
-		_spec.SetField(invoice.FieldOneVisionTransactionID, field.TypeString, value)
-		_node.OneVisionTransactionID = &value
+	if value, ok := ic.mutation.PaymentProvider(); ok {
+		_spec.SetField(invoice.FieldPaymentProvider, field.TypeEnum, value)
+		_node.PaymentProvider = value
 	}
 	if value, ok := ic.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
@@ -761,39 +773,33 @@ func (u *InvoiceUpsert) UpdateIsPaidTillProcessed() *InvoiceUpsert {
 	return u
 }
 
-// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
-func (u *InvoiceUpsert) SetAppleStoreTransactionID(v string) *InvoiceUpsert {
-	u.Set(invoice.FieldAppleStoreTransactionID, v)
+// SetExternalTransactionID sets the "external_transaction_id" field.
+func (u *InvoiceUpsert) SetExternalTransactionID(v string) *InvoiceUpsert {
+	u.Set(invoice.FieldExternalTransactionID, v)
 	return u
 }
 
-// UpdateAppleStoreTransactionID sets the "apple_store_transaction_id" field to the value that was provided on create.
-func (u *InvoiceUpsert) UpdateAppleStoreTransactionID() *InvoiceUpsert {
-	u.SetExcluded(invoice.FieldAppleStoreTransactionID)
+// UpdateExternalTransactionID sets the "external_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateExternalTransactionID() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldExternalTransactionID)
 	return u
 }
 
-// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
-func (u *InvoiceUpsert) ClearAppleStoreTransactionID() *InvoiceUpsert {
-	u.SetNull(invoice.FieldAppleStoreTransactionID)
+// ClearExternalTransactionID clears the value of the "external_transaction_id" field.
+func (u *InvoiceUpsert) ClearExternalTransactionID() *InvoiceUpsert {
+	u.SetNull(invoice.FieldExternalTransactionID)
 	return u
 }
 
-// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
-func (u *InvoiceUpsert) SetOneVisionTransactionID(v string) *InvoiceUpsert {
-	u.Set(invoice.FieldOneVisionTransactionID, v)
+// SetPaymentProvider sets the "payment_provider" field.
+func (u *InvoiceUpsert) SetPaymentProvider(v enum.PaymentProvider) *InvoiceUpsert {
+	u.Set(invoice.FieldPaymentProvider, v)
 	return u
 }
 
-// UpdateOneVisionTransactionID sets the "one_vision_transaction_id" field to the value that was provided on create.
-func (u *InvoiceUpsert) UpdateOneVisionTransactionID() *InvoiceUpsert {
-	u.SetExcluded(invoice.FieldOneVisionTransactionID)
-	return u
-}
-
-// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
-func (u *InvoiceUpsert) ClearOneVisionTransactionID() *InvoiceUpsert {
-	u.SetNull(invoice.FieldOneVisionTransactionID)
+// UpdatePaymentProvider sets the "payment_provider" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdatePaymentProvider() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldPaymentProvider)
 	return u
 }
 
@@ -1061,45 +1067,38 @@ func (u *InvoiceUpsertOne) UpdateIsPaidTillProcessed() *InvoiceUpsertOne {
 	})
 }
 
-// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
-func (u *InvoiceUpsertOne) SetAppleStoreTransactionID(v string) *InvoiceUpsertOne {
+// SetExternalTransactionID sets the "external_transaction_id" field.
+func (u *InvoiceUpsertOne) SetExternalTransactionID(v string) *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.SetAppleStoreTransactionID(v)
+		s.SetExternalTransactionID(v)
 	})
 }
 
-// UpdateAppleStoreTransactionID sets the "apple_store_transaction_id" field to the value that was provided on create.
-func (u *InvoiceUpsertOne) UpdateAppleStoreTransactionID() *InvoiceUpsertOne {
+// UpdateExternalTransactionID sets the "external_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateExternalTransactionID() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.UpdateAppleStoreTransactionID()
+		s.UpdateExternalTransactionID()
 	})
 }
 
-// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
-func (u *InvoiceUpsertOne) ClearAppleStoreTransactionID() *InvoiceUpsertOne {
+// ClearExternalTransactionID clears the value of the "external_transaction_id" field.
+func (u *InvoiceUpsertOne) ClearExternalTransactionID() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.ClearAppleStoreTransactionID()
+		s.ClearExternalTransactionID()
 	})
 }
 
-// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
-func (u *InvoiceUpsertOne) SetOneVisionTransactionID(v string) *InvoiceUpsertOne {
+// SetPaymentProvider sets the "payment_provider" field.
+func (u *InvoiceUpsertOne) SetPaymentProvider(v enum.PaymentProvider) *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.SetOneVisionTransactionID(v)
+		s.SetPaymentProvider(v)
 	})
 }
 
-// UpdateOneVisionTransactionID sets the "one_vision_transaction_id" field to the value that was provided on create.
-func (u *InvoiceUpsertOne) UpdateOneVisionTransactionID() *InvoiceUpsertOne {
+// UpdatePaymentProvider sets the "payment_provider" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdatePaymentProvider() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.UpdateOneVisionTransactionID()
-	})
-}
-
-// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
-func (u *InvoiceUpsertOne) ClearOneVisionTransactionID() *InvoiceUpsertOne {
-	return u.Update(func(s *InvoiceUpsert) {
-		s.ClearOneVisionTransactionID()
+		s.UpdatePaymentProvider()
 	})
 }
 
@@ -1538,45 +1537,38 @@ func (u *InvoiceUpsertBulk) UpdateIsPaidTillProcessed() *InvoiceUpsertBulk {
 	})
 }
 
-// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
-func (u *InvoiceUpsertBulk) SetAppleStoreTransactionID(v string) *InvoiceUpsertBulk {
+// SetExternalTransactionID sets the "external_transaction_id" field.
+func (u *InvoiceUpsertBulk) SetExternalTransactionID(v string) *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.SetAppleStoreTransactionID(v)
+		s.SetExternalTransactionID(v)
 	})
 }
 
-// UpdateAppleStoreTransactionID sets the "apple_store_transaction_id" field to the value that was provided on create.
-func (u *InvoiceUpsertBulk) UpdateAppleStoreTransactionID() *InvoiceUpsertBulk {
+// UpdateExternalTransactionID sets the "external_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateExternalTransactionID() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.UpdateAppleStoreTransactionID()
+		s.UpdateExternalTransactionID()
 	})
 }
 
-// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
-func (u *InvoiceUpsertBulk) ClearAppleStoreTransactionID() *InvoiceUpsertBulk {
+// ClearExternalTransactionID clears the value of the "external_transaction_id" field.
+func (u *InvoiceUpsertBulk) ClearExternalTransactionID() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.ClearAppleStoreTransactionID()
+		s.ClearExternalTransactionID()
 	})
 }
 
-// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
-func (u *InvoiceUpsertBulk) SetOneVisionTransactionID(v string) *InvoiceUpsertBulk {
+// SetPaymentProvider sets the "payment_provider" field.
+func (u *InvoiceUpsertBulk) SetPaymentProvider(v enum.PaymentProvider) *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.SetOneVisionTransactionID(v)
+		s.SetPaymentProvider(v)
 	})
 }
 
-// UpdateOneVisionTransactionID sets the "one_vision_transaction_id" field to the value that was provided on create.
-func (u *InvoiceUpsertBulk) UpdateOneVisionTransactionID() *InvoiceUpsertBulk {
+// UpdatePaymentProvider sets the "payment_provider" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdatePaymentProvider() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
-		s.UpdateOneVisionTransactionID()
-	})
-}
-
-// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
-func (u *InvoiceUpsertBulk) ClearOneVisionTransactionID() *InvoiceUpsertBulk {
-	return u.Update(func(s *InvoiceUpsert) {
-		s.ClearOneVisionTransactionID()
+		s.UpdatePaymentProvider()
 	})
 }
 

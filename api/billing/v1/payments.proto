@@ -3,7 +3,6 @@ syntax = "proto3";
 package billing.v1;
 
 import "api/utils/v1/models.proto";
-import "google/api/annotations.proto";
 
 option go_package = "gitlab.calendaria.team/services/finance/billing/api/billing/v1;billing_v1";
 option java_multiple_files = true;
@@ -17,6 +16,7 @@ service Payments {
 
 message CreatePaymentRequest {
   int64 productId = 1;
+  optional int64 amount = 2;
 }
 
 message CreatePaymentResponse {

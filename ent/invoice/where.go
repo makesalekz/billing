@@ -132,14 +132,9 @@ func SubscriptionID(v int64) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldSubscriptionID, v))
 }
 
-// AppleStoreTransactionID applies equality check predicate on the "apple_store_transaction_id" field. It's identical to AppleStoreTransactionIDEQ.
-func AppleStoreTransactionID(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEQ(FieldAppleStoreTransactionID, v))
-}
-
-// OneVisionTransactionID applies equality check predicate on the "one_vision_transaction_id" field. It's identical to OneVisionTransactionIDEQ.
-func OneVisionTransactionID(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEQ(FieldOneVisionTransactionID, v))
+// ExternalTransactionID applies equality check predicate on the "external_transaction_id" field. It's identical to ExternalTransactionIDEQ.
+func ExternalTransactionID(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldExternalTransactionID, v))
 }
 
 // IsTrial applies equality check predicate on the "is_trial" field. It's identical to IsTrialEQ.
@@ -712,154 +707,109 @@ func SubscriptionIDNotNil() predicate.Invoice {
 	return predicate.Invoice(sql.FieldNotNull(FieldSubscriptionID))
 }
 
-// AppleStoreTransactionIDEQ applies the EQ predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDEQ(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEQ(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDEQ applies the EQ predicate on the "external_transaction_id" field.
+func ExternalTransactionIDEQ(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDNEQ applies the NEQ predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDNEQ(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldNEQ(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDNEQ applies the NEQ predicate on the "external_transaction_id" field.
+func ExternalTransactionIDNEQ(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDIn applies the In predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDIn(vs ...string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldIn(FieldAppleStoreTransactionID, vs...))
+// ExternalTransactionIDIn applies the In predicate on the "external_transaction_id" field.
+func ExternalTransactionIDIn(vs ...string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldExternalTransactionID, vs...))
 }
 
-// AppleStoreTransactionIDNotIn applies the NotIn predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDNotIn(vs ...string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldNotIn(FieldAppleStoreTransactionID, vs...))
+// ExternalTransactionIDNotIn applies the NotIn predicate on the "external_transaction_id" field.
+func ExternalTransactionIDNotIn(vs ...string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldExternalTransactionID, vs...))
 }
 
-// AppleStoreTransactionIDGT applies the GT predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDGT(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldGT(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDGT applies the GT predicate on the "external_transaction_id" field.
+func ExternalTransactionIDGT(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDGTE applies the GTE predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDGTE(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldGTE(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDGTE applies the GTE predicate on the "external_transaction_id" field.
+func ExternalTransactionIDGTE(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDLT applies the LT predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDLT(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldLT(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDLT applies the LT predicate on the "external_transaction_id" field.
+func ExternalTransactionIDLT(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDLTE applies the LTE predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDLTE(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldLTE(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDLTE applies the LTE predicate on the "external_transaction_id" field.
+func ExternalTransactionIDLTE(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDContains applies the Contains predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDContains(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldContains(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDContains applies the Contains predicate on the "external_transaction_id" field.
+func ExternalTransactionIDContains(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldContains(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDHasPrefix applies the HasPrefix predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDHasPrefix(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldHasPrefix(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDHasPrefix applies the HasPrefix predicate on the "external_transaction_id" field.
+func ExternalTransactionIDHasPrefix(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldHasPrefix(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDHasSuffix applies the HasSuffix predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDHasSuffix(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldHasSuffix(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDHasSuffix applies the HasSuffix predicate on the "external_transaction_id" field.
+func ExternalTransactionIDHasSuffix(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldHasSuffix(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDIsNil applies the IsNil predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDIsNil() predicate.Invoice {
-	return predicate.Invoice(sql.FieldIsNull(FieldAppleStoreTransactionID))
+// ExternalTransactionIDIsNil applies the IsNil predicate on the "external_transaction_id" field.
+func ExternalTransactionIDIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldExternalTransactionID))
 }
 
-// AppleStoreTransactionIDNotNil applies the NotNil predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDNotNil() predicate.Invoice {
-	return predicate.Invoice(sql.FieldNotNull(FieldAppleStoreTransactionID))
+// ExternalTransactionIDNotNil applies the NotNil predicate on the "external_transaction_id" field.
+func ExternalTransactionIDNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldExternalTransactionID))
 }
 
-// AppleStoreTransactionIDEqualFold applies the EqualFold predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDEqualFold(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEqualFold(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDEqualFold applies the EqualFold predicate on the "external_transaction_id" field.
+func ExternalTransactionIDEqualFold(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEqualFold(FieldExternalTransactionID, v))
 }
 
-// AppleStoreTransactionIDContainsFold applies the ContainsFold predicate on the "apple_store_transaction_id" field.
-func AppleStoreTransactionIDContainsFold(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldContainsFold(FieldAppleStoreTransactionID, v))
+// ExternalTransactionIDContainsFold applies the ContainsFold predicate on the "external_transaction_id" field.
+func ExternalTransactionIDContainsFold(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldContainsFold(FieldExternalTransactionID, v))
 }
 
-// OneVisionTransactionIDEQ applies the EQ predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDEQ(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEQ(FieldOneVisionTransactionID, v))
+// PaymentProviderEQ applies the EQ predicate on the "payment_provider" field.
+func PaymentProviderEQ(v enum.PaymentProvider) predicate.Invoice {
+	vc := v
+	return predicate.Invoice(sql.FieldEQ(FieldPaymentProvider, vc))
 }
 
-// OneVisionTransactionIDNEQ applies the NEQ predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDNEQ(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldNEQ(FieldOneVisionTransactionID, v))
+// PaymentProviderNEQ applies the NEQ predicate on the "payment_provider" field.
+func PaymentProviderNEQ(v enum.PaymentProvider) predicate.Invoice {
+	vc := v
+	return predicate.Invoice(sql.FieldNEQ(FieldPaymentProvider, vc))
 }
 
-// OneVisionTransactionIDIn applies the In predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDIn(vs ...string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldIn(FieldOneVisionTransactionID, vs...))
+// PaymentProviderIn applies the In predicate on the "payment_provider" field.
+func PaymentProviderIn(vs ...enum.PaymentProvider) predicate.Invoice {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Invoice(sql.FieldIn(FieldPaymentProvider, v...))
 }
 
-// OneVisionTransactionIDNotIn applies the NotIn predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDNotIn(vs ...string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldNotIn(FieldOneVisionTransactionID, vs...))
-}
-
-// OneVisionTransactionIDGT applies the GT predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDGT(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldGT(FieldOneVisionTransactionID, v))
-}
-
-// OneVisionTransactionIDGTE applies the GTE predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDGTE(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldGTE(FieldOneVisionTransactionID, v))
-}
-
-// OneVisionTransactionIDLT applies the LT predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDLT(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldLT(FieldOneVisionTransactionID, v))
-}
-
-// OneVisionTransactionIDLTE applies the LTE predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDLTE(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldLTE(FieldOneVisionTransactionID, v))
-}
-
-// OneVisionTransactionIDContains applies the Contains predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDContains(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldContains(FieldOneVisionTransactionID, v))
-}
-
-// OneVisionTransactionIDHasPrefix applies the HasPrefix predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDHasPrefix(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldHasPrefix(FieldOneVisionTransactionID, v))
-}
-
-// OneVisionTransactionIDHasSuffix applies the HasSuffix predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDHasSuffix(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldHasSuffix(FieldOneVisionTransactionID, v))
-}
-
-// OneVisionTransactionIDIsNil applies the IsNil predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDIsNil() predicate.Invoice {
-	return predicate.Invoice(sql.FieldIsNull(FieldOneVisionTransactionID))
-}
-
-// OneVisionTransactionIDNotNil applies the NotNil predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDNotNil() predicate.Invoice {
-	return predicate.Invoice(sql.FieldNotNull(FieldOneVisionTransactionID))
-}
-
-// OneVisionTransactionIDEqualFold applies the EqualFold predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDEqualFold(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEqualFold(FieldOneVisionTransactionID, v))
-}
-
-// OneVisionTransactionIDContainsFold applies the ContainsFold predicate on the "one_vision_transaction_id" field.
-func OneVisionTransactionIDContainsFold(v string) predicate.Invoice {
-	return predicate.Invoice(sql.FieldContainsFold(FieldOneVisionTransactionID, v))
+// PaymentProviderNotIn applies the NotIn predicate on the "payment_provider" field.
+func PaymentProviderNotIn(vs ...enum.PaymentProvider) predicate.Invoice {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Invoice(sql.FieldNotIn(FieldPaymentProvider, v...))
 }
 
 // IsTrialEQ applies the EQ predicate on the "is_trial" field.

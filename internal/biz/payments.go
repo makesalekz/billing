@@ -131,8 +131,11 @@ func (uc *PaymentUseCase) initPaymentClient(config *config.Config) (*onevisionpa
 }
 
 func (uc *PaymentUseCase) CreatePayment(
-	ctx context.Context, tenantID, actorID, productID int64, appID string,
+	ctx context.Context, tenantID, actorID, productID int64, appID string, amount int64,
 ) (int64, string, error) {
+	if uc.paymentClient == nil {
+		return 0, "", v1.ErrorInternal("payment client is not initialized")
+	}
 	product, err := uc.productRepo.GetProduct(ctx, productID)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -143,8 +146,8 @@ func (uc *PaymentUseCase) CreatePayment(
 		return 0, "", v1.ErrorDatabaseQuery("failed to get product: %v", err)
 	}
 
-	if !uc.isProductAvailable(product) {
-		return 0, "", v1.ErrorInvalidRequest("product is not available")
+	if err = uc.isProductAvailable(product, amount); err != nil {
+		return 0, "", err
 	}
 
 	hasActiveSubscription, isFirst, err := uc.checkSubscriptionStatus(ctx, tenantID, actorID, productID)
@@ -162,7 +165,7 @@ func (uc *PaymentUseCase) CreatePayment(
 		AppID:     appID,
 		ProductID: productID,
 		Status:    enum.Created,
-		Amount:    product.Price.IntPart(),
+		Amount:    amount,
 		Price:     product.Price,
 	}
 
@@ -178,10 +181,6 @@ func (uc *PaymentUseCase) CreatePayment(
 		return 0, "", v1.ErrorDatabaseQuery("failed to create invoice: %v", err)
 	}
 
-	if uc.paymentClient == nil {
-		return 0, "", v1.ErrorInternal("payment client is not initialized")
-	}
-
 	paymentRequest := uc.getPaymentPayload(actorID, invoice, product, invoiceDTO.Price)
 	if err = paymentRequest.Validate(); err != nil {
 		return 0, "", v1.ErrorInvalidRequest("invalid payment payload: %v", err)
@@ -190,6 +189,16 @@ func (uc *PaymentUseCase) CreatePayment(
 	payment, err := uc.paymentClient.CreatePayment(paymentRequest)
 	if err != nil {
 		uc.log.Errorf("Failed to create payment: %v", err)
+		_, updateErr := uc.invoicesRepo.UpdateInvoice(
+			ctx, invoice, data.InvoiceDto{
+				Status: enum.Failed,
+			},
+		)
+
+		if updateErr != nil {
+			return 0, "", v1.ErrorDatabaseQuery("failed to update invoice: %v", updateErr)
+		}
+
 		return 0, "", v1.ErrorInvalidRequest("failed to create payment %v", err)
 	}
 
@@ -318,12 +327,14 @@ func (uc *PaymentUseCase) processFullRefund(
 	}
 
 	revokedAt := time.Now()
+	isRevoked := true
 
 	_, err := uc.invoicesRepo.UpdateInvoice(
 		ctx, invoice, data.InvoiceDto{
 			Status:                 enum.CanceledByUser,
 			OneVisionTransactionID: &transactionID,
 			RevokedAt:              &revokedAt,
+			IsRevoked:              &isRevoked,
 		},
 	)
 	if err != nil {
@@ -343,12 +354,14 @@ func (uc *PaymentUseCase) processPartialRefund(
 		totalDuration := invoice.PaidTill.Sub(*invoice.PaidAt)
 		remainingDuration := time.Duration(float64(totalDuration) * float64(payment.Amount) / float64(invoice.Amount))
 		newRevokedAt := invoice.PaidAt.Add(remainingDuration)
+		isRevoked := true
 
 		_, err := uc.invoicesRepo.UpdateInvoice(
 			ctx, invoice, data.InvoiceDto{
 				Status:                 enum.CanceledByUser,
 				OneVisionTransactionID: &transactionID,
 				RevokedAt:              &newRevokedAt,
+				IsRevoked:              &isRevoked,
 			},
 		)
 		if err != nil {
@@ -378,11 +391,6 @@ func (uc *PaymentUseCase) handleCompletedStatus(
 	}
 
 	uc.log.Infof("Payment profile successfully saved for user %v", invoice.UserID)
-
-	if invoice.IsTrial {
-		uc.log.Infof("Trial payment completed for invoice: %v", invoice.ID)
-		return nil
-	}
 
 	paidAt := time.Now()
 	paidTill := paidAt.AddDate(0, 1, 0) // 1 month
@@ -420,8 +428,7 @@ func (uc *PaymentUseCase) handleCompletedStatus(
 		)
 
 		if invoice.PaidTill != nil {
-			paidTill = invoice.PaidTill.AddDate(0, 1, 0) // 1 month
-			updateInvoiceDto.PaidTill = &paidTill
+			updateInvoiceDto.PaidTill = invoice.PaidTill
 		}
 	}
 
@@ -536,7 +543,7 @@ func (uc *PaymentUseCase) checkSubscriptionStatus(
 	hasActive := false
 
 	for _, invoice := range invoices {
-		if invoice.PaidTill != nil {
+		if invoice.PaidTill != nil && !invoice.IsRevoked {
 			if invoice.PaidTill.After(time.Now()) {
 				hasActive = true
 			}
@@ -612,9 +619,8 @@ func (uc *PaymentUseCase) ProcessExpiredPayments(ctx context.Context) {
 	uc.log.Info("Processing expired payments for recurrent profiles")
 
 	now := time.Now().Add(time.Hour) // give one hour to renew subscription
-	appID := "pms"
 
-	expiredPayments, err := uc.invoicesRepo.GetInvoicesToExpire(ctx, appID, &now)
+	expiredPayments, err := uc.invoicesRepo.GetInvoicesToExpire(ctx, &now)
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 	}
@@ -653,7 +659,7 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 		AppID:              invoice.AppID,
 		ProductID:          invoice.ProductID,
 		Status:             enum.Created,
-		Amount:             1,
+		Amount:             invoice.Amount,
 		Price:              product.Price,
 		RecurrentProfileID: invoice.PaymentProfileID,
 	}
@@ -704,22 +710,28 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 	uc.log.Infof("Recurrent payment successfully created, payment ID: %v", response.PaymentID)
 }
 
-func (uc *PaymentUseCase) isProductAvailable(product *ent.Product) bool {
+func (uc *PaymentUseCase) isProductAvailable(product *ent.Product, amount int64) error {
 	if !product.IsActive {
-		return false
+		return v1.ErrorInvalidRequest("product is not active")
 	}
 
-	if product.LimitedTill != nil && time.Now().After(*product.LimitedTill) {
-		return false
+	if product.IsLimited {
+		if product.LimitedTill != nil && time.Now().After(*product.LimitedTill) {
+			return v1.ErrorInvalidRequest("product is not available")
+		}
+
+		if product.Left == 0 || product.Left < amount {
+			return v1.ErrorInvalidRequest("Product amount ")
+		}
 	}
 
-	if product.Left != 0 && product.Left <= 0 {
-		return false
+	if product.IsExpiring && product.ExpiringTime != nil && time.Now().After(*product.ExpiringTime) {
+		return v1.ErrorInvalidRequest("product is not available")
 	}
 
-	if product.ExpiringTime != nil && time.Now().After(*product.ExpiringTime) {
-		return false
+	if product.IsUnique && product.UniqueLimit < amount {
+		return v1.ErrorInvalidRequest("product is not available")
 	}
 
-	return true
+	return nil
 }

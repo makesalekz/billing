@@ -197,43 +197,37 @@ func (iu *InvoiceUpdate) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpdate 
 	return iu
 }
 
-// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
-func (iu *InvoiceUpdate) SetAppleStoreTransactionID(s string) *InvoiceUpdate {
-	iu.mutation.SetAppleStoreTransactionID(s)
+// SetExternalTransactionID sets the "external_transaction_id" field.
+func (iu *InvoiceUpdate) SetExternalTransactionID(s string) *InvoiceUpdate {
+	iu.mutation.SetExternalTransactionID(s)
 	return iu
 }
 
-// SetNillableAppleStoreTransactionID sets the "apple_store_transaction_id" field if the given value is not nil.
-func (iu *InvoiceUpdate) SetNillableAppleStoreTransactionID(s *string) *InvoiceUpdate {
+// SetNillableExternalTransactionID sets the "external_transaction_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableExternalTransactionID(s *string) *InvoiceUpdate {
 	if s != nil {
-		iu.SetAppleStoreTransactionID(*s)
+		iu.SetExternalTransactionID(*s)
 	}
 	return iu
 }
 
-// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
-func (iu *InvoiceUpdate) ClearAppleStoreTransactionID() *InvoiceUpdate {
-	iu.mutation.ClearAppleStoreTransactionID()
+// ClearExternalTransactionID clears the value of the "external_transaction_id" field.
+func (iu *InvoiceUpdate) ClearExternalTransactionID() *InvoiceUpdate {
+	iu.mutation.ClearExternalTransactionID()
 	return iu
 }
 
-// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
-func (iu *InvoiceUpdate) SetOneVisionTransactionID(s string) *InvoiceUpdate {
-	iu.mutation.SetOneVisionTransactionID(s)
+// SetPaymentProvider sets the "payment_provider" field.
+func (iu *InvoiceUpdate) SetPaymentProvider(ep enum.PaymentProvider) *InvoiceUpdate {
+	iu.mutation.SetPaymentProvider(ep)
 	return iu
 }
 
-// SetNillableOneVisionTransactionID sets the "one_vision_transaction_id" field if the given value is not nil.
-func (iu *InvoiceUpdate) SetNillableOneVisionTransactionID(s *string) *InvoiceUpdate {
-	if s != nil {
-		iu.SetOneVisionTransactionID(*s)
+// SetNillablePaymentProvider sets the "payment_provider" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillablePaymentProvider(ep *enum.PaymentProvider) *InvoiceUpdate {
+	if ep != nil {
+		iu.SetPaymentProvider(*ep)
 	}
-	return iu
-}
-
-// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
-func (iu *InvoiceUpdate) ClearOneVisionTransactionID() *InvoiceUpdate {
-	iu.mutation.ClearOneVisionTransactionID()
 	return iu
 }
 
@@ -326,6 +320,11 @@ func (iu *InvoiceUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Invoice.status": %w`, err)}
 		}
 	}
+	if v, ok := iu.mutation.PaymentProvider(); ok {
+		if err := invoice.PaymentProviderValidator(v); err != nil {
+			return &ValidationError{Name: "payment_provider", err: fmt.Errorf(`ent: validator failed for field "Invoice.payment_provider": %w`, err)}
+		}
+	}
 	if iu.mutation.ProductCleared() && len(iu.mutation.ProductIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Invoice.product"`)
 	}
@@ -392,17 +391,14 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := iu.mutation.IsPaidTillProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
 	}
-	if value, ok := iu.mutation.AppleStoreTransactionID(); ok {
-		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
+	if value, ok := iu.mutation.ExternalTransactionID(); ok {
+		_spec.SetField(invoice.FieldExternalTransactionID, field.TypeString, value)
 	}
-	if iu.mutation.AppleStoreTransactionIDCleared() {
-		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
+	if iu.mutation.ExternalTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldExternalTransactionID, field.TypeString)
 	}
-	if value, ok := iu.mutation.OneVisionTransactionID(); ok {
-		_spec.SetField(invoice.FieldOneVisionTransactionID, field.TypeString, value)
-	}
-	if iu.mutation.OneVisionTransactionIDCleared() {
-		_spec.ClearField(invoice.FieldOneVisionTransactionID, field.TypeString)
+	if value, ok := iu.mutation.PaymentProvider(); ok {
+		_spec.SetField(invoice.FieldPaymentProvider, field.TypeEnum, value)
 	}
 	if value, ok := iu.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
@@ -623,43 +619,37 @@ func (iuo *InvoiceUpdateOne) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpd
 	return iuo
 }
 
-// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
-func (iuo *InvoiceUpdateOne) SetAppleStoreTransactionID(s string) *InvoiceUpdateOne {
-	iuo.mutation.SetAppleStoreTransactionID(s)
+// SetExternalTransactionID sets the "external_transaction_id" field.
+func (iuo *InvoiceUpdateOne) SetExternalTransactionID(s string) *InvoiceUpdateOne {
+	iuo.mutation.SetExternalTransactionID(s)
 	return iuo
 }
 
-// SetNillableAppleStoreTransactionID sets the "apple_store_transaction_id" field if the given value is not nil.
-func (iuo *InvoiceUpdateOne) SetNillableAppleStoreTransactionID(s *string) *InvoiceUpdateOne {
+// SetNillableExternalTransactionID sets the "external_transaction_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableExternalTransactionID(s *string) *InvoiceUpdateOne {
 	if s != nil {
-		iuo.SetAppleStoreTransactionID(*s)
+		iuo.SetExternalTransactionID(*s)
 	}
 	return iuo
 }
 
-// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
-func (iuo *InvoiceUpdateOne) ClearAppleStoreTransactionID() *InvoiceUpdateOne {
-	iuo.mutation.ClearAppleStoreTransactionID()
+// ClearExternalTransactionID clears the value of the "external_transaction_id" field.
+func (iuo *InvoiceUpdateOne) ClearExternalTransactionID() *InvoiceUpdateOne {
+	iuo.mutation.ClearExternalTransactionID()
 	return iuo
 }
 
-// SetOneVisionTransactionID sets the "one_vision_transaction_id" field.
-func (iuo *InvoiceUpdateOne) SetOneVisionTransactionID(s string) *InvoiceUpdateOne {
-	iuo.mutation.SetOneVisionTransactionID(s)
+// SetPaymentProvider sets the "payment_provider" field.
+func (iuo *InvoiceUpdateOne) SetPaymentProvider(ep enum.PaymentProvider) *InvoiceUpdateOne {
+	iuo.mutation.SetPaymentProvider(ep)
 	return iuo
 }
 
-// SetNillableOneVisionTransactionID sets the "one_vision_transaction_id" field if the given value is not nil.
-func (iuo *InvoiceUpdateOne) SetNillableOneVisionTransactionID(s *string) *InvoiceUpdateOne {
-	if s != nil {
-		iuo.SetOneVisionTransactionID(*s)
+// SetNillablePaymentProvider sets the "payment_provider" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillablePaymentProvider(ep *enum.PaymentProvider) *InvoiceUpdateOne {
+	if ep != nil {
+		iuo.SetPaymentProvider(*ep)
 	}
-	return iuo
-}
-
-// ClearOneVisionTransactionID clears the value of the "one_vision_transaction_id" field.
-func (iuo *InvoiceUpdateOne) ClearOneVisionTransactionID() *InvoiceUpdateOne {
-	iuo.mutation.ClearOneVisionTransactionID()
 	return iuo
 }
 
@@ -765,6 +755,11 @@ func (iuo *InvoiceUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Invoice.status": %w`, err)}
 		}
 	}
+	if v, ok := iuo.mutation.PaymentProvider(); ok {
+		if err := invoice.PaymentProviderValidator(v); err != nil {
+			return &ValidationError{Name: "payment_provider", err: fmt.Errorf(`ent: validator failed for field "Invoice.payment_provider": %w`, err)}
+		}
+	}
 	if iuo.mutation.ProductCleared() && len(iuo.mutation.ProductIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Invoice.product"`)
 	}
@@ -848,17 +843,14 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	if value, ok := iuo.mutation.IsPaidTillProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
 	}
-	if value, ok := iuo.mutation.AppleStoreTransactionID(); ok {
-		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
+	if value, ok := iuo.mutation.ExternalTransactionID(); ok {
+		_spec.SetField(invoice.FieldExternalTransactionID, field.TypeString, value)
 	}
-	if iuo.mutation.AppleStoreTransactionIDCleared() {
-		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
+	if iuo.mutation.ExternalTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldExternalTransactionID, field.TypeString)
 	}
-	if value, ok := iuo.mutation.OneVisionTransactionID(); ok {
-		_spec.SetField(invoice.FieldOneVisionTransactionID, field.TypeString, value)
-	}
-	if iuo.mutation.OneVisionTransactionIDCleared() {
-		_spec.ClearField(invoice.FieldOneVisionTransactionID, field.TypeString)
+	if value, ok := iuo.mutation.PaymentProvider(); ok {
+		_spec.SetField(invoice.FieldPaymentProvider, field.TypeEnum, value)
 	}
 	if value, ok := iuo.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)

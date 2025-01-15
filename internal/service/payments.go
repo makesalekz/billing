@@ -44,7 +44,12 @@ func (s *PaymentsService) CreatePayment(ctx context.Context, req *v1.CreatePayme
 		return nil, v1.ErrorInvalidRequest("product id is empty")
 	}
 
-	invoiceID, paymentPageURL, err := s.uc.CreatePayment(ctx, tenantID, actorID, req.GetProductId(), appID)
+	amount := req.GetAmount()
+	if amount == 0 {
+		amount = int64(1)
+	}
+
+	invoiceID, paymentPageURL, err := s.uc.CreatePayment(ctx, tenantID, actorID, req.GetProductId(), appID, amount)
 	if err != nil {
 		return nil, err
 	}

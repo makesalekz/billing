@@ -47,10 +47,10 @@ const (
 	FieldIsPaidTillProcessed = "is_paid_till_processed"
 	// FieldSubscriptionID holds the string denoting the subscription_id field in the database.
 	FieldSubscriptionID = "subscription_id"
-	// FieldAppleStoreTransactionID holds the string denoting the apple_store_transaction_id field in the database.
-	FieldAppleStoreTransactionID = "apple_store_transaction_id"
-	// FieldOneVisionTransactionID holds the string denoting the one_vision_transaction_id field in the database.
-	FieldOneVisionTransactionID = "one_vision_transaction_id"
+	// FieldExternalTransactionID holds the string denoting the external_transaction_id field in the database.
+	FieldExternalTransactionID = "external_transaction_id"
+	// FieldPaymentProvider holds the string denoting the payment_provider field in the database.
+	FieldPaymentProvider = "payment_provider"
 	// FieldIsTrial holds the string denoting the is_trial field in the database.
 	FieldIsTrial = "is_trial"
 	// FieldPaymentProfileID holds the string denoting the payment_profile_id field in the database.
@@ -105,8 +105,8 @@ var Columns = []string{
 	FieldIsPaidAtProcessed,
 	FieldIsPaidTillProcessed,
 	FieldSubscriptionID,
-	FieldAppleStoreTransactionID,
-	FieldOneVisionTransactionID,
+	FieldExternalTransactionID,
+	FieldPaymentProvider,
 	FieldIsTrial,
 	FieldPaymentProfileID,
 }
@@ -147,6 +147,18 @@ func StatusValidator(s enum.InvoiceStatus) error {
 		return nil
 	default:
 		return fmt.Errorf("invoice: invalid enum value for status field: %q", s)
+	}
+}
+
+const DefaultPaymentProvider enum.PaymentProvider = "APP_STORE"
+
+// PaymentProviderValidator is a validator for the "payment_provider" field enum values. It is called by the builders before save.
+func PaymentProviderValidator(pp enum.PaymentProvider) error {
+	switch pp {
+	case "APP_STORE", "ONE_VISION_PAYMENT":
+		return nil
+	default:
+		return fmt.Errorf("invoice: invalid enum value for payment_provider field: %q", pp)
 	}
 }
 
@@ -238,14 +250,14 @@ func BySubscriptionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubscriptionID, opts...).ToFunc()
 }
 
-// ByAppleStoreTransactionID orders the results by the apple_store_transaction_id field.
-func ByAppleStoreTransactionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAppleStoreTransactionID, opts...).ToFunc()
+// ByExternalTransactionID orders the results by the external_transaction_id field.
+func ByExternalTransactionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExternalTransactionID, opts...).ToFunc()
 }
 
-// ByOneVisionTransactionID orders the results by the one_vision_transaction_id field.
-func ByOneVisionTransactionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOneVisionTransactionID, opts...).ToFunc()
+// ByPaymentProvider orders the results by the payment_provider field.
+func ByPaymentProvider(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPaymentProvider, opts...).ToFunc()
 }
 
 // ByIsTrial orders the results by the is_trial field.

@@ -50,26 +50,26 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Invoice",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			invoice.FieldUserID:                  {Type: field.TypeInt64, Column: invoice.FieldUserID},
-			invoice.FieldTenantID:                {Type: field.TypeInt64, Column: invoice.FieldTenantID},
-			invoice.FieldAppID:                   {Type: field.TypeString, Column: invoice.FieldAppID},
-			invoice.FieldProductID:               {Type: field.TypeInt64, Column: invoice.FieldProductID},
-			invoice.FieldAmount:                  {Type: field.TypeInt64, Column: invoice.FieldAmount},
-			invoice.FieldPrice:                   {Type: field.TypeFloat64, Column: invoice.FieldPrice},
-			invoice.FieldCurrency:                {Type: field.TypeString, Column: invoice.FieldCurrency},
-			invoice.FieldStatus:                  {Type: field.TypeEnum, Column: invoice.FieldStatus},
-			invoice.FieldPaidAt:                  {Type: field.TypeTime, Column: invoice.FieldPaidAt},
-			invoice.FieldPaidTill:                {Type: field.TypeTime, Column: invoice.FieldPaidTill},
-			invoice.FieldIsRevoked:               {Type: field.TypeBool, Column: invoice.FieldIsRevoked},
-			invoice.FieldRevokedAt:               {Type: field.TypeTime, Column: invoice.FieldRevokedAt},
-			invoice.FieldIsRevokedProcessed:      {Type: field.TypeBool, Column: invoice.FieldIsRevokedProcessed},
-			invoice.FieldIsPaidAtProcessed:       {Type: field.TypeBool, Column: invoice.FieldIsPaidAtProcessed},
-			invoice.FieldIsPaidTillProcessed:     {Type: field.TypeBool, Column: invoice.FieldIsPaidTillProcessed},
-			invoice.FieldSubscriptionID:          {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
-			invoice.FieldAppleStoreTransactionID: {Type: field.TypeString, Column: invoice.FieldAppleStoreTransactionID},
-			invoice.FieldOneVisionTransactionID:  {Type: field.TypeString, Column: invoice.FieldOneVisionTransactionID},
-			invoice.FieldIsTrial:                 {Type: field.TypeBool, Column: invoice.FieldIsTrial},
-			invoice.FieldPaymentProfileID:        {Type: field.TypeInt64, Column: invoice.FieldPaymentProfileID},
+			invoice.FieldUserID:                {Type: field.TypeInt64, Column: invoice.FieldUserID},
+			invoice.FieldTenantID:              {Type: field.TypeInt64, Column: invoice.FieldTenantID},
+			invoice.FieldAppID:                 {Type: field.TypeString, Column: invoice.FieldAppID},
+			invoice.FieldProductID:             {Type: field.TypeInt64, Column: invoice.FieldProductID},
+			invoice.FieldAmount:                {Type: field.TypeInt64, Column: invoice.FieldAmount},
+			invoice.FieldPrice:                 {Type: field.TypeFloat64, Column: invoice.FieldPrice},
+			invoice.FieldCurrency:              {Type: field.TypeString, Column: invoice.FieldCurrency},
+			invoice.FieldStatus:                {Type: field.TypeEnum, Column: invoice.FieldStatus},
+			invoice.FieldPaidAt:                {Type: field.TypeTime, Column: invoice.FieldPaidAt},
+			invoice.FieldPaidTill:              {Type: field.TypeTime, Column: invoice.FieldPaidTill},
+			invoice.FieldIsRevoked:             {Type: field.TypeBool, Column: invoice.FieldIsRevoked},
+			invoice.FieldRevokedAt:             {Type: field.TypeTime, Column: invoice.FieldRevokedAt},
+			invoice.FieldIsRevokedProcessed:    {Type: field.TypeBool, Column: invoice.FieldIsRevokedProcessed},
+			invoice.FieldIsPaidAtProcessed:     {Type: field.TypeBool, Column: invoice.FieldIsPaidAtProcessed},
+			invoice.FieldIsPaidTillProcessed:   {Type: field.TypeBool, Column: invoice.FieldIsPaidTillProcessed},
+			invoice.FieldSubscriptionID:        {Type: field.TypeInt64, Column: invoice.FieldSubscriptionID},
+			invoice.FieldExternalTransactionID: {Type: field.TypeString, Column: invoice.FieldExternalTransactionID},
+			invoice.FieldPaymentProvider:       {Type: field.TypeEnum, Column: invoice.FieldPaymentProvider},
+			invoice.FieldIsTrial:               {Type: field.TypeBool, Column: invoice.FieldIsTrial},
+			invoice.FieldPaymentProfileID:      {Type: field.TypeInt64, Column: invoice.FieldPaymentProfileID},
 		},
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
@@ -531,14 +531,14 @@ func (f *InvoiceFilter) WhereSubscriptionID(p entql.Int64P) {
 	f.Where(p.Field(invoice.FieldSubscriptionID))
 }
 
-// WhereAppleStoreTransactionID applies the entql string predicate on the apple_store_transaction_id field.
-func (f *InvoiceFilter) WhereAppleStoreTransactionID(p entql.StringP) {
-	f.Where(p.Field(invoice.FieldAppleStoreTransactionID))
+// WhereExternalTransactionID applies the entql string predicate on the external_transaction_id field.
+func (f *InvoiceFilter) WhereExternalTransactionID(p entql.StringP) {
+	f.Where(p.Field(invoice.FieldExternalTransactionID))
 }
 
-// WhereOneVisionTransactionID applies the entql string predicate on the one_vision_transaction_id field.
-func (f *InvoiceFilter) WhereOneVisionTransactionID(p entql.StringP) {
-	f.Where(p.Field(invoice.FieldOneVisionTransactionID))
+// WherePaymentProvider applies the entql string predicate on the payment_provider field.
+func (f *InvoiceFilter) WherePaymentProvider(p entql.StringP) {
+	f.Where(p.Field(invoice.FieldPaymentProvider))
 }
 
 // WhereIsTrial applies the entql bool predicate on the is_trial field.
