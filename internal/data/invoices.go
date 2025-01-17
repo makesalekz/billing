@@ -82,27 +82,32 @@ func (r *invoicesRepo) UpdateInvoice(
 	}
 
 	if dto.PaidAt != nil {
-		query = query.SetPaidAt(*dto.PaidAt)
+		query.SetPaidAt(*dto.PaidAt)
 	}
 
 	if dto.IsPaidAtProcessed != nil {
-		query = query.SetIsPaidAtProcessed(*dto.IsPaidAtProcessed)
+		query.SetIsPaidAtProcessed(*dto.IsPaidAtProcessed)
 	}
 
 	if dto.IsPaidTillProcessed != nil {
-		query = query.SetIsPaidTillProcessed(*dto.IsPaidTillProcessed)
+		query.SetIsPaidTillProcessed(*dto.IsPaidTillProcessed)
 	}
 
 	if dto.IsRevoked != nil {
-		query = query.SetIsRevoked(*dto.IsRevoked)
+		query.SetIsRevoked(*dto.IsRevoked)
 	}
 
 	if dto.RevokedAt != nil {
-		query = query.SetRevokedAt(*dto.RevokedAt)
+		query.SetRevokedAt(*dto.RevokedAt)
 	}
 
 	if dto.IsRevokedProcessed != nil {
-		query = query.SetIsRevokedProcessed(*dto.IsRevokedProcessed)
+		query.SetIsRevokedProcessed(*dto.IsRevokedProcessed)
+	}
+
+	if dto.OneVisionTransactionID != nil {
+		query.SetExternalTransactionID(*dto.OneVisionTransactionID)
+		query.SetPaymentProvider(enum.OneVisionPayment)
 	}
 
 	return query.Save(ctx)
