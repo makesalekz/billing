@@ -41,7 +41,7 @@ INSERT INTO bundles (id, amount, item_id, product_id, created_at, updated_at)
 VALUES
 -- Basic plan
 (2, 50, 201, 12, NOW(), NOW()),
-(3, 25, 202, 12, NOW(), NOW()),
+(3, 20, 202, 12, NOW(), NOW()),
 (4, 5, 203, 12, NOW(), NOW()),
 (5, 5, 205, 12, NOW(), NOW()),
 (6, 1, 207, 12, NOW(), NOW()),
