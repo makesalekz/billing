@@ -595,20 +595,7 @@ func (uc *PaymentUseCase) saveRecurrentProfile(
 		return nil, fmt.Errorf("failed to check existing payment profile: %w", err)
 	}
 
-	if existingProfile != nil {
-		uc.log.Infof("Payment profile already exists for user %v. Updating profile.", userID)
-
-		err = uc.paymentProfileRepo.UpdateProfile(
-			ctx, existingProfile.ID, data.PaymentProfileDto{
-				Email:          &email,
-				Phone:          &phone,
-				RecurrentToken: &recurrentToken,
-			},
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update payment profile: %w", err)
-		}
-	} else {
+	if existingProfile == nil {
 		uc.log.Infof("Creating new payment profile for user %v.", userID)
 
 		existingProfile, err = uc.paymentProfileRepo.CreateProfile(
@@ -624,6 +611,19 @@ func (uc *PaymentUseCase) saveRecurrentProfile(
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create payment profile: %w", err)
+		}
+	} else {
+		uc.log.Infof("Payment profile already exists for user %v. Updating profile.", userID)
+
+		err = uc.paymentProfileRepo.UpdateProfile(
+			ctx, existingProfile.ID, data.PaymentProfileDto{
+				Email:          &email,
+				Phone:          &phone,
+				RecurrentToken: &recurrentToken,
+			},
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update payment profile: %w", err)
 		}
 	}
 
