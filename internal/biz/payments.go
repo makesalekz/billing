@@ -670,6 +670,12 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 		uc.log.Infof("Skipping recurrent payment for app %v", invoice.AppID)
 		return
 	}
+
+	if uc.paymentClient == nil {
+		uc.log.Error("Payment client is not initialized")
+		return
+	}
+
 	if invoice.PaymentProfileID == nil {
 		uc.log.Errorf("Payment profile not found for invoice %v", invoice.ID)
 		return
@@ -709,11 +715,6 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 		Amount:         product.Price.IntPart(),
 		OrderID:        strconv.FormatInt(newInvoice.ID, 10),
 		Description:    product.Description,
-	}
-
-	if uc.paymentClient == nil {
-		uc.log.Error("Payment client is not initialized")
-		return
 	}
 
 	if err = recurrentRequest.Validate(); err != nil {
