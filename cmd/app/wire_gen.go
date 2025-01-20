@@ -48,13 +48,14 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	productUseCase := biz.NewProductUseCase(productRepo)
 	productService := service.NewProductService(productUseCase)
 	invoicesRepo := data.NewInvoicesRepo(dataData)
+	productReservationRepo := data.NewProductReservationRepo(dataData)
 	conn, cleanup2, err := data.NewNatsClient(bootstrap)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
 	iQueueManager := nats.NewQueueManager(configConfig, conn, logger)
-	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesRepo, itemsRepo, productRepo, iQueueManager)
+	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesRepo, itemsRepo, productRepo, productReservationRepo, iQueueManager)
 	invoiceService := service.NewInvoiceService(invoicesUseCase)
 	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)
 	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo)
@@ -62,7 +63,6 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
 	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
-	productReservationRepo := data.NewProductReservationRepo(dataData)
 	paymentUseCase, err := biz.NewPaymentUsecase(configConfig, logger, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo)
 	if err != nil {
 		cleanup2()
