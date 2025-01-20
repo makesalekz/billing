@@ -73,7 +73,7 @@ func (s *InvoiceService) ListInvoices(ctx context.Context, req *v1.ListInvoicesR
 
 	pagination := FormPaginateRequest(req.GetPagination())
 
-	listInvoices, err := s.uc.ListInvoices(ctx, actorID, filter, pagination)
+	listInvoices, err := s.uc.ListInvoices(ctx, filter, pagination)
 	if err != nil {
 		return nil, err
 	}
