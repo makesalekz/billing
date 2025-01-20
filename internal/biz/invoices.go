@@ -25,11 +25,12 @@ type InvoicesList struct {
 }
 
 type InvoicesUseCase struct {
-	log          *log.Helper
-	invoiceRepo  data.InvoicesRepo
-	itemsRepo    data.ItemsRepo
-	productRepo  data.ProductRepo
-	queryManager u_nats.IQueueManager
+	log                    *log.Helper
+	invoiceRepo            data.InvoicesRepo
+	itemsRepo              data.ItemsRepo
+	productRepo            data.ProductRepo
+	productReservationRepo data.ProductReservationRepo
+	queryManager           u_nats.IQueueManager
 }
 
 func NewInvoicesUseCase(
@@ -37,19 +38,21 @@ func NewInvoicesUseCase(
 	invoiceRepo data.InvoicesRepo,
 	itemsRepo data.ItemsRepo,
 	productRepo data.ProductRepo,
+	productReservationRepo data.ProductReservationRepo,
 	queryManager u_nats.IQueueManager,
 ) *InvoicesUseCase {
 	return &InvoicesUseCase{
-		log:          log.NewHelper(log.With(logger, "module", "biz/project")),
-		invoiceRepo:  invoiceRepo,
-		itemsRepo:    itemsRepo,
-		productRepo:  productRepo,
-		queryManager: queryManager,
+		log:                    log.NewHelper(log.With(logger, "module", "biz/project")),
+		invoiceRepo:            invoiceRepo,
+		itemsRepo:              itemsRepo,
+		productRepo:            productRepo,
+		productReservationRepo: productReservationRepo,
+		queryManager:           queryManager,
 	}
 }
 
 func (uc *InvoicesUseCase) CreateInvoice(
-	ctx context.Context, actorID, tenantID int64, appID string, invoiceDto data.InvoiceDto,
+	ctx context.Context, actorID int64, invoiceDto data.InvoiceDto,
 ) (*ent.Invoice, error) {
 	if invoiceDto.Amount <= 0 {
 		return nil, v1.ErrorInvalidRequest("amount must be greater than 0")
@@ -91,6 +94,25 @@ func (uc *InvoicesUseCase) CreateInvoice(
 		return nil, v1.ErrorDatabaseQuery("failed to create invoice: %s", err.Error())
 	}
 
+	_, err = uc.productReservationRepo.CreateReservation(
+		ctx, data.ProductReservationDto{
+			ProductID:           invoiceDto.ProductID,
+			InvoiceID:           invoice.ID,
+			ReservationQuantity: invoiceDto.Amount,
+			UserID:              actorID,
+			Status:              enum.Pending,
+		},
+	)
+
+	if err != nil {
+		_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoice, data.InvoiceDto{Status: enum.Failed})
+		if err != nil {
+			return nil, v1.ErrorDatabaseQuery("failed to create product reservation: %v", err)
+		}
+
+		return nil, v1.ErrorDatabaseQuery("failed to create product reservation: %v", err)
+	}
+
 	return invoice, nil
 }
 
@@ -129,7 +151,7 @@ func (uc *InvoicesUseCase) GetInvoice(
 }
 
 func (uc *InvoicesUseCase) ListInvoices(
-	ctx context.Context, actorID int64, filter data.InvoiceFilter, paginate *utils_v1.PaginateRequest,
+	ctx context.Context, filter data.InvoiceFilter, paginate *utils_v1.PaginateRequest,
 ) (*InvoicesList, error) {
 	total, err := uc.invoiceRepo.CountInvoices(ctx, filter)
 	if err != nil {

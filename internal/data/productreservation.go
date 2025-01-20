@@ -54,6 +54,10 @@ func (r *productReservationRepo) CreateReservation(
 		return nil, err
 	}
 
+	if !product.IsLimited {
+		return &ent.ProductReservation{}, nil
+	}
+
 	if product.Left < reservationDto.ReservationQuantity {
 		return nil, errors.New("insufficient stock")
 	}

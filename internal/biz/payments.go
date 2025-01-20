@@ -192,14 +192,14 @@ func (uc *PaymentUseCase) CreatePayment(
 	payment, err := uc.paymentClient.CreatePayment(paymentRequest)
 	if err != nil {
 		uc.log.Errorf("Failed to create payment: %v", err)
-		_, updateErr := uc.invoicesRepo.UpdateInvoice(
+		_, err = uc.invoicesRepo.UpdateInvoice(
 			ctx, invoice, data.InvoiceDto{
 				Status: enum.Failed,
 			},
 		)
 
-		if updateErr != nil {
-			return 0, "", v1.ErrorDatabaseQuery("failed to update invoice: %v", updateErr)
+		if err != nil {
+			return 0, "", v1.ErrorDatabaseQuery("failed to update invoice: %v", err)
 		}
 
 		return 0, "", v1.ErrorInvalidRequest("failed to create payment %v", err)
@@ -771,7 +771,7 @@ func (uc *PaymentUseCase) isProductAvailable(product *ent.Product, amount int64)
 func (uc *PaymentUseCase) reserveProduct(
 	ctx context.Context, product *ent.Product, invoice *ent.Invoice, amount int64,
 ) error {
-	if product.IsLimited && product.Left > amount {
+	if product.IsLimited {
 		_, err := uc.productReservationRepo.CreateReservation(
 			ctx, data.ProductReservationDto{
 				ProductID:           product.ID,
