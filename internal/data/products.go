@@ -62,6 +62,14 @@ func (r *productsRepo) CreateProduct(ctx context.Context, productDto ProductDto)
 		query.SetExpiringTime(*productDto.ExpiringTime)
 	}
 
+	if productDto.PaymentModel != nil {
+		query.SetPaymentModel(*productDto.PaymentModel)
+	}
+
+	if productDto.ProductPeriod != nil {
+		query.SetProductPeriod(*productDto.ProductPeriod)
+	}
+
 	product, err := query.Save(ctx)
 	if err != nil {
 		return nil, err
@@ -72,10 +80,12 @@ func (r *productsRepo) CreateProduct(ctx context.Context, productDto ProductDto)
 		var bundleCreate []*ent.BundleCreate
 
 		for _, bund := range productDto.Bundles {
-			bundleCreate = append(bundleCreate, tx.Bundle.Create().
-				SetAmount(bund.Amount).
-				SetItemID(bund.ItemID).
-				SetProductID(product.ID))
+			bundleCreate = append(
+				bundleCreate, tx.Bundle.Create().
+					SetAmount(bund.Amount).
+					SetItemID(bund.ItemID).
+					SetProductID(product.ID),
+			)
 		}
 
 		bundles, err = tx.Bundle.CreateBulk(bundleCreate...).Save(ctx)
@@ -187,11 +197,13 @@ func (r *productsRepo) updateBundles(
 		return nil, err
 	}
 
-	err = tx.Bundle.MapCreateBulk(createBundles, func(create *ent.BundleCreate, i int) {
-		create.SetAmount(createBundles[i].Amount).
-			SetItemID(createBundles[i].ItemID).
-			SetProductID(productEnt.ID)
-	}).Exec(ctx)
+	err = tx.Bundle.MapCreateBulk(
+		createBundles, func(create *ent.BundleCreate, i int) {
+			create.SetAmount(createBundles[i].Amount).
+				SetItemID(createBundles[i].ItemID).
+				SetProductID(productEnt.ID)
+		},
+	).Exec(ctx)
 	if err != nil {
 		return nil, err
 	}

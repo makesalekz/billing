@@ -91,20 +91,22 @@ type ItemDto struct {
 }
 
 type ProductDto struct {
-	AppID        string
-	Name         string
-	Description  string
-	Price        decimal.Decimal
-	Currency     string
-	IsActive     bool
-	IsLimited    bool
-	LimitedTill  *time.Time
-	Left         int64
-	IsUnique     bool
-	UniqueLimit  int64
-	IsExpiring   bool
-	ExpiringTime *time.Time
-	Bundles      []BundleDto
+	AppID         string
+	Name          string
+	Description   string
+	Price         decimal.Decimal
+	Currency      string
+	IsActive      bool
+	IsLimited     bool
+	LimitedTill   *time.Time
+	Left          int64
+	IsUnique      bool
+	UniqueLimit   int64
+	IsExpiring    bool
+	ExpiringTime  *time.Time
+	Bundles       []BundleDto
+	PaymentModel  *enum.PaymentModel
+	ProductPeriod *enum.ProductPeriod
 }
 
 type BundleDto struct {

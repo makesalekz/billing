@@ -2,135 +2,55 @@ package biz
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/shopspring/decimal"
 
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/internal/data"
 	"gitlab.calendaria.team/services/finance/onevisionpay"
-	"gitlab.calendaria.team/services/utils/v1/config"
+)
+
+const (
+	DefaultPriceForCardLink = 0
+	PmsAppID                = "pms"
 )
 
 type PaymentUseCase struct {
-	paymentClient          *onevisionpay.Client
+	log                    *log.Helper
+	paymentClient          *data.OvpClient
 	invoicesRepo           data.InvoicesRepo
 	productRepo            data.ProductRepo
 	subscriptionRepo       data.SubscriptionsRepo
 	paymentProfileRepo     data.PaymentProfileRepo
 	productReservationRepo data.ProductReservationRepo
-	log                    *log.Helper
-	PaymentSuccessURL      string
-	PaymentFailureURL      string
-	PaymentCallbackURL     string
-	MerchantID             string
-	MerchantName           string
-	ServiceID              string
+	invoiceManager         *InvoicesManager
 }
 
 func NewPaymentUsecase(
-	config *config.Config,
 	logger log.Logger,
+	paymentClient *data.OvpClient,
 	invoicesRepo data.InvoicesRepo,
 	productRepo data.ProductRepo,
 	subscriptionRepo data.SubscriptionsRepo,
 	paymentProfileRepo data.PaymentProfileRepo,
 	productReservationRepo data.ProductReservationRepo,
+	invoiceManager *InvoicesManager,
 ) (*PaymentUseCase, error) {
-	helper := log.NewHelper(log.With(logger, "module", "usecase/payment"))
-	helper.Info("creating onevisionpay client")
-
-	uc := &PaymentUseCase{
-		log:                    helper,
+	return &PaymentUseCase{
+		log:                    log.NewHelper(log.With(logger, "module", "usecase/payment")),
+		paymentClient:          paymentClient,
 		invoicesRepo:           invoicesRepo,
 		productRepo:            productRepo,
 		subscriptionRepo:       subscriptionRepo,
 		paymentProfileRepo:     paymentProfileRepo,
 		productReservationRepo: productReservationRepo,
-	}
-
-	if err := uc.loadConfig(config); err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
-	}
-
-	client, err := uc.initPaymentClient(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize payment client: %w", err)
-	}
-	uc.paymentClient = client
-
-	return uc, nil
-}
-
-func (uc *PaymentUseCase) loadConfig(config *config.Config) error {
-	var err error
-	uc.PaymentSuccessURL, err = config.Value("PAYMENT_SUCCESS_URL").String()
-	if err != nil {
-		return fmt.Errorf("missing PAYMENT_SUCCESS_URL: %w", err)
-	}
-
-	uc.PaymentCallbackURL, err = config.Value("PAYMENT_CALLBACK_URL").String()
-	if err != nil {
-		return fmt.Errorf("missing PAYMENT_CALLBACK_URL: %w", err)
-	}
-
-	uc.PaymentFailureURL, err = config.Value("PAYMENT_FAILURE_URL").String()
-	if err != nil {
-		return fmt.Errorf("missing PAYMENT_FAILURE_URL: %w", err)
-	}
-
-	secrets, err := config.ReadSecretsFor(context.Background(), "onevisionpay")
-	if err != nil {
-		return fmt.Errorf("failed to read secrets: %w", err)
-	}
-
-	if err = uc.parseSecrets(secrets); err != nil {
-		return fmt.Errorf("invalid secrets: %w", err)
-	}
-
-	return nil
-}
-
-func (uc *PaymentUseCase) parseSecrets(secrets map[string]interface{}) error {
-	var ok bool
-	if uc.MerchantID, ok = secrets["merchant_id"].(string); !ok || uc.MerchantID == "" {
-		return errors.New("merchant_id not set")
-	}
-
-	if uc.MerchantName, ok = secrets["merchant_name"].(string); !ok || uc.MerchantName == "" {
-		return errors.New("merchant_name not set")
-	}
-
-	if uc.ServiceID, ok = secrets["service_id"].(string); !ok || uc.ServiceID == "" {
-		return errors.New("service_id not set")
-	}
-
-	return nil
-}
-
-func (uc *PaymentUseCase) initPaymentClient(config *config.Config) (*onevisionpay.Client, error) {
-	debug := os.Getenv("DEBUG") != ""
-	env := onevisionpay.Production
-	if debug {
-		env = onevisionpay.Sandbox
-	}
-
-	secrets, err := config.ReadSecretsFor(context.Background(), "onevisionpay")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read onevisionpay secrets: %w", err)
-	}
-
-	apiKey, _ := secrets["api_key"].(string)
-	apiSecret, _ := secrets["api_secret"].(string)
-
-	return onevisionpay.NewClient(apiKey, apiSecret, env)
+		invoiceManager:         invoiceManager,
+	}, nil
 }
 
 func (uc *PaymentUseCase) CreatePayment(
@@ -138,28 +58,6 @@ func (uc *PaymentUseCase) CreatePayment(
 ) (int64, string, error) {
 	if uc.paymentClient == nil {
 		return 0, "", v1.ErrorInternal("payment client is not initialized")
-	}
-	product, err := uc.productRepo.GetProduct(ctx, productID)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			uc.log.Errorf("Product not found: %d", productID)
-			return 0, "", v1.ErrorNotFound("product not found")
-		}
-		uc.log.Errorf("Failed to get product %d: %v", productID, err)
-		return 0, "", v1.ErrorDatabaseQuery("failed to get product: %v", err)
-	}
-
-	if err = uc.isProductAvailable(product, amount); err != nil {
-		return 0, "", err
-	}
-
-	hasActiveSubscription, isFirst, err := uc.checkSubscriptionStatus(ctx, tenantID, actorID, productID)
-	if err != nil {
-		return 0, "", err
-	}
-
-	if hasActiveSubscription && product.PaymentModel == enum.Recurrent {
-		return 0, "", v1.ErrorInvalidRequest("user already has active subscription")
 	}
 
 	invoiceDTO := data.InvoiceDto{
@@ -169,38 +67,24 @@ func (uc *PaymentUseCase) CreatePayment(
 		ProductID: productID,
 		Status:    enum.Created,
 		Amount:    amount,
-		Price:     product.Price,
 	}
 
-	if isFirst && product.PaymentModel == enum.Recurrent {
-		invoiceDTO.Amount = amount
-		invoiceDTO.Price = decimal.NewFromInt(DefaultPriceForCardLink)
-		invoiceDTO.IsTrial = true
-	}
+	invoice, product, rollback, err := uc.invoiceManager.CreateInvoice(ctx, tenantID, actorID, invoiceDTO, productID)
 
-	invoice, err := uc.invoicesRepo.CreateInvoice(ctx, invoiceDTO)
 	if err != nil {
-		uc.log.Errorf("Failed to create invoice: %+v, error: %v", invoiceDTO, err)
-		return 0, "", v1.ErrorDatabaseQuery("failed to create invoice: %v", err)
+		if rollback != nil {
+			rollback()
+		}
+		return 0, "", err
 	}
 
-	paymentRequest := uc.getPaymentPayload(actorID, invoice, product, invoiceDTO.Price, amount)
-	if err = paymentRequest.Validate(); err != nil {
-		return 0, "", v1.ErrorInvalidRequest("invalid payment payload: %v", err)
-	}
+	payment, err := uc.paymentClient.CreatePayment(
+		actorID, invoice, product,
+	)
 
-	payment, err := uc.paymentClient.CreatePayment(paymentRequest)
 	if err != nil {
 		uc.log.Errorf("Failed to create payment: %v", err)
-		_, err = uc.invoicesRepo.UpdateInvoice(
-			ctx, invoice, data.InvoiceDto{
-				Status: enum.Failed,
-			},
-		)
-
-		if err != nil {
-			return 0, "", v1.ErrorDatabaseQuery("failed to update invoice: %v", err)
-		}
+		rollback()
 
 		return 0, "", v1.ErrorInvalidRequest("failed to create payment %v", err)
 	}
@@ -213,11 +97,6 @@ func (uc *PaymentUseCase) CreatePayment(
 	)
 	if err != nil {
 		return 0, "", v1.ErrorDatabaseQuery("failed to update invoice: %v", err)
-	}
-
-	err = uc.reserveProduct(ctx, product, invoice, amount)
-	if err != nil {
-		return 0, "", err
 	}
 
 	return updatedInvoice.ID, payment.PaymentPageURL, nil
@@ -238,21 +117,9 @@ func (uc *PaymentUseCase) HandlePaymentCallback(
 		return
 	}
 
-	payload, err := uc.paymentClient.ParsePayload(req.GetData())
+	statusResponse, invoiceID, err := uc.paymentClient.ParsePayload(req.GetData())
 	if err != nil {
 		uc.log.Errorf("Failed to parse payload: %v", err)
-		return
-	}
-
-	statusResponse, err := uc.getPaymentStatus(payload.PaymentID, payload.OrderID)
-	if err != nil {
-		uc.log.Errorf("Failed to check payment status: %v", err)
-		return
-	}
-
-	invoiceID, err := strconv.ParseInt(statusResponse.OrderID, 10, 64)
-	if err != nil {
-		uc.log.Errorf("Failed to parse invoice ID: %v", err)
 		return
 	}
 
@@ -402,13 +269,11 @@ func (uc *PaymentUseCase) handleCompletedStatus(
 	uc.log.Infof("Payment profile successfully saved for user %v", invoice.UserID)
 
 	paidAt := time.Now()
-	paidTill := paidAt.AddDate(0, 1, 0) // 1 month
 
 	updateInvoiceDto := data.InvoiceDto{
 		Status:             enum.Paid,
 		RecurrentProfileID: &recurrentProfile.ID,
 		PaidAt:             &paidAt,
-		PaidTill:           &paidTill,
 	}
 
 	if invoice.SubscriptionID == nil {
@@ -508,45 +373,6 @@ func (uc *PaymentUseCase) CancelSubscription(
 	return nil
 }
 
-func (uc *PaymentUseCase) getPaymentPayload(
-	actorID int64, invoice *ent.Invoice, product *ent.Product, price decimal.Decimal, amount int64,
-) onevisionpay.PaymentRequest {
-	quantity := int(amount)
-	paymentRequest := onevisionpay.PaymentRequest{
-		Amount:      price.IntPart(),
-		OrderID:     strconv.FormatInt(invoice.ID, 10),
-		UserID:      strconv.FormatInt(actorID, 10),
-		Description: product.Description,
-		Items: []onevisionpay.PaymentItem{
-			{
-				MerchantID:   uc.MerchantID,
-				ServiceID:    uc.ServiceID,
-				MerchantName: uc.MerchantName,
-				Name:         product.Name,
-				Quantity:     quantity,
-				AmountOnePcs: price.IntPart(),
-				AmountSum:    price.IntPart(),
-			},
-		},
-		PaymentType:            onevisionpay.Pay,
-		PaymentMethod:          onevisionpay.Ecom,
-		Currency:               product.Currency,
-		PaymentLifetime:        DefaultPaymentLifeTime,
-		Lang:                   DefaultPaymentLang,
-		CreateRecurrentProfile: false,
-		SuccessURL:             uc.PaymentSuccessURL,
-		CallbackURL:            uc.PaymentCallbackURL,
-		FailureURL:             uc.PaymentFailureURL,
-	}
-
-	if product.PaymentModel == enum.Recurrent {
-		paymentRequest.CreateRecurrentProfile = true
-		paymentRequest.RecurrentProfileLifetime = DefaultRecurrentProfileLifeTime
-	}
-
-	return paymentRequest
-}
-
 func (uc *PaymentUseCase) checkSubscriptionStatus(
 	ctx context.Context, tenantID, actorID, productID int64,
 ) (bool, bool, error) {
@@ -630,22 +456,6 @@ func (uc *PaymentUseCase) saveRecurrentProfile(
 	return existingProfile, nil
 }
 
-func (uc *PaymentUseCase) getPaymentStatus(
-	paymentID int64, orderID string,
-) (*onevisionpay.StatusResponse, error) {
-	statusResponse, err := uc.paymentClient.PaymentStatus(
-		onevisionpay.StatusRequest{
-			PaymentID: paymentID,
-			OrderID:   orderID,
-		},
-	)
-	if err != nil {
-		uc.log.Errorf("Failed to fetch payment status for payment ID %v: %v", paymentID, err)
-		return nil, err
-	}
-	return statusResponse, nil
-}
-
 // ProcessExpiredPayments processes expired payments for recurrent profiles.
 func (uc *PaymentUseCase) ProcessExpiredPayments(ctx context.Context) {
 	uc.log.Info("Processing expired payments for recurrent profiles")
@@ -685,12 +495,6 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 		return
 	}
 
-	product, err := uc.productRepo.GetProduct(ctx, invoice.ProductID)
-	if err != nil {
-		uc.log.Errorf("Failed to get product for invoice %v: %v", invoice.ID, err)
-		return
-	}
-
 	newInvoiceDTO := data.InvoiceDto{
 		TenantID:           invoice.TenantID,
 		UserID:             invoice.UserID,
@@ -698,42 +502,34 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 		ProductID:          invoice.ProductID,
 		Status:             enum.Created,
 		Amount:             invoice.Amount,
-		Price:              product.Price,
 		RecurrentProfileID: invoice.PaymentProfileID,
 	}
 
-	newInvoice, err := uc.invoicesRepo.CreateInvoice(ctx, newInvoiceDTO)
+	newInvoice, product, rollback, err := uc.invoiceManager.CreateInvoice(
+		ctx, invoice.TenantID, invoice.UserID,
+		newInvoiceDTO,
+		invoice.ProductID,
+	)
+
 	if err != nil {
+		if rollback != nil {
+			rollback()
+		}
 		uc.log.Errorf("Failed to create new invoice for recurrent payment: %v", err)
 		return
 	}
 
 	uc.log.Infof("New invoice created for recurrent payment, invoice ID: %v", newInvoice.ID)
 
-	recurrentRequest := onevisionpay.RecurrentRequest{
-		RecurrentToken: *invoice.Edges.PaymentProfile.RecurrentToken,
-		Amount:         product.Price.IntPart(),
-		OrderID:        strconv.FormatInt(newInvoice.ID, 10),
-		Description:    product.Description,
-	}
-
-	if err = recurrentRequest.Validate(); err != nil {
-		uc.log.Errorf("Invalid recurrent payment request: %v", err)
-		return
-	}
-
-	response, err := uc.paymentClient.RecurrentPayment(recurrentRequest)
+	response, transactionID, err := uc.paymentClient.RecurrentPayment(newInvoice, product, invoice.Edges.PaymentProfile)
 	if err != nil {
 		uc.log.Errorf("Failed to create recurrent payment: %v", err)
 		return
 	}
 
-	transactionID := strconv.FormatInt(response.PaymentID, 10)
-
 	_, err = uc.invoicesRepo.UpdateInvoice(
 		ctx, invoice, data.InvoiceDto{
-			Status:                 enum.Created,
-			OneVisionTransactionID: &transactionID,
+			OneVisionTransactionID: transactionID,
 		},
 	)
 	if err != nil {

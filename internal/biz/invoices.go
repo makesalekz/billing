@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/shopspring/decimal"
 	"golang.org/x/exp/maps"
 
 	"gitlab.calendaria.team/services/finance/billing/messages"
@@ -26,6 +25,7 @@ type InvoicesList struct {
 
 type InvoicesUseCase struct {
 	log                    *log.Helper
+	invoiceManager         *InvoicesManager
 	invoiceRepo            data.InvoicesRepo
 	itemsRepo              data.ItemsRepo
 	productRepo            data.ProductRepo
@@ -35,6 +35,7 @@ type InvoicesUseCase struct {
 
 func NewInvoicesUseCase(
 	logger log.Logger,
+	invoiceManager *InvoicesManager,
 	invoiceRepo data.InvoicesRepo,
 	itemsRepo data.ItemsRepo,
 	productRepo data.ProductRepo,
@@ -43,6 +44,7 @@ func NewInvoicesUseCase(
 ) *InvoicesUseCase {
 	return &InvoicesUseCase{
 		log:                    log.NewHelper(log.With(logger, "module", "biz/project")),
+		invoiceManager:         invoiceManager,
 		invoiceRepo:            invoiceRepo,
 		itemsRepo:              itemsRepo,
 		productRepo:            productRepo,
@@ -52,65 +54,17 @@ func NewInvoicesUseCase(
 }
 
 func (uc *InvoicesUseCase) CreateInvoice(
-	ctx context.Context, actorID int64, invoiceDto data.InvoiceDto,
+	ctx context.Context, tenantID, actorID int64, invoiceDto data.InvoiceDto,
 ) (*ent.Invoice, error) {
-	if invoiceDto.Amount <= 0 {
-		return nil, v1.ErrorInvalidRequest("amount must be greater than 0")
-	}
-
-	product, err := uc.productRepo.GetProduct(ctx, invoiceDto.ProductID)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, v1.ErrorNotFound("failed to get product: %s", err.Error())
-		}
-
-		return nil, v1.ErrorDatabaseQuery("failed to get product: %s", err.Error())
-	}
-
-	if !product.IsActive {
-		return nil, v1.ErrorInvalidRequest("product is not active")
-	}
-
-	if product.IsUnique {
-		err = uc.canProductBeUsedOneMoreTime(ctx, actorID, product)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if product.IsLimited {
-		err = uc.checkProductLimit(invoiceDto.Amount, product)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if invoiceDto.Price.IsZero() {
-		invoiceDto.Price = product.Price.Mul(decimal.NewFromInt(invoiceDto.Amount))
-	}
-
-	invoice, err := uc.invoiceRepo.CreateInvoice(ctx, invoiceDto)
-	if err != nil {
-		return nil, v1.ErrorDatabaseQuery("failed to create invoice: %s", err.Error())
-	}
-
-	_, err = uc.productReservationRepo.CreateReservation(
-		ctx, data.ProductReservationDto{
-			ProductID:           invoiceDto.ProductID,
-			InvoiceID:           invoice.ID,
-			ReservationQuantity: invoiceDto.Amount,
-			UserID:              actorID,
-			Status:              enum.Pending,
-		},
+	invoice, _, rollback, err := uc.invoiceManager.CreateInvoice(
+		ctx, tenantID, actorID, invoiceDto,
+		invoiceDto.ProductID,
 	)
-
 	if err != nil {
-		_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoice, data.InvoiceDto{Status: enum.Failed})
-		if err != nil {
-			return nil, v1.ErrorDatabaseQuery("failed to create product reservation: %v", err)
+		if rollback != nil {
+			rollback()
 		}
-
-		return nil, v1.ErrorDatabaseQuery("failed to create product reservation: %v", err)
+		return nil, err
 	}
 
 	return invoice, nil
@@ -177,28 +131,6 @@ func (uc *InvoicesUseCase) ListInvoices(
 	}, nil
 }
 
-// checks if product was already used.
-func (uc *InvoicesUseCase) canProductBeUsedOneMoreTime(ctx context.Context, actorID int64, product *ent.Product) error {
-	if product.IsUnique {
-		count, err := uc.invoiceRepo.CountInvoices(
-			ctx, data.InvoiceFilter{
-				UserID:    actorID,
-				ProductID: product.ID,
-				Status:    enum.Paid,
-			},
-		)
-		if err != nil {
-			return v1.ErrorDatabaseQuery("failed to list invoices: %s", err.Error())
-		}
-
-		if int64(count) >= product.UniqueLimit {
-			return v1.ErrorInvalidRequest("product already used")
-		}
-	}
-
-	return nil
-}
-
 func (uc *InvoicesUseCase) RevokeInvoice(
 	ctx context.Context, actorID, tenantID int64, appID string, invoiceID int64,
 ) error {
@@ -222,20 +154,6 @@ func (uc *InvoicesUseCase) RevokeInvoice(
 	)
 	if err != nil {
 		return v1.ErrorDatabaseQuery("failed to revoke invoice: %s", err.Error())
-	}
-
-	return nil
-}
-
-func (uc *InvoicesUseCase) checkProductLimit(amount int64, product *ent.Product) error {
-	if product.IsLimited {
-		if product.Left <= 0 || product.Left < amount {
-			return v1.ErrorInvalidRequest("product is out of stock")
-		}
-
-		if product.LimitedTill != nil && !product.LimitedTill.IsZero() && product.LimitedTill.Before(time.Now()) {
-			return v1.ErrorInvalidRequest("product is no longer available")
-		}
 	}
 
 	return nil

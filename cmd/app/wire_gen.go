@@ -47,23 +47,30 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	productRepo := data.NewProductsRepo(dataData)
 	productUseCase := biz.NewProductUseCase(productRepo)
 	productService := service.NewProductService(productUseCase)
-	invoicesRepo := data.NewInvoicesRepo(dataData)
 	productReservationRepo := data.NewProductReservationRepo(dataData)
+	invoicesRepo := data.NewInvoicesRepo(dataData)
+	invoicesManager := biz.NewInvoicesManager(logger, productRepo, productReservationRepo, invoicesRepo)
 	conn, cleanup2, err := data.NewNatsClient(bootstrap)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
 	iQueueManager := nats.NewQueueManager(configConfig, conn, logger)
-	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesRepo, itemsRepo, productRepo, productReservationRepo, iQueueManager)
+	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesManager, invoicesRepo, itemsRepo, productRepo, productReservationRepo, iQueueManager)
 	invoiceService := service.NewInvoiceService(invoicesUseCase)
 	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)
 	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo)
 	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
+	ovpClient, err := data.NewOvpClient(configConfig, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
-	paymentUseCase, err := biz.NewPaymentUsecase(configConfig, logger, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo)
+	paymentUseCase, err := biz.NewPaymentUsecase(logger, ovpClient, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo, invoicesManager)
 	if err != nil {
 		cleanup2()
 		cleanup()

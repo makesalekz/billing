@@ -4405,6 +4405,7 @@ type ProductMutation struct {
 	is_expiring          *bool
 	expiring_time        *time.Time
 	payment_model        *enum.PaymentModel
+	product_period       *enum.ProductPeriod
 	clearedFields        map[string]struct{}
 	invoices             map[int64]struct{}
 	removedinvoices      map[int64]struct{}
@@ -5264,6 +5265,42 @@ func (m *ProductMutation) ResetPaymentModel() {
 	m.payment_model = nil
 }
 
+// SetProductPeriod sets the "product_period" field.
+func (m *ProductMutation) SetProductPeriod(ep enum.ProductPeriod) {
+	m.product_period = &ep
+}
+
+// ProductPeriod returns the value of the "product_period" field in the mutation.
+func (m *ProductMutation) ProductPeriod() (r enum.ProductPeriod, exists bool) {
+	v := m.product_period
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProductPeriod returns the old "product_period" field's value of the Product entity.
+// If the Product object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProductMutation) OldProductPeriod(ctx context.Context) (v enum.ProductPeriod, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProductPeriod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProductPeriod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProductPeriod: %w", err)
+	}
+	return oldValue.ProductPeriod, nil
+}
+
+// ResetProductPeriod resets all changes to the "product_period" field.
+func (m *ProductMutation) ResetProductPeriod() {
+	m.product_period = nil
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by ids.
 func (m *ProductMutation) AddInvoiceIDs(ids ...int64) {
 	if m.invoices == nil {
@@ -5514,7 +5551,7 @@ func (m *ProductMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProductMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 18)
 	if m.created_at != nil {
 		fields = append(fields, product.FieldCreatedAt)
 	}
@@ -5566,6 +5603,9 @@ func (m *ProductMutation) Fields() []string {
 	if m.payment_model != nil {
 		fields = append(fields, product.FieldPaymentModel)
 	}
+	if m.product_period != nil {
+		fields = append(fields, product.FieldProductPeriod)
+	}
 	return fields
 }
 
@@ -5608,6 +5648,8 @@ func (m *ProductMutation) Field(name string) (ent.Value, bool) {
 		return m.ExpiringTime()
 	case product.FieldPaymentModel:
 		return m.PaymentModel()
+	case product.FieldProductPeriod:
+		return m.ProductPeriod()
 	}
 	return nil, false
 }
@@ -5651,6 +5693,8 @@ func (m *ProductMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldExpiringTime(ctx)
 	case product.FieldPaymentModel:
 		return m.OldPaymentModel(ctx)
+	case product.FieldProductPeriod:
+		return m.OldProductPeriod(ctx)
 	}
 	return nil, fmt.Errorf("unknown Product field %s", name)
 }
@@ -5778,6 +5822,13 @@ func (m *ProductMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPaymentModel(v)
+		return nil
+	case product.FieldProductPeriod:
+		v, ok := value.(enum.ProductPeriod)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProductPeriod(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Product field %s", name)
@@ -5950,6 +6001,9 @@ func (m *ProductMutation) ResetField(name string) error {
 		return nil
 	case product.FieldPaymentModel:
 		m.ResetPaymentModel()
+		return nil
+	case product.FieldProductPeriod:
+		m.ResetProductPeriod()
 		return nil
 	}
 	return fmt.Errorf("unknown Product field %s", name)

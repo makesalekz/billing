@@ -302,6 +302,20 @@ func (pu *ProductUpdate) SetNillablePaymentModel(em *enum.PaymentModel) *Product
 	return pu
 }
 
+// SetProductPeriod sets the "product_period" field.
+func (pu *ProductUpdate) SetProductPeriod(ep enum.ProductPeriod) *ProductUpdate {
+	pu.mutation.SetProductPeriod(ep)
+	return pu
+}
+
+// SetNillableProductPeriod sets the "product_period" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillableProductPeriod(ep *enum.ProductPeriod) *ProductUpdate {
+	if ep != nil {
+		pu.SetProductPeriod(*ep)
+	}
+	return pu
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
 func (pu *ProductUpdate) AddInvoiceIDs(ids ...int64) *ProductUpdate {
 	pu.mutation.AddInvoiceIDs(ids...)
@@ -510,6 +524,11 @@ func (pu *ProductUpdate) check() error {
 			return &ValidationError{Name: "payment_model", err: fmt.Errorf(`ent: validator failed for field "Product.payment_model": %w`, err)}
 		}
 	}
+	if v, ok := pu.mutation.ProductPeriod(); ok {
+		if err := product.ProductPeriodValidator(v); err != nil {
+			return &ValidationError{Name: "product_period", err: fmt.Errorf(`ent: validator failed for field "Product.product_period": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -602,6 +621,9 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := pu.mutation.PaymentModel(); ok {
 		_spec.SetField(product.FieldPaymentModel, field.TypeEnum, value)
+	}
+	if value, ok := pu.mutation.ProductPeriod(); ok {
+		_spec.SetField(product.FieldProductPeriod, field.TypeEnum, value)
 	}
 	if pu.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1072,6 +1094,20 @@ func (puo *ProductUpdateOne) SetNillablePaymentModel(em *enum.PaymentModel) *Pro
 	return puo
 }
 
+// SetProductPeriod sets the "product_period" field.
+func (puo *ProductUpdateOne) SetProductPeriod(ep enum.ProductPeriod) *ProductUpdateOne {
+	puo.mutation.SetProductPeriod(ep)
+	return puo
+}
+
+// SetNillableProductPeriod sets the "product_period" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillableProductPeriod(ep *enum.ProductPeriod) *ProductUpdateOne {
+	if ep != nil {
+		puo.SetProductPeriod(*ep)
+	}
+	return puo
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
 func (puo *ProductUpdateOne) AddInvoiceIDs(ids ...int64) *ProductUpdateOne {
 	puo.mutation.AddInvoiceIDs(ids...)
@@ -1293,6 +1329,11 @@ func (puo *ProductUpdateOne) check() error {
 			return &ValidationError{Name: "payment_model", err: fmt.Errorf(`ent: validator failed for field "Product.payment_model": %w`, err)}
 		}
 	}
+	if v, ok := puo.mutation.ProductPeriod(); ok {
+		if err := product.ProductPeriodValidator(v); err != nil {
+			return &ValidationError{Name: "product_period", err: fmt.Errorf(`ent: validator failed for field "Product.product_period": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1402,6 +1443,9 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 	}
 	if value, ok := puo.mutation.PaymentModel(); ok {
 		_spec.SetField(product.FieldPaymentModel, field.TypeEnum, value)
+	}
+	if value, ok := puo.mutation.ProductPeriod(); ok {
+		_spec.SetField(product.FieldProductPeriod, field.TypeEnum, value)
 	}
 	if puo.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{

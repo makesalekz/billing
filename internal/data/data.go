@@ -33,6 +33,7 @@ var ProviderSet = wire.NewSet(
 	NewSubscriptionsRepo,
 	NewPaymentProfileRepo,
 	NewProductReservationRepo,
+	NewOvpClient,
 )
 
 const (

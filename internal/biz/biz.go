@@ -11,19 +11,11 @@ import (
 //nolint:gochecknoglobals // global variable, used in wire
 var ProviderSet = wire.NewSet(
 	nats.NewQueueManager,
+	NewInvoicesManager,
 	NewItemsUsecase,
 	NewProductUseCase,
 	NewInvoicesUseCase,
 	NewSubscriptionUsecase,
 	NewAppleStoreUsecase,
 	NewPaymentUsecase,
-)
-
-const (
-	DefaultPaymentCurrency          = "KZT"
-	DefaultPaymentLifeTime          = 60 * 15 * 1            // 15min
-	DefaultRecurrentProfileLifeTime = 60 * 60 * 24 * 365 * 4 // 4 years
-	DefaultPaymentLang              = "ru"
-	DefaultPriceForCardLink         = 0
-	PmsAppID                        = "pms"
 )

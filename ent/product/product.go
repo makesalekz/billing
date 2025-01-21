@@ -51,6 +51,8 @@ const (
 	FieldExpiringTime = "expiring_time"
 	// FieldPaymentModel holds the string denoting the payment_model field in the database.
 	FieldPaymentModel = "payment_model"
+	// FieldProductPeriod holds the string denoting the product_period field in the database.
+	FieldProductPeriod = "product_period"
 	// EdgeInvoices holds the string denoting the invoices edge name in mutations.
 	EdgeInvoices = "invoices"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
@@ -111,6 +113,7 @@ var Columns = []string{
 	FieldIsExpiring,
 	FieldExpiringTime,
 	FieldPaymentModel,
+	FieldProductPeriod,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -166,6 +169,18 @@ func PaymentModelValidator(pm enum.PaymentModel) error {
 		return nil
 	default:
 		return fmt.Errorf("product: invalid enum value for payment_model field: %q", pm)
+	}
+}
+
+const DefaultProductPeriod enum.ProductPeriod = "month"
+
+// ProductPeriodValidator is a validator for the "product_period" field enum values. It is called by the builders before save.
+func ProductPeriodValidator(pp enum.ProductPeriod) error {
+	switch pp {
+	case "day", "week", "month", "year", "unlimited":
+		return nil
+	default:
+		return fmt.Errorf("product: invalid enum value for product_period field: %q", pp)
 	}
 }
 
@@ -260,6 +275,11 @@ func ByExpiringTime(opts ...sql.OrderTermOption) OrderOption {
 // ByPaymentModel orders the results by the payment_model field.
 func ByPaymentModel(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPaymentModel, opts...).ToFunc()
+}
+
+// ByProductPeriod orders the results by the product_period field.
+func ByProductPeriod(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProductPeriod, opts...).ToFunc()
 }
 
 // ByInvoicesCount orders the results by invoices count.

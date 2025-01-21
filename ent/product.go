@@ -53,6 +53,8 @@ type Product struct {
 	ExpiringTime *time.Time `json:"expiring_time,omitempty"`
 	// Payment model for this product.
 	PaymentModel enum.PaymentModel `json:"payment_model,omitempty"`
+	// Period of product.
+	ProductPeriod enum.ProductPeriod `json:"product_period,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProductQuery when eager-loading is set.
 	Edges        ProductEdges `json:"edges"`
@@ -121,7 +123,7 @@ func (*Product) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case product.FieldID, product.FieldLeft, product.FieldUniqueLimit:
 			values[i] = new(sql.NullInt64)
-		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency, product.FieldPaymentModel:
+		case product.FieldAppID, product.FieldName, product.FieldDescription, product.FieldCurrency, product.FieldPaymentModel, product.FieldProductPeriod:
 			values[i] = new(sql.NullString)
 		case product.FieldCreatedAt, product.FieldUpdatedAt, product.FieldDeletedAt, product.FieldLimitedTill, product.FieldExpiringTime:
 			values[i] = new(sql.NullTime)
@@ -251,6 +253,12 @@ func (pr *Product) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pr.PaymentModel = enum.PaymentModel(value.String)
 			}
+		case product.FieldProductPeriod:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field product_period", values[i])
+			} else if value.Valid {
+				pr.ProductPeriod = enum.ProductPeriod(value.String)
+			}
 		default:
 			pr.selectValues.Set(columns[i], values[i])
 		}
@@ -363,6 +371,9 @@ func (pr *Product) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("payment_model=")
 	builder.WriteString(fmt.Sprintf("%v", pr.PaymentModel))
+	builder.WriteString(", ")
+	builder.WriteString("product_period=")
+	builder.WriteString(fmt.Sprintf("%v", pr.ProductPeriod))
 	builder.WriteByte(')')
 	return builder.String()
 }

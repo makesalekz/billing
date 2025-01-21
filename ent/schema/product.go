@@ -41,6 +41,8 @@ func (Product) Fields() []ent.Field {
 		field.Time("expiring_time").Optional().Nillable().Comment("Time when this product expires."),
 		field.Enum("payment_model").GoType(enum.PaymentModel("")).Default(enum.Recurrent.Value()).
 			Comment("Payment model for this product."),
+		field.Enum("product_period").GoType(enum.ProductPeriod("")).Default(enum.ProductPeriodMonth.Value()).
+			Comment("Period of product."),
 	}
 }
 

@@ -137,6 +137,7 @@ func (r *productReservationRepo) CancelReservationByInvoiceID(ctx context.Contex
 		}
 		return err
 	}
+
 	if len(reservations) == 0 {
 		err = tx.Commit()
 		if err != nil {

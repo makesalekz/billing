@@ -126,23 +126,24 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Product",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			product.FieldCreatedAt:    {Type: field.TypeTime, Column: product.FieldCreatedAt},
-			product.FieldUpdatedAt:    {Type: field.TypeTime, Column: product.FieldUpdatedAt},
-			product.FieldDeletedAt:    {Type: field.TypeTime, Column: product.FieldDeletedAt},
-			product.FieldAppID:        {Type: field.TypeString, Column: product.FieldAppID},
-			product.FieldName:         {Type: field.TypeString, Column: product.FieldName},
-			product.FieldDescription:  {Type: field.TypeString, Column: product.FieldDescription},
-			product.FieldPrice:        {Type: field.TypeFloat64, Column: product.FieldPrice},
-			product.FieldCurrency:     {Type: field.TypeString, Column: product.FieldCurrency},
-			product.FieldIsActive:     {Type: field.TypeBool, Column: product.FieldIsActive},
-			product.FieldIsLimited:    {Type: field.TypeBool, Column: product.FieldIsLimited},
-			product.FieldLimitedTill:  {Type: field.TypeTime, Column: product.FieldLimitedTill},
-			product.FieldLeft:         {Type: field.TypeInt64, Column: product.FieldLeft},
-			product.FieldIsUnique:     {Type: field.TypeBool, Column: product.FieldIsUnique},
-			product.FieldUniqueLimit:  {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
-			product.FieldIsExpiring:   {Type: field.TypeBool, Column: product.FieldIsExpiring},
-			product.FieldExpiringTime: {Type: field.TypeTime, Column: product.FieldExpiringTime},
-			product.FieldPaymentModel: {Type: field.TypeEnum, Column: product.FieldPaymentModel},
+			product.FieldCreatedAt:     {Type: field.TypeTime, Column: product.FieldCreatedAt},
+			product.FieldUpdatedAt:     {Type: field.TypeTime, Column: product.FieldUpdatedAt},
+			product.FieldDeletedAt:     {Type: field.TypeTime, Column: product.FieldDeletedAt},
+			product.FieldAppID:         {Type: field.TypeString, Column: product.FieldAppID},
+			product.FieldName:          {Type: field.TypeString, Column: product.FieldName},
+			product.FieldDescription:   {Type: field.TypeString, Column: product.FieldDescription},
+			product.FieldPrice:         {Type: field.TypeFloat64, Column: product.FieldPrice},
+			product.FieldCurrency:      {Type: field.TypeString, Column: product.FieldCurrency},
+			product.FieldIsActive:      {Type: field.TypeBool, Column: product.FieldIsActive},
+			product.FieldIsLimited:     {Type: field.TypeBool, Column: product.FieldIsLimited},
+			product.FieldLimitedTill:   {Type: field.TypeTime, Column: product.FieldLimitedTill},
+			product.FieldLeft:          {Type: field.TypeInt64, Column: product.FieldLeft},
+			product.FieldIsUnique:      {Type: field.TypeBool, Column: product.FieldIsUnique},
+			product.FieldUniqueLimit:   {Type: field.TypeInt64, Column: product.FieldUniqueLimit},
+			product.FieldIsExpiring:    {Type: field.TypeBool, Column: product.FieldIsExpiring},
+			product.FieldExpiringTime:  {Type: field.TypeTime, Column: product.FieldExpiringTime},
+			product.FieldPaymentModel:  {Type: field.TypeEnum, Column: product.FieldPaymentModel},
+			product.FieldProductPeriod: {Type: field.TypeEnum, Column: product.FieldProductPeriod},
 		},
 	}
 	graph.Nodes[5] = &sqlgraph.Node{
@@ -989,6 +990,11 @@ func (f *ProductFilter) WhereExpiringTime(p entql.TimeP) {
 // WherePaymentModel applies the entql string predicate on the payment_model field.
 func (f *ProductFilter) WherePaymentModel(p entql.StringP) {
 	f.Where(p.Field(product.FieldPaymentModel))
+}
+
+// WhereProductPeriod applies the entql string predicate on the product_period field.
+func (f *ProductFilter) WhereProductPeriod(p entql.StringP) {
+	f.Where(p.Field(product.FieldProductPeriod))
 }
 
 // WhereHasInvoices applies a predicate to check if query has an edge invoices.

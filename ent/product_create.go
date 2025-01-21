@@ -234,6 +234,20 @@ func (pc *ProductCreate) SetNillablePaymentModel(em *enum.PaymentModel) *Product
 	return pc
 }
 
+// SetProductPeriod sets the "product_period" field.
+func (pc *ProductCreate) SetProductPeriod(ep enum.ProductPeriod) *ProductCreate {
+	pc.mutation.SetProductPeriod(ep)
+	return pc
+}
+
+// SetNillableProductPeriod sets the "product_period" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableProductPeriod(ep *enum.ProductPeriod) *ProductCreate {
+	if ep != nil {
+		pc.SetProductPeriod(*ep)
+	}
+	return pc
+}
+
 // SetID sets the "id" field.
 func (pc *ProductCreate) SetID(i int64) *ProductCreate {
 	pc.mutation.SetID(i)
@@ -383,6 +397,10 @@ func (pc *ProductCreate) defaults() error {
 		v := product.DefaultPaymentModel
 		pc.mutation.SetPaymentModel(v)
 	}
+	if _, ok := pc.mutation.ProductPeriod(); !ok {
+		v := product.DefaultProductPeriod
+		pc.mutation.SetProductPeriod(v)
+	}
 	return nil
 }
 
@@ -437,6 +455,14 @@ func (pc *ProductCreate) check() error {
 	if v, ok := pc.mutation.PaymentModel(); ok {
 		if err := product.PaymentModelValidator(v); err != nil {
 			return &ValidationError{Name: "payment_model", err: fmt.Errorf(`ent: validator failed for field "Product.payment_model": %w`, err)}
+		}
+	}
+	if _, ok := pc.mutation.ProductPeriod(); !ok {
+		return &ValidationError{Name: "product_period", err: errors.New(`ent: missing required field "Product.product_period"`)}
+	}
+	if v, ok := pc.mutation.ProductPeriod(); ok {
+		if err := product.ProductPeriodValidator(v); err != nil {
+			return &ValidationError{Name: "product_period", err: fmt.Errorf(`ent: validator failed for field "Product.product_period": %w`, err)}
 		}
 	}
 	return nil
@@ -539,6 +565,10 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.PaymentModel(); ok {
 		_spec.SetField(product.FieldPaymentModel, field.TypeEnum, value)
 		_node.PaymentModel = value
+	}
+	if value, ok := pc.mutation.ProductPeriod(); ok {
+		_spec.SetField(product.FieldProductPeriod, field.TypeEnum, value)
+		_node.ProductPeriod = value
 	}
 	if nodes := pc.mutation.InvoicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -896,6 +926,18 @@ func (u *ProductUpsert) UpdatePaymentModel() *ProductUpsert {
 	return u
 }
 
+// SetProductPeriod sets the "product_period" field.
+func (u *ProductUpsert) SetProductPeriod(v enum.ProductPeriod) *ProductUpsert {
+	u.Set(product.FieldProductPeriod, v)
+	return u
+}
+
+// UpdateProductPeriod sets the "product_period" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateProductPeriod() *ProductUpsert {
+	u.SetExcluded(product.FieldProductPeriod)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1224,6 +1266,20 @@ func (u *ProductUpsertOne) SetPaymentModel(v enum.PaymentModel) *ProductUpsertOn
 func (u *ProductUpsertOne) UpdatePaymentModel() *ProductUpsertOne {
 	return u.Update(func(s *ProductUpsert) {
 		s.UpdatePaymentModel()
+	})
+}
+
+// SetProductPeriod sets the "product_period" field.
+func (u *ProductUpsertOne) SetProductPeriod(v enum.ProductPeriod) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetProductPeriod(v)
+	})
+}
+
+// UpdateProductPeriod sets the "product_period" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateProductPeriod() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateProductPeriod()
 	})
 }
 
@@ -1721,6 +1777,20 @@ func (u *ProductUpsertBulk) SetPaymentModel(v enum.PaymentModel) *ProductUpsertB
 func (u *ProductUpsertBulk) UpdatePaymentModel() *ProductUpsertBulk {
 	return u.Update(func(s *ProductUpsert) {
 		s.UpdatePaymentModel()
+	})
+}
+
+// SetProductPeriod sets the "product_period" field.
+func (u *ProductUpsertBulk) SetProductPeriod(v enum.ProductPeriod) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetProductPeriod(v)
+	})
+}
+
+// UpdateProductPeriod sets the "product_period" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateProductPeriod() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateProductPeriod()
 	})
 }
 

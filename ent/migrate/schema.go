@@ -155,6 +155,7 @@ var (
 		{Name: "is_expiring", Type: field.TypeBool, Nullable: true, Default: false},
 		{Name: "expiring_time", Type: field.TypeTime, Nullable: true},
 		{Name: "payment_model", Type: field.TypeEnum, Enums: []string{"ONE_TIME", "RECURRENT"}, Default: "RECURRENT"},
+		{Name: "product_period", Type: field.TypeEnum, Enums: []string{"day", "week", "month", "year", "unlimited"}, Default: "month"},
 	}
 	// ProductsTable holds the schema information for the "products" table.
 	ProductsTable = &schema.Table{

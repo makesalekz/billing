@@ -837,6 +837,36 @@ func PaymentModelNotIn(vs ...enum.PaymentModel) predicate.Product {
 	return predicate.Product(sql.FieldNotIn(FieldPaymentModel, v...))
 }
 
+// ProductPeriodEQ applies the EQ predicate on the "product_period" field.
+func ProductPeriodEQ(v enum.ProductPeriod) predicate.Product {
+	vc := v
+	return predicate.Product(sql.FieldEQ(FieldProductPeriod, vc))
+}
+
+// ProductPeriodNEQ applies the NEQ predicate on the "product_period" field.
+func ProductPeriodNEQ(v enum.ProductPeriod) predicate.Product {
+	vc := v
+	return predicate.Product(sql.FieldNEQ(FieldProductPeriod, vc))
+}
+
+// ProductPeriodIn applies the In predicate on the "product_period" field.
+func ProductPeriodIn(vs ...enum.ProductPeriod) predicate.Product {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Product(sql.FieldIn(FieldProductPeriod, v...))
+}
+
+// ProductPeriodNotIn applies the NotIn predicate on the "product_period" field.
+func ProductPeriodNotIn(vs ...enum.ProductPeriod) predicate.Product {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Product(sql.FieldNotIn(FieldProductPeriod, v...))
+}
+
 // HasInvoices applies the HasEdge predicate on the "invoices" edge.
 func HasInvoices() predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
