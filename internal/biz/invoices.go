@@ -56,10 +56,9 @@ func NewInvoicesUseCase(
 func (uc *InvoicesUseCase) CreateInvoice(
 	ctx context.Context, tenantID, actorID int64, invoiceDto data.InvoiceDto,
 ) (*ent.Invoice, error) {
-	invoice, _, rollback, err := uc.invoiceManager.CreateInvoice(
-		ctx, tenantID, actorID, invoiceDto,
-		invoiceDto.ProductID,
-	)
+	invoiceDto.TenantID = tenantID
+	invoiceDto.UserID = actorID
+	invoice, _, rollback, err := uc.invoiceManager.CreateInvoice(ctx, invoiceDto)
 	if err != nil {
 		if rollback != nil {
 			rollback()

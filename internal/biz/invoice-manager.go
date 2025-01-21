@@ -14,6 +14,14 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/internal/data"
 )
 
+const (
+	HoursInDay     = 24
+	DaysInMonth    = 30
+	DaysInWeek     = 7
+	DaysInYear     = 365
+	UnlimitedYears = 100
+)
+
 type InvoicesManager struct {
 	log                    *log.Helper
 	productRepo            data.ProductRepo
@@ -36,13 +44,13 @@ func NewInvoicesManager(
 }
 
 func (im *InvoicesManager) CreateInvoice(
-	ctx context.Context, tenantID, actorID int64, invoiceDto data.InvoiceDto, productID int64,
+	ctx context.Context, invoiceDto data.InvoiceDto,
 ) (*ent.Invoice, *ent.Product, func(), error) {
 	if invoiceDto.Amount <= 0 {
 		return nil, nil, nil, v1.ErrorInvalidRequest("amount must be greater than 0")
 	}
 
-	product, err := im.productRepo.GetProduct(ctx, productID)
+	product, err := im.productRepo.GetProduct(ctx, invoiceDto.ProductID)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil, nil, v1.ErrorNotFound("product not found")
@@ -54,7 +62,7 @@ func (im *InvoicesManager) CreateInvoice(
 		return nil, nil, nil, errors.New("product is not active")
 	}
 
-	if err = im.canProductBeUsedOneMoreTime(ctx, actorID, product); err != nil {
+	if err = im.canProductBeUsedOneMoreTime(ctx, invoiceDto.UserID, product); err != nil {
 		return nil, nil, nil, err
 	}
 
@@ -62,27 +70,11 @@ func (im *InvoicesManager) CreateInvoice(
 		return nil, nil, nil, err
 	}
 
-	if invoiceDto.Price.IsZero() || invoiceDto.Price.LessThanOrEqual(product.Price) {
-		invoiceDto.Price = product.Price.Mul(decimal.NewFromInt(invoiceDto.Amount))
+	if err = im.calculateInvoicePrice(ctx, &invoiceDto, product); err != nil {
+		return nil, nil, nil, err
 	}
 
-	if product.PaymentModel == enum.Recurrent {
-		hasActive, isFirst, err := im.checkSubscriptionStatus(ctx, tenantID, actorID, productID)
-		if err != nil {
-			return nil, nil, nil, v1.ErrorDatabaseQuery("%v", err)
-		}
-
-		if hasActive {
-			return nil, nil, nil, v1.ErrorInvalidRequest("active subscription exists")
-		}
-
-		if isFirst {
-			invoiceDto.Price = decimal.NewFromInt(DefaultPriceForCardLink)
-			invoiceDto.IsTrial = true
-		}
-	}
-
-	im.applyInvoicePeriod(product, invoiceDto)
+	im.applyInvoicePeriod(product, &invoiceDto)
 
 	invoice, err := im.invoiceRepo.CreateInvoice(ctx, invoiceDto)
 	if err != nil {
@@ -106,7 +98,7 @@ func (im *InvoicesManager) CreateInvoice(
 			ProductID:           invoiceDto.ProductID,
 			InvoiceID:           invoice.ID,
 			ReservationQuantity: invoiceDto.Amount,
-			UserID:              actorID,
+			UserID:              invoiceDto.UserID,
 			Status:              enum.Pending,
 		},
 	)
@@ -119,23 +111,51 @@ func (im *InvoicesManager) CreateInvoice(
 	return invoice, product, rollbackFunc, nil
 }
 
-func (im *InvoicesManager) applyInvoicePeriod(product *ent.Product, dto data.InvoiceDto) {
-	if product.ProductPeriod == enum.ProductPeriodDay {
-		paidTill := time.Now().AddDate(0, 0, 1)
-		dto.PaidTill = &paidTill
-	} else if product.ProductPeriod == enum.ProductPeriodWeek {
-		paidTill := time.Now().AddDate(0, 0, 7)
-		dto.PaidTill = &paidTill
-	} else if product.ProductPeriod == enum.ProductPeriodMonth {
-		paidTill := time.Now().AddDate(0, 1, 0)
-		dto.PaidTill = &paidTill
-	} else if product.ProductPeriod == enum.ProductPeriodYear {
-		paidTill := time.Now().AddDate(1, 0, 0)
-		dto.PaidTill = &paidTill
-	} else if product.ProductPeriod == enum.ProductPeriodUnlimited {
-		paidTill := time.Now().AddDate(100, 0, 0)
-		dto.PaidTill = &paidTill
+func (im *InvoicesManager) calculateInvoicePrice(
+	ctx context.Context, invoiceDto *data.InvoiceDto, product *ent.Product,
+) error {
+	if invoiceDto.Price.IsZero() || invoiceDto.Price.LessThanOrEqual(product.Price) {
+		invoiceDto.Price = product.Price.Mul(decimal.NewFromInt(invoiceDto.Amount))
 	}
+
+	if product.PaymentModel == enum.Recurrent {
+		hasActive, isFirst, subscriptionErr := im.checkSubscriptionStatus(
+			ctx, invoiceDto.TenantID, invoiceDto.UserID, invoiceDto.ProductID,
+		)
+		if subscriptionErr != nil {
+			return subscriptionErr
+		}
+
+		if hasActive {
+			return errors.New("subscription already active")
+		}
+
+		if isFirst {
+			invoiceDto.Price = decimal.NewFromInt(DefaultPriceForCardLink)
+			invoiceDto.IsTrial = true
+		}
+	}
+	return nil
+}
+
+func (im *InvoicesManager) applyInvoicePeriod(product *ent.Product, dto *data.InvoiceDto) {
+	var duration time.Duration
+	switch product.ProductPeriod {
+	case enum.ProductPeriodDay:
+		duration = HoursInDay * time.Hour
+	case enum.ProductPeriodWeek:
+		duration = DaysInWeek * HoursInDay * time.Hour
+	case enum.ProductPeriodMonth:
+		duration = DaysInMonth * HoursInDay * time.Hour
+	case enum.ProductPeriodYear:
+		duration = DaysInYear * HoursInDay * time.Hour
+	case enum.ProductPeriodUnlimited:
+		duration = UnlimitedYears * DaysInYear * HoursInDay * time.Hour
+	default:
+		return
+	}
+	paidTill := time.Now().Add(duration)
+	dto.PaidTill = &paidTill
 }
 
 func (im *InvoicesManager) checkSubscriptionStatus(

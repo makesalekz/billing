@@ -69,7 +69,7 @@ func (uc *PaymentUseCase) CreatePayment(
 		Amount:    amount,
 	}
 
-	invoice, product, rollback, err := uc.invoiceManager.CreateInvoice(ctx, tenantID, actorID, invoiceDTO, productID)
+	invoice, product, rollback, err := uc.invoiceManager.CreateInvoice(ctx, invoiceDTO)
 
 	if err != nil {
 		if rollback != nil {
@@ -373,39 +373,6 @@ func (uc *PaymentUseCase) CancelSubscription(
 	return nil
 }
 
-func (uc *PaymentUseCase) checkSubscriptionStatus(
-	ctx context.Context, tenantID, actorID, productID int64,
-) (bool, bool, error) {
-	// fetch all paid invoices for the user in the app
-	filter := data.InvoiceFilter{
-		TenantID:  tenantID,
-		UserID:    actorID,
-		Status:    enum.Paid,
-		Paid:      true,
-		ProductID: productID,
-	}
-
-	invoices, err := uc.invoicesRepo.ListInvoices(ctx, filter, nil)
-	if err != nil {
-		uc.log.Errorf("Failed to list invoices: %v", err)
-		return false, false, err
-	}
-
-	hasActive := false
-
-	for _, invoice := range invoices {
-		if invoice.PaidTill != nil && !invoice.IsRevoked {
-			if invoice.PaidTill.After(time.Now()) {
-				hasActive = true
-			}
-		}
-	}
-
-	isFirst := len(invoices) == 0
-
-	return hasActive, isFirst, nil
-}
-
 func (uc *PaymentUseCase) saveRecurrentProfile(
 	ctx context.Context, userID int64, statusResponse *onevisionpay.StatusResponse,
 ) (*ent.PaymentProfile, error) {
@@ -506,9 +473,7 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 	}
 
 	newInvoice, product, rollback, err := uc.invoiceManager.CreateInvoice(
-		ctx, invoice.TenantID, invoice.UserID,
-		newInvoiceDTO,
-		invoice.ProductID,
+		ctx, newInvoiceDTO,
 	)
 
 	if err != nil {
@@ -537,53 +502,6 @@ func (uc *PaymentUseCase) createRecurrentPayment(ctx context.Context, invoice *e
 	}
 
 	uc.log.Infof("Recurrent payment successfully created, payment ID: %v", response.PaymentID)
-}
-
-func (uc *PaymentUseCase) isProductAvailable(product *ent.Product, amount int64) error {
-	if !product.IsActive {
-		return v1.ErrorInvalidRequest("product is not active")
-	}
-
-	if product.IsLimited {
-		if product.LimitedTill != nil && time.Now().After(*product.LimitedTill) {
-			return v1.ErrorInvalidRequest("product is not available")
-		}
-
-		if product.Left == 0 || product.Left < amount {
-			return v1.ErrorInvalidRequest("Product amount ")
-		}
-	}
-
-	if product.IsExpiring && product.ExpiringTime != nil && time.Now().After(*product.ExpiringTime) {
-		return v1.ErrorInvalidRequest("product is not available")
-	}
-
-	if product.IsUnique && product.UniqueLimit < amount {
-		return v1.ErrorInvalidRequest("product is not available")
-	}
-
-	return nil
-}
-
-func (uc *PaymentUseCase) reserveProduct(
-	ctx context.Context, product *ent.Product, invoice *ent.Invoice, amount int64,
-) error {
-	if product.IsLimited {
-		_, err := uc.productReservationRepo.CreateReservation(
-			ctx, data.ProductReservationDto{
-				ProductID:           product.ID,
-				InvoiceID:           invoice.ID,
-				UserID:              invoice.UserID,
-				ReservationQuantity: amount,
-				Status:              enum.Pending,
-			},
-		)
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (uc *PaymentUseCase) CancelReservations(ctx context.Context) {
