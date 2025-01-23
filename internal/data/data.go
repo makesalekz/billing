@@ -14,6 +14,7 @@ import (
 	"github.com/google/wire"
 
 	_ "github.com/lib/pq"
+
 	_ "gitlab.calendaria.team/services/finance/billing/ent/runtime"
 )
 
@@ -30,6 +31,9 @@ var ProviderSet = wire.NewSet(
 	NewProductsRepo,
 	NewInvoicesRepo,
 	NewSubscriptionsRepo,
+	NewPaymentProfileRepo,
+	NewProductReservationRepo,
+	NewOvpClient,
 )
 
 const (

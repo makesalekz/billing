@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/golang-jwt/jwt/v5"
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/internal/biz"
 	"gitlab.calendaria.team/services/finance/billing/internal/data"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type AppleStoreService struct {

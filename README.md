@@ -265,3 +265,23 @@ To stop docker:
 ```bash
 make stop
 ```
+
+
+### Environments
+
+Vault secrets
+```txt
+secret/data/app/billing/onevisionpay = {
+    api_key: string,
+    api_secret: string,
+    merchant_id: string,
+    merchant_name: string,
+    service_id: string,
+}
+```
+
+Consult secrets
+
+PAYMENT_SUCCESS_URL=<string>
+PAYMENT_FAILURE_URL=<string>
+PAYMENT_CALLBACK_URL=<string>

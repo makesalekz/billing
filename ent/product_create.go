@@ -13,8 +13,10 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
@@ -218,6 +220,34 @@ func (pc *ProductCreate) SetNillableExpiringTime(t *time.Time) *ProductCreate {
 	return pc
 }
 
+// SetPaymentModel sets the "payment_model" field.
+func (pc *ProductCreate) SetPaymentModel(em enum.PaymentModel) *ProductCreate {
+	pc.mutation.SetPaymentModel(em)
+	return pc
+}
+
+// SetNillablePaymentModel sets the "payment_model" field if the given value is not nil.
+func (pc *ProductCreate) SetNillablePaymentModel(em *enum.PaymentModel) *ProductCreate {
+	if em != nil {
+		pc.SetPaymentModel(*em)
+	}
+	return pc
+}
+
+// SetProductPeriod sets the "product_period" field.
+func (pc *ProductCreate) SetProductPeriod(ep enum.ProductPeriod) *ProductCreate {
+	pc.mutation.SetProductPeriod(ep)
+	return pc
+}
+
+// SetNillableProductPeriod sets the "product_period" field if the given value is not nil.
+func (pc *ProductCreate) SetNillableProductPeriod(ep *enum.ProductPeriod) *ProductCreate {
+	if ep != nil {
+		pc.SetProductPeriod(*ep)
+	}
+	return pc
+}
+
 // SetID sets the "id" field.
 func (pc *ProductCreate) SetID(i int64) *ProductCreate {
 	pc.mutation.SetID(i)
@@ -267,6 +297,21 @@ func (pc *ProductCreate) AddBundles(b ...*Bundle) *ProductCreate {
 		ids[i] = b[i].ID
 	}
 	return pc.AddBundleIDs(ids...)
+}
+
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by IDs.
+func (pc *ProductCreate) AddReservationIDs(ids ...int64) *ProductCreate {
+	pc.mutation.AddReservationIDs(ids...)
+	return pc
+}
+
+// AddReservations adds the "reservations" edges to the ProductReservation entity.
+func (pc *ProductCreate) AddReservations(p ...*ProductReservation) *ProductCreate {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pc.AddReservationIDs(ids...)
 }
 
 // Mutation returns the ProductMutation object of the builder.
@@ -348,6 +393,14 @@ func (pc *ProductCreate) defaults() error {
 		v := product.DefaultIsExpiring
 		pc.mutation.SetIsExpiring(v)
 	}
+	if _, ok := pc.mutation.PaymentModel(); !ok {
+		v := product.DefaultPaymentModel
+		pc.mutation.SetPaymentModel(v)
+	}
+	if _, ok := pc.mutation.ProductPeriod(); !ok {
+		v := product.DefaultProductPeriod
+		pc.mutation.SetProductPeriod(v)
+	}
 	return nil
 }
 
@@ -394,6 +447,22 @@ func (pc *ProductCreate) check() error {
 	if v, ok := pc.mutation.UniqueLimit(); ok {
 		if err := product.UniqueLimitValidator(v); err != nil {
 			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
+		}
+	}
+	if _, ok := pc.mutation.PaymentModel(); !ok {
+		return &ValidationError{Name: "payment_model", err: errors.New(`ent: missing required field "Product.payment_model"`)}
+	}
+	if v, ok := pc.mutation.PaymentModel(); ok {
+		if err := product.PaymentModelValidator(v); err != nil {
+			return &ValidationError{Name: "payment_model", err: fmt.Errorf(`ent: validator failed for field "Product.payment_model": %w`, err)}
+		}
+	}
+	if _, ok := pc.mutation.ProductPeriod(); !ok {
+		return &ValidationError{Name: "product_period", err: errors.New(`ent: missing required field "Product.product_period"`)}
+	}
+	if v, ok := pc.mutation.ProductPeriod(); ok {
+		if err := product.ProductPeriodValidator(v); err != nil {
+			return &ValidationError{Name: "product_period", err: fmt.Errorf(`ent: validator failed for field "Product.product_period": %w`, err)}
 		}
 	}
 	return nil
@@ -493,6 +562,14 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 		_spec.SetField(product.FieldExpiringTime, field.TypeTime, value)
 		_node.ExpiringTime = &value
 	}
+	if value, ok := pc.mutation.PaymentModel(); ok {
+		_spec.SetField(product.FieldPaymentModel, field.TypeEnum, value)
+		_node.PaymentModel = value
+	}
+	if value, ok := pc.mutation.ProductPeriod(); ok {
+		_spec.SetField(product.FieldProductPeriod, field.TypeEnum, value)
+		_node.ProductPeriod = value
+	}
 	if nodes := pc.mutation.InvoicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -534,6 +611,22 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bundle.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.ReservationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.ReservationsTable,
+			Columns: []string{product.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -818,6 +911,30 @@ func (u *ProductUpsert) UpdateExpiringTime() *ProductUpsert {
 // ClearExpiringTime clears the value of the "expiring_time" field.
 func (u *ProductUpsert) ClearExpiringTime() *ProductUpsert {
 	u.SetNull(product.FieldExpiringTime)
+	return u
+}
+
+// SetPaymentModel sets the "payment_model" field.
+func (u *ProductUpsert) SetPaymentModel(v enum.PaymentModel) *ProductUpsert {
+	u.Set(product.FieldPaymentModel, v)
+	return u
+}
+
+// UpdatePaymentModel sets the "payment_model" field to the value that was provided on create.
+func (u *ProductUpsert) UpdatePaymentModel() *ProductUpsert {
+	u.SetExcluded(product.FieldPaymentModel)
+	return u
+}
+
+// SetProductPeriod sets the "product_period" field.
+func (u *ProductUpsert) SetProductPeriod(v enum.ProductPeriod) *ProductUpsert {
+	u.Set(product.FieldProductPeriod, v)
+	return u
+}
+
+// UpdateProductPeriod sets the "product_period" field to the value that was provided on create.
+func (u *ProductUpsert) UpdateProductPeriod() *ProductUpsert {
+	u.SetExcluded(product.FieldProductPeriod)
 	return u
 }
 
@@ -1135,6 +1252,34 @@ func (u *ProductUpsertOne) UpdateExpiringTime() *ProductUpsertOne {
 func (u *ProductUpsertOne) ClearExpiringTime() *ProductUpsertOne {
 	return u.Update(func(s *ProductUpsert) {
 		s.ClearExpiringTime()
+	})
+}
+
+// SetPaymentModel sets the "payment_model" field.
+func (u *ProductUpsertOne) SetPaymentModel(v enum.PaymentModel) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetPaymentModel(v)
+	})
+}
+
+// UpdatePaymentModel sets the "payment_model" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdatePaymentModel() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdatePaymentModel()
+	})
+}
+
+// SetProductPeriod sets the "product_period" field.
+func (u *ProductUpsertOne) SetProductPeriod(v enum.ProductPeriod) *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetProductPeriod(v)
+	})
+}
+
+// UpdateProductPeriod sets the "product_period" field to the value that was provided on create.
+func (u *ProductUpsertOne) UpdateProductPeriod() *ProductUpsertOne {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateProductPeriod()
 	})
 }
 
@@ -1618,6 +1763,34 @@ func (u *ProductUpsertBulk) UpdateExpiringTime() *ProductUpsertBulk {
 func (u *ProductUpsertBulk) ClearExpiringTime() *ProductUpsertBulk {
 	return u.Update(func(s *ProductUpsert) {
 		s.ClearExpiringTime()
+	})
+}
+
+// SetPaymentModel sets the "payment_model" field.
+func (u *ProductUpsertBulk) SetPaymentModel(v enum.PaymentModel) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetPaymentModel(v)
+	})
+}
+
+// UpdatePaymentModel sets the "payment_model" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdatePaymentModel() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdatePaymentModel()
+	})
+}
+
+// SetProductPeriod sets the "product_period" field.
+func (u *ProductUpsertBulk) SetProductPeriod(v enum.ProductPeriod) *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.SetProductPeriod(v)
+	})
+}
+
+// UpdateProductPeriod sets the "product_period" field to the value that was provided on create.
+func (u *ProductUpsertBulk) UpdateProductPeriod() *ProductUpsertBulk {
+	return u.Update(func(s *ProductUpsert) {
+		s.UpdateProductPeriod()
 	})
 }
 

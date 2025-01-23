@@ -47,14 +47,22 @@ const (
 	FieldIsPaidTillProcessed = "is_paid_till_processed"
 	// FieldSubscriptionID holds the string denoting the subscription_id field in the database.
 	FieldSubscriptionID = "subscription_id"
-	// FieldAppleStoreTransactionID holds the string denoting the apple_store_transaction_id field in the database.
-	FieldAppleStoreTransactionID = "apple_store_transaction_id"
+	// FieldExternalTransactionID holds the string denoting the external_transaction_id field in the database.
+	FieldExternalTransactionID = "external_transaction_id"
+	// FieldPaymentProvider holds the string denoting the payment_provider field in the database.
+	FieldPaymentProvider = "payment_provider"
 	// FieldIsTrial holds the string denoting the is_trial field in the database.
 	FieldIsTrial = "is_trial"
+	// FieldPaymentProfileID holds the string denoting the payment_profile_id field in the database.
+	FieldPaymentProfileID = "payment_profile_id"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
 	EdgeProduct = "product"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
 	EdgeSubscriptions = "subscriptions"
+	// EdgePaymentProfile holds the string denoting the payment_profile edge name in mutations.
+	EdgePaymentProfile = "payment_profile"
+	// EdgeReservations holds the string denoting the reservations edge name in mutations.
+	EdgeReservations = "reservations"
 	// Table holds the table name of the invoice in the database.
 	Table = "invoices"
 	// ProductTable is the table that holds the product relation/edge.
@@ -71,6 +79,20 @@ const (
 	SubscriptionsInverseTable = "subscriptions"
 	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
 	SubscriptionsColumn = "subscription_id"
+	// PaymentProfileTable is the table that holds the payment_profile relation/edge.
+	PaymentProfileTable = "invoices"
+	// PaymentProfileInverseTable is the table name for the PaymentProfile entity.
+	// It exists in this package in order to avoid circular dependency with the "paymentprofile" package.
+	PaymentProfileInverseTable = "payment_profiles"
+	// PaymentProfileColumn is the table column denoting the payment_profile relation/edge.
+	PaymentProfileColumn = "payment_profile_id"
+	// ReservationsTable is the table that holds the reservations relation/edge.
+	ReservationsTable = "product_reservations"
+	// ReservationsInverseTable is the table name for the ProductReservation entity.
+	// It exists in this package in order to avoid circular dependency with the "productreservation" package.
+	ReservationsInverseTable = "product_reservations"
+	// ReservationsColumn is the table column denoting the reservations relation/edge.
+	ReservationsColumn = "invoice_reservations"
 )
 
 // Columns holds all SQL columns for invoice fields.
@@ -92,8 +114,10 @@ var Columns = []string{
 	FieldIsPaidAtProcessed,
 	FieldIsPaidTillProcessed,
 	FieldSubscriptionID,
-	FieldAppleStoreTransactionID,
+	FieldExternalTransactionID,
+	FieldPaymentProvider,
 	FieldIsTrial,
+	FieldPaymentProfileID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -132,6 +156,18 @@ func StatusValidator(s enum.InvoiceStatus) error {
 		return nil
 	default:
 		return fmt.Errorf("invoice: invalid enum value for status field: %q", s)
+	}
+}
+
+const DefaultPaymentProvider enum.PaymentProvider = "APP_STORE"
+
+// PaymentProviderValidator is a validator for the "payment_provider" field enum values. It is called by the builders before save.
+func PaymentProviderValidator(pp enum.PaymentProvider) error {
+	switch pp {
+	case "APP_STORE", "ONE_VISION_PAYMENT":
+		return nil
+	default:
+		return fmt.Errorf("invoice: invalid enum value for payment_provider field: %q", pp)
 	}
 }
 
@@ -223,14 +259,24 @@ func BySubscriptionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubscriptionID, opts...).ToFunc()
 }
 
-// ByAppleStoreTransactionID orders the results by the apple_store_transaction_id field.
-func ByAppleStoreTransactionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAppleStoreTransactionID, opts...).ToFunc()
+// ByExternalTransactionID orders the results by the external_transaction_id field.
+func ByExternalTransactionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExternalTransactionID, opts...).ToFunc()
+}
+
+// ByPaymentProvider orders the results by the payment_provider field.
+func ByPaymentProvider(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPaymentProvider, opts...).ToFunc()
 }
 
 // ByIsTrial orders the results by the is_trial field.
 func ByIsTrial(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsTrial, opts...).ToFunc()
+}
+
+// ByPaymentProfileID orders the results by the payment_profile_id field.
+func ByPaymentProfileID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPaymentProfileID, opts...).ToFunc()
 }
 
 // ByProductField orders the results by product field.
@@ -246,6 +292,27 @@ func BySubscriptionsField(field string, opts ...sql.OrderTermOption) OrderOption
 		sqlgraph.OrderByNeighborTerms(s, newSubscriptionsStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByPaymentProfileField orders the results by payment_profile field.
+func ByPaymentProfileField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPaymentProfileStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByReservationsCount orders the results by reservations count.
+func ByReservationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReservationsStep(), opts...)
+	}
+}
+
+// ByReservations orders the results by reservations terms.
+func ByReservations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReservationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newProductStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -258,5 +325,19 @@ func newSubscriptionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubscriptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, SubscriptionsTable, SubscriptionsColumn),
+	)
+}
+func newPaymentProfileStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PaymentProfileInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, PaymentProfileTable, PaymentProfileColumn),
+	)
+}
+func newReservationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReservationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReservationsTable, ReservationsColumn),
 	)
 }

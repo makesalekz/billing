@@ -16,6 +16,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
@@ -29,6 +30,7 @@ type ProductQuery struct {
 	withInvoices      *InvoiceQuery
 	withSubscriptions *SubscriptionsQuery
 	withBundles       *BundleQuery
+	withReservations  *ProductReservationQuery
 	modifiers         []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -125,6 +127,28 @@ func (pq *ProductQuery) QueryBundles() *BundleQuery {
 			sqlgraph.From(product.Table, product.FieldID, selector),
 			sqlgraph.To(bundle.Table, bundle.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, product.BundlesTable, product.BundlesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReservations chains the current query on the "reservations" edge.
+func (pq *ProductQuery) QueryReservations() *ProductReservationQuery {
+	query := (&ProductReservationClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(product.Table, product.FieldID, selector),
+			sqlgraph.To(productreservation.Table, productreservation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, product.ReservationsTable, product.ReservationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -327,6 +351,7 @@ func (pq *ProductQuery) Clone() *ProductQuery {
 		withInvoices:      pq.withInvoices.Clone(),
 		withSubscriptions: pq.withSubscriptions.Clone(),
 		withBundles:       pq.withBundles.Clone(),
+		withReservations:  pq.withReservations.Clone(),
 		// clone intermediate query.
 		sql:       pq.sql.Clone(),
 		path:      pq.path,
@@ -364,6 +389,17 @@ func (pq *ProductQuery) WithBundles(opts ...func(*BundleQuery)) *ProductQuery {
 		opt(query)
 	}
 	pq.withBundles = query
+	return pq
+}
+
+// WithReservations tells the query-builder to eager-load the nodes that are connected to
+// the "reservations" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProductQuery) WithReservations(opts ...func(*ProductReservationQuery)) *ProductQuery {
+	query := (&ProductReservationClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withReservations = query
 	return pq
 }
 
@@ -445,10 +481,11 @@ func (pq *ProductQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Prod
 	var (
 		nodes       = []*Product{}
 		_spec       = pq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			pq.withInvoices != nil,
 			pq.withSubscriptions != nil,
 			pq.withBundles != nil,
+			pq.withReservations != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -490,6 +527,13 @@ func (pq *ProductQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Prod
 		if err := pq.loadBundles(ctx, query, nodes,
 			func(n *Product) { n.Edges.Bundles = []*Bundle{} },
 			func(n *Product, e *Bundle) { n.Edges.Bundles = append(n.Edges.Bundles, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withReservations; query != nil {
+		if err := pq.loadReservations(ctx, query, nodes,
+			func(n *Product) { n.Edges.Reservations = []*ProductReservation{} },
+			func(n *Product, e *ProductReservation) { n.Edges.Reservations = append(n.Edges.Reservations, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -581,6 +625,37 @@ func (pq *ProductQuery) loadBundles(ctx context.Context, query *BundleQuery, nod
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "product_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pq *ProductQuery) loadReservations(ctx context.Context, query *ProductReservationQuery, nodes []*Product, init func(*Product), assign func(*Product, *ProductReservation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Product)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.ProductReservation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(product.ReservationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.product_reservations
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "product_reservations" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "product_reservations" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

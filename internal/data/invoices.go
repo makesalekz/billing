@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
 )
 
@@ -22,6 +24,7 @@ type InvoicesRepo interface {
 	) ([]*ent.Invoice, error)
 	GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoicesToRevoke(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
+	GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoice, error)
 }
 
 type invoicesRepo struct {
@@ -49,15 +52,21 @@ func (r *invoicesRepo) CreateInvoice(ctx context.Context, dto InvoiceDto) (*ent.
 	}
 
 	if dto.PaidAt != nil {
-		query = query.SetPaidAt(*dto.PaidAt)
+		query.SetPaidAt(*dto.PaidAt)
 	}
 
 	if dto.PaidTill != nil {
-		query = query.SetPaidTill(*dto.PaidTill)
+		query.SetPaidTill(*dto.PaidTill)
 	}
 
 	if dto.AppleStoreTransactionID != nil {
-		query = query.SetAppleStoreTransactionID(*dto.AppleStoreTransactionID)
+		query.SetExternalTransactionID(*dto.AppleStoreTransactionID)
+		query.SetPaymentProvider(enum.AppStore)
+	}
+
+	if dto.OneVisionTransactionID != nil {
+		query.SetExternalTransactionID(*dto.OneVisionTransactionID)
+		query.SetPaymentProvider(enum.OneVisionPayment)
 	}
 
 	return query.Save(ctx)
@@ -73,27 +82,32 @@ func (r *invoicesRepo) UpdateInvoice(
 	}
 
 	if dto.PaidAt != nil {
-		query = query.SetPaidAt(*dto.PaidAt)
+		query.SetPaidAt(*dto.PaidAt)
 	}
 
 	if dto.IsPaidAtProcessed != nil {
-		query = query.SetIsPaidAtProcessed(*dto.IsPaidAtProcessed)
+		query.SetIsPaidAtProcessed(*dto.IsPaidAtProcessed)
 	}
 
 	if dto.IsPaidTillProcessed != nil {
-		query = query.SetIsPaidTillProcessed(*dto.IsPaidTillProcessed)
+		query.SetIsPaidTillProcessed(*dto.IsPaidTillProcessed)
 	}
 
 	if dto.IsRevoked != nil {
-		query = query.SetIsRevoked(*dto.IsRevoked)
+		query.SetIsRevoked(*dto.IsRevoked)
 	}
 
 	if dto.RevokedAt != nil {
-		query = query.SetRevokedAt(*dto.RevokedAt)
+		query.SetRevokedAt(*dto.RevokedAt)
 	}
 
 	if dto.IsRevokedProcessed != nil {
-		query = query.SetIsRevokedProcessed(*dto.IsRevokedProcessed)
+		query.SetIsRevokedProcessed(*dto.IsRevokedProcessed)
+	}
+
+	if dto.OneVisionTransactionID != nil {
+		query.SetExternalTransactionID(*dto.OneVisionTransactionID)
+		query.SetPaymentProvider(enum.OneVisionPayment)
 	}
 
 	return query.Save(ctx)
@@ -118,8 +132,16 @@ func (r *invoicesRepo) GetInvoice(
 		Only(ctx)
 }
 
+func (r *invoicesRepo) GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoice, error) {
+	return r.db.Invoice.Query().Where(invoice.ID(id)).Only(ctx)
+}
+
 func (r *invoicesRepo) CountInvoices(ctx context.Context, filter InvoiceFilter) (int32, error) {
 	query := r.db.Invoice.Query()
+
+	if filter.TenantID != 0 {
+		query.Where(invoice.TenantID(filter.TenantID))
+	}
 
 	if filter.UserID != 0 {
 		query.Where(invoice.UserID(filter.UserID))
@@ -154,6 +176,10 @@ func (r *invoicesRepo) ListInvoices(
 	ctx context.Context, filter InvoiceFilter, paginate *utils_v1.PaginateRequest,
 ) ([]*ent.Invoice, error) {
 	query := r.db.Invoice.Query().Where(invoice.IDGT(paginate.GetFromId())).Limit(int(paginate.GetLimit()))
+
+	if filter.TenantID != 0 {
+		query.Where(invoice.TenantID(filter.TenantID))
+	}
 
 	if filter.UserID != 0 {
 		query.Where(invoice.UserID(filter.UserID))
@@ -198,21 +224,31 @@ func (r *invoicesRepo) ListInvoices(
 	return query.All(ctx)
 }
 
-func (r *invoicesRepo) GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error) {
+func (r *invoicesRepo) GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) (
+	[]*ent.Invoice, error,
+) {
 	return r.db.Invoice.Query().Where(
 		invoice.StatusEQ(enum.Paid),
 		invoice.IsPaidAtProcessed(true),
 		invoice.IsRevoked(false),
 		invoice.IsPaidTillProcessed(false),
 		invoice.PaidTillLT(*paidTill),
-	).Modify(func(s *sql.Selector) {
-		invoicesT := sql.Table(invoice.Table).As("t2")
+	).Modify(
+		func(s *sql.Selector) {
+			invoicesT := sql.Table(invoice.Table).As("t2")
 
-		s.LeftJoin(invoicesT).
-			On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
-			OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
-		s.Where(sql.IsNull(invoicesT.C(invoice.FieldPaidTill)))
-	}).Limit(int(BackgroundProcessPageSize)).
+			s.LeftJoin(invoicesT).
+				On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
+				OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
+			s.Where(sql.IsNull(invoicesT.C(invoice.FieldPaidTill)))
+		},
+		func(s *sql.Selector) {
+			paymentProfileT := sql.Table(paymentprofile.Table).As("t3")
+
+			s.LeftJoin(paymentProfileT).
+				On(paymentProfileT.C(paymentprofile.FieldID), s.C(invoice.FieldPaymentProfileID))
+		},
+	).Limit(int(BackgroundProcessPageSize)).
 		All(ctx)
 }
 
@@ -223,19 +259,23 @@ func (r *invoicesRepo) GetInvoicesToRevoke(ctx context.Context, paidTill *time.T
 		invoice.IsRevoked(true),
 		invoice.IsRevokedProcessed(false),
 		invoice.IsPaidTillProcessed(false),
-	).Modify(func(s *sql.Selector) {
-		invoicesT := sql.Table(invoice.Table).As("t2")
+	).Modify(
+		func(s *sql.Selector) {
+			invoicesT := sql.Table(invoice.Table).As("t2")
 
-		s.LeftJoin(invoicesT).
-			On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
-			OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
+			s.LeftJoin(invoicesT).
+				On(invoicesT.C(invoice.FieldSubscriptionID), s.C(invoice.FieldSubscriptionID)).
+				OnP(sql.ColumnsLT(s.C(invoice.FieldPaidTill), invoicesT.C(invoice.FieldPaidTill)))
 
-		s.Where(sql.And(
-			sql.IsNull(invoicesT.C(invoice.FieldPaidTill)),
-			sql.NotNull(s.C(invoice.FieldPaidTill)),
-			sql.GT(s.C(invoice.FieldPaidTill), paidTill),
-			sql.ColumnsLT(s.C(invoice.FieldRevokedAt), s.C(invoice.FieldPaidTill)),
-		))
-	}).Limit(int(BackgroundProcessPageSize)).
+			s.Where(
+				sql.And(
+					sql.IsNull(invoicesT.C(invoice.FieldPaidTill)),
+					sql.NotNull(s.C(invoice.FieldPaidTill)),
+					sql.GT(s.C(invoice.FieldPaidTill), paidTill),
+					sql.ColumnsLT(s.C(invoice.FieldRevokedAt), s.C(invoice.FieldPaidTill)),
+				),
+			)
+		},
+	).Limit(int(BackgroundProcessPageSize)).
 		All(ctx)
 }

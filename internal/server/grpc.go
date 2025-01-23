@@ -25,6 +25,7 @@ func NewGRPCServer(
 	invoiceService *service.InvoiceService,
 	subscriptionService *service.SubscriptionService,
 	appleStoreService *service.AppleStoreService,
+	paymentService *service.PaymentsService,
 ) *grpc.Server {
 	err := tracer.Initialize()
 	if err != nil {
@@ -59,6 +60,7 @@ func NewGRPCServer(
 	v1.RegisterInvoicesServer(srv, invoiceService)
 	v1.RegisterSubscriptionsServer(srv, subscriptionService)
 	v1.RegisterAppleStoreServer(srv, appleStoreService)
+	v1.RegisterPaymentsServer(srv, paymentService)
 
 	return srv
 }

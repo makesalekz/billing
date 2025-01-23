@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
+
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 )
 
@@ -25,9 +26,11 @@ func (Invoice) Fields() []ent.Field {
 		field.Int64("amount").Immutable(),
 		field.Float("price").
 			GoType(decimal.Decimal{}).
-			SchemaType(map[string]string{
-				dialect.Postgres: "numeric",
-			}),
+			SchemaType(
+				map[string]string{
+					dialect.Postgres: "numeric",
+				},
+			),
 		field.String("currency").Default("KZT").MaxLen(3),
 		field.Enum("status").GoType(enum.InvoiceStatus("")).Default(enum.Created.Value()),
 		field.Time("paid_at").Optional().Nillable(),
@@ -38,8 +41,10 @@ func (Invoice) Fields() []ent.Field {
 		field.Bool("is_paid_at_processed").Default(false),
 		field.Bool("is_paid_till_processed").Default(false),
 		field.Int64("subscription_id").Optional().Nillable().Immutable(),
-		field.String("apple_store_transaction_id").Optional().Nillable(),
+		field.String("external_transaction_id").Optional().Nillable(),
+		field.Enum("payment_provider").GoType(enum.PaymentProvider("")).Default(enum.AppStore.Value()),
 		field.Bool("is_trial").Default(false),
+		field.Int64("payment_profile_id").Optional().Nillable(),
 	}
 }
 
@@ -57,5 +62,10 @@ func (Invoice) Edges() []ent.Edge {
 			Unique().
 			Immutable().
 			Field("subscription_id"),
+		edge.From("payment_profile", PaymentProfile.Type).
+			Ref("invoices").
+			Unique().
+			Field("payment_profile_id"),
+		edge.To("reservations", ProductReservation.Type),
 	}
 }

@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,21 +13,25 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
 // InvoiceQuery is the builder for querying Invoice entities.
 type InvoiceQuery struct {
 	config
-	ctx               *QueryContext
-	order             []invoice.OrderOption
-	inters            []Interceptor
-	predicates        []predicate.Invoice
-	withProduct       *ProductQuery
-	withSubscriptions *SubscriptionsQuery
-	modifiers         []func(*sql.Selector)
+	ctx                *QueryContext
+	order              []invoice.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.Invoice
+	withProduct        *ProductQuery
+	withSubscriptions  *SubscriptionsQuery
+	withPaymentProfile *PaymentProfileQuery
+	withReservations   *ProductReservationQuery
+	modifiers          []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -100,6 +105,50 @@ func (iq *InvoiceQuery) QuerySubscriptions() *SubscriptionsQuery {
 			sqlgraph.From(invoice.Table, invoice.FieldID, selector),
 			sqlgraph.To(subscriptions.Table, subscriptions.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, invoice.SubscriptionsTable, invoice.SubscriptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPaymentProfile chains the current query on the "payment_profile" edge.
+func (iq *InvoiceQuery) QueryPaymentProfile() *PaymentProfileQuery {
+	query := (&PaymentProfileClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invoice.Table, invoice.FieldID, selector),
+			sqlgraph.To(paymentprofile.Table, paymentprofile.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invoice.PaymentProfileTable, invoice.PaymentProfileColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReservations chains the current query on the "reservations" edge.
+func (iq *InvoiceQuery) QueryReservations() *ProductReservationQuery {
+	query := (&ProductReservationClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invoice.Table, invoice.FieldID, selector),
+			sqlgraph.To(productreservation.Table, productreservation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, invoice.ReservationsTable, invoice.ReservationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
 		return fromU, nil
@@ -294,13 +343,15 @@ func (iq *InvoiceQuery) Clone() *InvoiceQuery {
 		return nil
 	}
 	return &InvoiceQuery{
-		config:            iq.config,
-		ctx:               iq.ctx.Clone(),
-		order:             append([]invoice.OrderOption{}, iq.order...),
-		inters:            append([]Interceptor{}, iq.inters...),
-		predicates:        append([]predicate.Invoice{}, iq.predicates...),
-		withProduct:       iq.withProduct.Clone(),
-		withSubscriptions: iq.withSubscriptions.Clone(),
+		config:             iq.config,
+		ctx:                iq.ctx.Clone(),
+		order:              append([]invoice.OrderOption{}, iq.order...),
+		inters:             append([]Interceptor{}, iq.inters...),
+		predicates:         append([]predicate.Invoice{}, iq.predicates...),
+		withProduct:        iq.withProduct.Clone(),
+		withSubscriptions:  iq.withSubscriptions.Clone(),
+		withPaymentProfile: iq.withPaymentProfile.Clone(),
+		withReservations:   iq.withReservations.Clone(),
 		// clone intermediate query.
 		sql:       iq.sql.Clone(),
 		path:      iq.path,
@@ -327,6 +378,28 @@ func (iq *InvoiceQuery) WithSubscriptions(opts ...func(*SubscriptionsQuery)) *In
 		opt(query)
 	}
 	iq.withSubscriptions = query
+	return iq
+}
+
+// WithPaymentProfile tells the query-builder to eager-load the nodes that are connected to
+// the "payment_profile" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InvoiceQuery) WithPaymentProfile(opts ...func(*PaymentProfileQuery)) *InvoiceQuery {
+	query := (&PaymentProfileClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withPaymentProfile = query
+	return iq
+}
+
+// WithReservations tells the query-builder to eager-load the nodes that are connected to
+// the "reservations" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InvoiceQuery) WithReservations(opts ...func(*ProductReservationQuery)) *InvoiceQuery {
+	query := (&ProductReservationClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withReservations = query
 	return iq
 }
 
@@ -408,9 +481,11 @@ func (iq *InvoiceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Invo
 	var (
 		nodes       = []*Invoice{}
 		_spec       = iq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [4]bool{
 			iq.withProduct != nil,
 			iq.withSubscriptions != nil,
+			iq.withPaymentProfile != nil,
+			iq.withReservations != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -443,6 +518,19 @@ func (iq *InvoiceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Invo
 	if query := iq.withSubscriptions; query != nil {
 		if err := iq.loadSubscriptions(ctx, query, nodes, nil,
 			func(n *Invoice, e *Subscriptions) { n.Edges.Subscriptions = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withPaymentProfile; query != nil {
+		if err := iq.loadPaymentProfile(ctx, query, nodes, nil,
+			func(n *Invoice, e *PaymentProfile) { n.Edges.PaymentProfile = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withReservations; query != nil {
+		if err := iq.loadReservations(ctx, query, nodes,
+			func(n *Invoice) { n.Edges.Reservations = []*ProductReservation{} },
+			func(n *Invoice, e *ProductReservation) { n.Edges.Reservations = append(n.Edges.Reservations, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -510,6 +598,69 @@ func (iq *InvoiceQuery) loadSubscriptions(ctx context.Context, query *Subscripti
 	}
 	return nil
 }
+func (iq *InvoiceQuery) loadPaymentProfile(ctx context.Context, query *PaymentProfileQuery, nodes []*Invoice, init func(*Invoice), assign func(*Invoice, *PaymentProfile)) error {
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*Invoice)
+	for i := range nodes {
+		if nodes[i].PaymentProfileID == nil {
+			continue
+		}
+		fk := *nodes[i].PaymentProfileID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(paymentprofile.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "payment_profile_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (iq *InvoiceQuery) loadReservations(ctx context.Context, query *ProductReservationQuery, nodes []*Invoice, init func(*Invoice), assign func(*Invoice, *ProductReservation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Invoice)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.ProductReservation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(invoice.ReservationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.invoice_reservations
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "invoice_reservations" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "invoice_reservations" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (iq *InvoiceQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := iq.querySpec()
@@ -544,6 +695,9 @@ func (iq *InvoiceQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if iq.withSubscriptions != nil {
 			_spec.Node.AddColumnOnce(invoice.FieldSubscriptionID)
+		}
+		if iq.withPaymentProfile != nil {
+			_spec.Node.AddColumnOnce(invoice.FieldPaymentProfileID)
 		}
 	}
 	if ps := iq.predicates; len(ps) > 0 {

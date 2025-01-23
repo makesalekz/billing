@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/billing/messages"
 	"golang.org/x/exp/maps"
 
+	"gitlab.calendaria.team/services/finance/billing/messages"
+
 	"github.com/go-kratos/kratos/v2/log"
+
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
@@ -23,70 +24,46 @@ type InvoicesList struct {
 }
 
 type InvoicesUseCase struct {
-	log          *log.Helper
-	invoiceRepo  data.InvoicesRepo
-	itemsRepo    data.ItemsRepo
-	productRepo  data.ProductRepo
-	queryManager u_nats.IQueueManager
+	log                    *log.Helper
+	invoiceManager         *InvoicesManager
+	invoiceRepo            data.InvoicesRepo
+	itemsRepo              data.ItemsRepo
+	productRepo            data.ProductRepo
+	productReservationRepo data.ProductReservationRepo
+	queryManager           u_nats.IQueueManager
 }
 
 func NewInvoicesUseCase(
 	logger log.Logger,
+	invoiceManager *InvoicesManager,
 	invoiceRepo data.InvoicesRepo,
 	itemsRepo data.ItemsRepo,
 	productRepo data.ProductRepo,
+	productReservationRepo data.ProductReservationRepo,
 	queryManager u_nats.IQueueManager,
 ) *InvoicesUseCase {
 	return &InvoicesUseCase{
-		log:          log.NewHelper(log.With(logger, "module", "biz/project")),
-		invoiceRepo:  invoiceRepo,
-		itemsRepo:    itemsRepo,
-		productRepo:  productRepo,
-		queryManager: queryManager,
+		log:                    log.NewHelper(log.With(logger, "module", "biz/project")),
+		invoiceManager:         invoiceManager,
+		invoiceRepo:            invoiceRepo,
+		itemsRepo:              itemsRepo,
+		productRepo:            productRepo,
+		productReservationRepo: productReservationRepo,
+		queryManager:           queryManager,
 	}
 }
 
 func (uc *InvoicesUseCase) CreateInvoice(
-	ctx context.Context, actorID, tenantID int64, appID string, invoiceDto data.InvoiceDto,
+	ctx context.Context, tenantID, actorID int64, invoiceDto data.InvoiceDto,
 ) (*ent.Invoice, error) {
-	if invoiceDto.Amount <= 0 {
-		return nil, v1.ErrorInvalidRequest("amount must be greater than 0")
-	}
-
-	product, err := uc.productRepo.GetProduct(ctx, invoiceDto.ProductID)
+	invoiceDto.TenantID = tenantID
+	invoiceDto.UserID = actorID
+	invoice, _, rollback, err := uc.invoiceManager.CreateInvoice(ctx, invoiceDto)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, v1.ErrorNotFound("failed to get product: %s", err.Error())
+		if rollback != nil {
+			rollback()
 		}
-
-		return nil, v1.ErrorDatabaseQuery("failed to get product: %s", err.Error())
-	}
-
-	if !product.IsActive {
-		return nil, v1.ErrorInvalidRequest("product is not active")
-	}
-
-	if product.IsUnique {
-		err = uc.canProductBeUsedOneMoreTime(ctx, actorID, product)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if product.IsLimited {
-		err = uc.checkProductLimit(invoiceDto.Amount, product)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if invoiceDto.Price.IsZero() {
-		invoiceDto.Price = product.Price.Mul(decimal.NewFromInt(invoiceDto.Amount))
-	}
-
-	invoice, err := uc.invoiceRepo.CreateInvoice(ctx, invoiceDto)
-	if err != nil {
-		return nil, v1.ErrorDatabaseQuery("failed to create invoice: %s", err.Error())
+		return nil, err
 	}
 
 	return invoice, nil
@@ -127,7 +104,7 @@ func (uc *InvoicesUseCase) GetInvoice(
 }
 
 func (uc *InvoicesUseCase) ListInvoices(
-	ctx context.Context, actorID int64, filter data.InvoiceFilter, paginate *utils_v1.PaginateRequest,
+	ctx context.Context, filter data.InvoiceFilter, paginate *utils_v1.PaginateRequest,
 ) (*InvoicesList, error) {
 	total, err := uc.invoiceRepo.CountInvoices(ctx, filter)
 	if err != nil {
@@ -153,26 +130,6 @@ func (uc *InvoicesUseCase) ListInvoices(
 	}, nil
 }
 
-// checks if product was already used.
-func (uc *InvoicesUseCase) canProductBeUsedOneMoreTime(ctx context.Context, actorID int64, product *ent.Product) error {
-	if product.IsUnique {
-		count, err := uc.invoiceRepo.CountInvoices(ctx, data.InvoiceFilter{
-			UserID:    actorID,
-			ProductID: product.ID,
-			Status:    enum.Paid,
-		})
-		if err != nil {
-			return v1.ErrorDatabaseQuery("failed to list invoices: %s", err.Error())
-		}
-
-		if int64(count) >= product.UniqueLimit {
-			return v1.ErrorInvalidRequest("product already used")
-		}
-	}
-
-	return nil
-}
-
 func (uc *InvoicesUseCase) RevokeInvoice(
 	ctx context.Context, actorID, tenantID int64, appID string, invoiceID int64,
 ) error {
@@ -188,26 +145,14 @@ func (uc *InvoicesUseCase) RevokeInvoice(
 	now := time.Now()
 	tvar := true
 
-	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoiceData, data.InvoiceDto{
-		IsRevoked: &tvar,
-		RevokedAt: &now,
-	})
+	_, err = uc.invoiceRepo.UpdateInvoice(
+		ctx, invoiceData, data.InvoiceDto{
+			IsRevoked: &tvar,
+			RevokedAt: &now,
+		},
+	)
 	if err != nil {
 		return v1.ErrorDatabaseQuery("failed to revoke invoice: %s", err.Error())
-	}
-
-	return nil
-}
-
-func (uc *InvoicesUseCase) checkProductLimit(amount int64, product *ent.Product) error {
-	if product.IsLimited {
-		if product.Left <= 0 || product.Left < amount {
-			return v1.ErrorInvalidRequest("product is out of stock")
-		}
-
-		if product.LimitedTill != nil && !product.LimitedTill.IsZero() && product.LimitedTill.Before(time.Now()) {
-			return v1.ErrorInvalidRequest("product is no longer available")
-		}
 	}
 
 	return nil
@@ -216,13 +161,15 @@ func (uc *InvoicesUseCase) checkProductLimit(amount int64, product *ent.Product)
 func (uc *InvoicesUseCase) UpdateResources(ctx context.Context) {
 	fvar := false
 	now := time.Now()
-	invoices, err := uc.invoiceRepo.ListInvoices(ctx, data.InvoiceFilter{
-		Status:        enum.Paid,
-		PaidProcesses: &fvar,
-		IsRevoked:     &fvar,
-		PaidTillProc:  &fvar,
-		PaidTill:      &now,
-	}, &utils_v1.PaginateRequest{Limit: data.BackgroundProcessPageSize, FromId: 0})
+	invoices, err := uc.invoiceRepo.ListInvoices(
+		ctx, data.InvoiceFilter{
+			Status:        enum.Paid,
+			PaidProcesses: &fvar,
+			IsRevoked:     &fvar,
+			PaidTillProc:  &fvar,
+			PaidTill:      &now,
+		}, &utils_v1.PaginateRequest{Limit: data.BackgroundProcessPageSize, FromId: 0},
+	)
 	if err != nil {
 		uc.log.Errorf("failed to list invoices: %s", err.Error())
 
@@ -279,9 +226,11 @@ func (uc *InvoicesUseCase) updateResources(ctx context.Context, invoice *ent.Inv
 	}
 
 	tvar := true
-	_, err = uc.invoiceRepo.UpdateInvoice(ctx, invoice, data.InvoiceDto{
-		IsPaidAtProcessed: &tvar,
-	})
+	_, err = uc.invoiceRepo.UpdateInvoice(
+		ctx, invoice, data.InvoiceDto{
+			IsPaidAtProcessed: &tvar,
+		},
+	)
 	if err != nil {
 		return v1.ErrorInternal("failed to update invoice: %s", err.Error())
 	}
@@ -415,8 +364,8 @@ func ReplyInvoice(invoice *ent.Invoice) *v1.Invoice {
 		reply.RevokedAt = invoice.RevokedAt.Format(time.RFC3339)
 	}
 
-	if invoice.AppleStoreTransactionID != nil {
-		reply.AppleStoreTransactionId = *invoice.AppleStoreTransactionID
+	if invoice.ExternalTransactionID != nil {
+		reply.AppleStoreTransactionId = *invoice.ExternalTransactionID
 	}
 
 	return reply

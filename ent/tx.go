@@ -18,8 +18,12 @@ type Tx struct {
 	Invoice *InvoiceClient
 	// Item is the client for interacting with the Item builders.
 	Item *ItemClient
+	// PaymentProfile is the client for interacting with the PaymentProfile builders.
+	PaymentProfile *PaymentProfileClient
 	// Product is the client for interacting with the Product builders.
 	Product *ProductClient
+	// ProductReservation is the client for interacting with the ProductReservation builders.
+	ProductReservation *ProductReservationClient
 	// Subscriptions is the client for interacting with the Subscriptions builders.
 	Subscriptions *SubscriptionsClient
 
@@ -156,7 +160,9 @@ func (tx *Tx) init() {
 	tx.Bundle = NewBundleClient(tx.config)
 	tx.Invoice = NewInvoiceClient(tx.config)
 	tx.Item = NewItemClient(tx.config)
+	tx.PaymentProfile = NewPaymentProfileClient(tx.config)
 	tx.Product = NewProductClient(tx.config)
+	tx.ProductReservation = NewProductReservationClient(tx.config)
 	tx.Subscriptions = NewSubscriptionsClient(tx.config)
 }
 

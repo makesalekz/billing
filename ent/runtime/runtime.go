@@ -8,7 +8,9 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/item"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/schema"
 )
 
@@ -64,7 +66,7 @@ func init() {
 	// invoice.DefaultIsPaidTillProcessed holds the default value on creation for the is_paid_till_processed field.
 	invoice.DefaultIsPaidTillProcessed = invoiceDescIsPaidTillProcessed.Default.(bool)
 	// invoiceDescIsTrial is the schema descriptor for is_trial field.
-	invoiceDescIsTrial := invoiceFields[18].Descriptor()
+	invoiceDescIsTrial := invoiceFields[19].Descriptor()
 	// invoice.DefaultIsTrial holds the default value on creation for the is_trial field.
 	invoice.DefaultIsTrial = invoiceDescIsTrial.Default.(bool)
 	itemMixin := schema.Item{}.Mixin()
@@ -86,6 +88,25 @@ func init() {
 	item.DefaultUpdatedAt = itemDescUpdatedAt.Default.(func() time.Time)
 	// item.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	item.UpdateDefaultUpdatedAt = itemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	paymentprofileMixin := schema.PaymentProfile{}.Mixin()
+	paymentprofileMixinHooks1 := paymentprofileMixin[1].Hooks()
+	paymentprofile.Hooks[0] = paymentprofileMixinHooks1[0]
+	paymentprofileMixinInters1 := paymentprofileMixin[1].Interceptors()
+	paymentprofile.Interceptors[0] = paymentprofileMixinInters1[0]
+	paymentprofileMixinFields0 := paymentprofileMixin[0].Fields()
+	_ = paymentprofileMixinFields0
+	paymentprofileFields := schema.PaymentProfile{}.Fields()
+	_ = paymentprofileFields
+	// paymentprofileDescCreatedAt is the schema descriptor for created_at field.
+	paymentprofileDescCreatedAt := paymentprofileMixinFields0[0].Descriptor()
+	// paymentprofile.DefaultCreatedAt holds the default value on creation for the created_at field.
+	paymentprofile.DefaultCreatedAt = paymentprofileDescCreatedAt.Default.(func() time.Time)
+	// paymentprofileDescUpdatedAt is the schema descriptor for updated_at field.
+	paymentprofileDescUpdatedAt := paymentprofileMixinFields0[1].Descriptor()
+	// paymentprofile.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	paymentprofile.DefaultUpdatedAt = paymentprofileDescUpdatedAt.Default.(func() time.Time)
+	// paymentprofile.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	paymentprofile.UpdateDefaultUpdatedAt = paymentprofileDescUpdatedAt.UpdateDefault.(func() time.Time)
 	productMixin := schema.Product{}.Mixin()
 	productMixinHooks1 := productMixin[1].Hooks()
 	product.Hooks[0] = productMixinHooks1[0]
@@ -137,6 +158,31 @@ func init() {
 	productDescIsExpiring := productFields[12].Descriptor()
 	// product.DefaultIsExpiring holds the default value on creation for the is_expiring field.
 	product.DefaultIsExpiring = productDescIsExpiring.Default.(bool)
+	productreservationMixin := schema.ProductReservation{}.Mixin()
+	productreservationMixinFields0 := productreservationMixin[0].Fields()
+	_ = productreservationMixinFields0
+	productreservationFields := schema.ProductReservation{}.Fields()
+	_ = productreservationFields
+	// productreservationDescCreatedAt is the schema descriptor for created_at field.
+	productreservationDescCreatedAt := productreservationMixinFields0[0].Descriptor()
+	// productreservation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	productreservation.DefaultCreatedAt = productreservationDescCreatedAt.Default.(func() time.Time)
+	// productreservationDescUpdatedAt is the schema descriptor for updated_at field.
+	productreservationDescUpdatedAt := productreservationMixinFields0[1].Descriptor()
+	// productreservation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	productreservation.DefaultUpdatedAt = productreservationDescUpdatedAt.Default.(func() time.Time)
+	// productreservation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	productreservation.UpdateDefaultUpdatedAt = productreservationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// productreservationDescReservedQuantity is the schema descriptor for reserved_quantity field.
+	productreservationDescReservedQuantity := productreservationFields[4].Descriptor()
+	// productreservation.DefaultReservedQuantity holds the default value on creation for the reserved_quantity field.
+	productreservation.DefaultReservedQuantity = productreservationDescReservedQuantity.Default.(int64)
+	// productreservation.ReservedQuantityValidator is a validator for the "reserved_quantity" field. It is called by the builders before save.
+	productreservation.ReservedQuantityValidator = productreservationDescReservedQuantity.Validators[0].(func(int64) error)
+	// productreservationDescExpirationTime is the schema descriptor for expiration_time field.
+	productreservationDescExpirationTime := productreservationFields[6].Descriptor()
+	// productreservation.DefaultExpirationTime holds the default value on creation for the expiration_time field.
+	productreservation.DefaultExpirationTime = productreservationDescExpirationTime.Default.(func() time.Time)
 }
 
 const (

@@ -66,8 +66,10 @@ var (
 		{Name: "is_revoked_processed", Type: field.TypeBool, Default: false},
 		{Name: "is_paid_at_processed", Type: field.TypeBool, Default: false},
 		{Name: "is_paid_till_processed", Type: field.TypeBool, Default: false},
-		{Name: "apple_store_transaction_id", Type: field.TypeString, Nullable: true},
+		{Name: "external_transaction_id", Type: field.TypeString, Nullable: true},
+		{Name: "payment_provider", Type: field.TypeEnum, Enums: []string{"APP_STORE", "ONE_VISION_PAYMENT"}, Default: "APP_STORE"},
 		{Name: "is_trial", Type: field.TypeBool, Default: false},
+		{Name: "payment_profile_id", Type: field.TypeInt64, Nullable: true},
 		{Name: "product_id", Type: field.TypeInt64},
 		{Name: "subscription_id", Type: field.TypeInt64, Nullable: true},
 	}
@@ -78,14 +80,20 @@ var (
 		PrimaryKey: []*schema.Column{InvoicesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
+				Symbol:     "invoices_payment_profiles_invoices",
+				Columns:    []*schema.Column{InvoicesColumns[18]},
+				RefColumns: []*schema.Column{PaymentProfilesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
 				Symbol:     "invoices_products_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[17]},
+				Columns:    []*schema.Column{InvoicesColumns[19]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "invoices_subscriptions_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[18]},
+				Columns:    []*schema.Column{InvoicesColumns[20]},
 				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -107,6 +115,26 @@ var (
 		Columns:    ItemsColumns,
 		PrimaryKey: []*schema.Column{ItemsColumns[0]},
 	}
+	// PaymentProfilesColumns holds the columns for the "payment_profiles" table.
+	PaymentProfilesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "pan_masked", Type: field.TypeString},
+		{Name: "holder", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString},
+		{Name: "phone", Type: field.TypeString},
+		{Name: "user_token", Type: field.TypeString},
+		{Name: "recurrent_token", Type: field.TypeString, Unique: true, Nullable: true},
+	}
+	// PaymentProfilesTable holds the schema information for the "payment_profiles" table.
+	PaymentProfilesTable = &schema.Table{
+		Name:       "payment_profiles",
+		Columns:    PaymentProfilesColumns,
+		PrimaryKey: []*schema.Column{PaymentProfilesColumns[0]},
+	}
 	// ProductsColumns holds the columns for the "products" table.
 	ProductsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -126,12 +154,48 @@ var (
 		{Name: "unique_limit", Type: field.TypeInt64, Default: 0},
 		{Name: "is_expiring", Type: field.TypeBool, Nullable: true, Default: false},
 		{Name: "expiring_time", Type: field.TypeTime, Nullable: true},
+		{Name: "payment_model", Type: field.TypeEnum, Enums: []string{"ONE_TIME", "RECURRENT"}, Default: "RECURRENT"},
+		{Name: "product_period", Type: field.TypeEnum, Enums: []string{"day", "week", "month", "year", "unlimited"}, Default: "month"},
 	}
 	// ProductsTable holds the schema information for the "products" table.
 	ProductsTable = &schema.Table{
 		Name:       "products",
 		Columns:    ProductsColumns,
 		PrimaryKey: []*schema.Column{ProductsColumns[0]},
+	}
+	// ProductReservationsColumns holds the columns for the "product_reservations" table.
+	ProductReservationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "product_id", Type: field.TypeInt64},
+		{Name: "invoice_id", Type: field.TypeInt64},
+		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "reserved_quantity", Type: field.TypeInt64, Default: 1},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"PENDING", "COMPLETED", "EXPIRED", "CANCELLED"}, Default: "PENDING"},
+		{Name: "expiration_time", Type: field.TypeTime},
+		{Name: "invoice_reservations", Type: field.TypeInt64},
+		{Name: "product_reservations", Type: field.TypeInt64},
+	}
+	// ProductReservationsTable holds the schema information for the "product_reservations" table.
+	ProductReservationsTable = &schema.Table{
+		Name:       "product_reservations",
+		Columns:    ProductReservationsColumns,
+		PrimaryKey: []*schema.Column{ProductReservationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "product_reservations_invoices_reservations",
+				Columns:    []*schema.Column{ProductReservationsColumns[9]},
+				RefColumns: []*schema.Column{InvoicesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "product_reservations_products_reservations",
+				Columns:    []*schema.Column{ProductReservationsColumns[10]},
+				RefColumns: []*schema.Column{ProductsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// SubscriptionsColumns holds the columns for the "subscriptions" table.
 	SubscriptionsColumns = []*schema.Column{
@@ -160,7 +224,9 @@ var (
 		BundlesTable,
 		InvoicesTable,
 		ItemsTable,
+		PaymentProfilesTable,
 		ProductsTable,
+		ProductReservationsTable,
 		SubscriptionsTable,
 	}
 )
@@ -168,7 +234,10 @@ var (
 func init() {
 	BundlesTable.ForeignKeys[0].RefTable = ItemsTable
 	BundlesTable.ForeignKeys[1].RefTable = ProductsTable
-	InvoicesTable.ForeignKeys[0].RefTable = ProductsTable
-	InvoicesTable.ForeignKeys[1].RefTable = SubscriptionsTable
+	InvoicesTable.ForeignKeys[0].RefTable = PaymentProfilesTable
+	InvoicesTable.ForeignKeys[1].RefTable = ProductsTable
+	InvoicesTable.ForeignKeys[2].RefTable = SubscriptionsTable
+	ProductReservationsTable.ForeignKeys[0].RefTable = InvoicesTable
+	ProductReservationsTable.ForeignKeys[1].RefTable = ProductsTable
 	SubscriptionsTable.ForeignKeys[0].RefTable = ProductsTable
 }

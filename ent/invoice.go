@@ -12,6 +12,7 @@ import (
 	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
@@ -53,10 +54,14 @@ type Invoice struct {
 	IsPaidTillProcessed bool `json:"is_paid_till_processed,omitempty"`
 	// SubscriptionID holds the value of the "subscription_id" field.
 	SubscriptionID *int64 `json:"subscription_id,omitempty"`
-	// AppleStoreTransactionID holds the value of the "apple_store_transaction_id" field.
-	AppleStoreTransactionID *string `json:"apple_store_transaction_id,omitempty"`
+	// ExternalTransactionID holds the value of the "external_transaction_id" field.
+	ExternalTransactionID *string `json:"external_transaction_id,omitempty"`
+	// PaymentProvider holds the value of the "payment_provider" field.
+	PaymentProvider enum.PaymentProvider `json:"payment_provider,omitempty"`
 	// IsTrial holds the value of the "is_trial" field.
 	IsTrial bool `json:"is_trial,omitempty"`
+	// PaymentProfileID holds the value of the "payment_profile_id" field.
+	PaymentProfileID *int64 `json:"payment_profile_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InvoiceQuery when eager-loading is set.
 	Edges        InvoiceEdges `json:"edges"`
@@ -69,9 +74,13 @@ type InvoiceEdges struct {
 	Product *Product `json:"product,omitempty"`
 	// Subscriptions holds the value of the subscriptions edge.
 	Subscriptions *Subscriptions `json:"subscriptions,omitempty"`
+	// PaymentProfile holds the value of the payment_profile edge.
+	PaymentProfile *PaymentProfile `json:"payment_profile,omitempty"`
+	// Reservations holds the value of the reservations edge.
+	Reservations []*ProductReservation `json:"reservations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
 // ProductOrErr returns the Product value or an error if the edge
@@ -96,6 +105,26 @@ func (e InvoiceEdges) SubscriptionsOrErr() (*Subscriptions, error) {
 	return nil, &NotLoadedError{edge: "subscriptions"}
 }
 
+// PaymentProfileOrErr returns the PaymentProfile value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e InvoiceEdges) PaymentProfileOrErr() (*PaymentProfile, error) {
+	if e.PaymentProfile != nil {
+		return e.PaymentProfile, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: paymentprofile.Label}
+	}
+	return nil, &NotLoadedError{edge: "payment_profile"}
+}
+
+// ReservationsOrErr returns the Reservations value or an error if the edge
+// was not loaded in eager-loading.
+func (e InvoiceEdges) ReservationsOrErr() ([]*ProductReservation, error) {
+	if e.loadedTypes[3] {
+		return e.Reservations, nil
+	}
+	return nil, &NotLoadedError{edge: "reservations"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Invoice) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -105,9 +134,9 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 			values[i] = new(decimal.Decimal)
 		case invoice.FieldIsRevoked, invoice.FieldIsRevokedProcessed, invoice.FieldIsPaidAtProcessed, invoice.FieldIsPaidTillProcessed, invoice.FieldIsTrial:
 			values[i] = new(sql.NullBool)
-		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID:
+		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID, invoice.FieldPaymentProfileID:
 			values[i] = new(sql.NullInt64)
-		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus, invoice.FieldAppleStoreTransactionID:
+		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus, invoice.FieldExternalTransactionID, invoice.FieldPaymentProvider:
 			values[i] = new(sql.NullString)
 		case invoice.FieldPaidAt, invoice.FieldPaidTill, invoice.FieldRevokedAt:
 			values[i] = new(sql.NullTime)
@@ -232,18 +261,31 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 				i.SubscriptionID = new(int64)
 				*i.SubscriptionID = value.Int64
 			}
-		case invoice.FieldAppleStoreTransactionID:
+		case invoice.FieldExternalTransactionID:
 			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field apple_store_transaction_id", values[j])
+				return fmt.Errorf("unexpected type %T for field external_transaction_id", values[j])
 			} else if value.Valid {
-				i.AppleStoreTransactionID = new(string)
-				*i.AppleStoreTransactionID = value.String
+				i.ExternalTransactionID = new(string)
+				*i.ExternalTransactionID = value.String
+			}
+		case invoice.FieldPaymentProvider:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field payment_provider", values[j])
+			} else if value.Valid {
+				i.PaymentProvider = enum.PaymentProvider(value.String)
 			}
 		case invoice.FieldIsTrial:
 			if value, ok := values[j].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_trial", values[j])
 			} else if value.Valid {
 				i.IsTrial = value.Bool
+			}
+		case invoice.FieldPaymentProfileID:
+			if value, ok := values[j].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field payment_profile_id", values[j])
+			} else if value.Valid {
+				i.PaymentProfileID = new(int64)
+				*i.PaymentProfileID = value.Int64
 			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
@@ -266,6 +308,16 @@ func (i *Invoice) QueryProduct() *ProductQuery {
 // QuerySubscriptions queries the "subscriptions" edge of the Invoice entity.
 func (i *Invoice) QuerySubscriptions() *SubscriptionsQuery {
 	return NewInvoiceClient(i.config).QuerySubscriptions(i)
+}
+
+// QueryPaymentProfile queries the "payment_profile" edge of the Invoice entity.
+func (i *Invoice) QueryPaymentProfile() *PaymentProfileQuery {
+	return NewInvoiceClient(i.config).QueryPaymentProfile(i)
+}
+
+// QueryReservations queries the "reservations" edge of the Invoice entity.
+func (i *Invoice) QueryReservations() *ProductReservationQuery {
+	return NewInvoiceClient(i.config).QueryReservations(i)
 }
 
 // Update returns a builder for updating this Invoice.
@@ -347,13 +399,21 @@ func (i *Invoice) String() string {
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
-	if v := i.AppleStoreTransactionID; v != nil {
-		builder.WriteString("apple_store_transaction_id=")
+	if v := i.ExternalTransactionID; v != nil {
+		builder.WriteString("external_transaction_id=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
+	builder.WriteString("payment_provider=")
+	builder.WriteString(fmt.Sprintf("%v", i.PaymentProvider))
+	builder.WriteString(", ")
 	builder.WriteString("is_trial=")
 	builder.WriteString(fmt.Sprintf("%v", i.IsTrial))
+	builder.WriteString(", ")
+	if v := i.PaymentProfileID; v != nil {
+		builder.WriteString("payment_profile_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

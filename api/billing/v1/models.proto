@@ -32,6 +32,8 @@ message Product{
   bool isExpiring = 12;
   optional string expiringTime = 13;
   repeated Bundle bundles = 14;
+  string paymentModel = 15;
+  string paymentPeriod = 16;
 }
 
 message Bundle {

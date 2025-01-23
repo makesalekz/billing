@@ -13,9 +13,11 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
@@ -286,6 +288,34 @@ func (pu *ProductUpdate) ClearExpiringTime() *ProductUpdate {
 	return pu
 }
 
+// SetPaymentModel sets the "payment_model" field.
+func (pu *ProductUpdate) SetPaymentModel(em enum.PaymentModel) *ProductUpdate {
+	pu.mutation.SetPaymentModel(em)
+	return pu
+}
+
+// SetNillablePaymentModel sets the "payment_model" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillablePaymentModel(em *enum.PaymentModel) *ProductUpdate {
+	if em != nil {
+		pu.SetPaymentModel(*em)
+	}
+	return pu
+}
+
+// SetProductPeriod sets the "product_period" field.
+func (pu *ProductUpdate) SetProductPeriod(ep enum.ProductPeriod) *ProductUpdate {
+	pu.mutation.SetProductPeriod(ep)
+	return pu
+}
+
+// SetNillableProductPeriod sets the "product_period" field if the given value is not nil.
+func (pu *ProductUpdate) SetNillableProductPeriod(ep *enum.ProductPeriod) *ProductUpdate {
+	if ep != nil {
+		pu.SetProductPeriod(*ep)
+	}
+	return pu
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
 func (pu *ProductUpdate) AddInvoiceIDs(ids ...int64) *ProductUpdate {
 	pu.mutation.AddInvoiceIDs(ids...)
@@ -329,6 +359,21 @@ func (pu *ProductUpdate) AddBundles(b ...*Bundle) *ProductUpdate {
 		ids[i] = b[i].ID
 	}
 	return pu.AddBundleIDs(ids...)
+}
+
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by IDs.
+func (pu *ProductUpdate) AddReservationIDs(ids ...int64) *ProductUpdate {
+	pu.mutation.AddReservationIDs(ids...)
+	return pu
+}
+
+// AddReservations adds the "reservations" edges to the ProductReservation entity.
+func (pu *ProductUpdate) AddReservations(p ...*ProductReservation) *ProductUpdate {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pu.AddReservationIDs(ids...)
 }
 
 // Mutation returns the ProductMutation object of the builder.
@@ -399,6 +444,27 @@ func (pu *ProductUpdate) RemoveBundles(b ...*Bundle) *ProductUpdate {
 	return pu.RemoveBundleIDs(ids...)
 }
 
+// ClearReservations clears all "reservations" edges to the ProductReservation entity.
+func (pu *ProductUpdate) ClearReservations() *ProductUpdate {
+	pu.mutation.ClearReservations()
+	return pu
+}
+
+// RemoveReservationIDs removes the "reservations" edge to ProductReservation entities by IDs.
+func (pu *ProductUpdate) RemoveReservationIDs(ids ...int64) *ProductUpdate {
+	pu.mutation.RemoveReservationIDs(ids...)
+	return pu
+}
+
+// RemoveReservations removes "reservations" edges to ProductReservation entities.
+func (pu *ProductUpdate) RemoveReservations(p ...*ProductReservation) *ProductUpdate {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pu.RemoveReservationIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *ProductUpdate) Save(ctx context.Context) (int, error) {
 	if err := pu.defaults(); err != nil {
@@ -451,6 +517,16 @@ func (pu *ProductUpdate) check() error {
 	if v, ok := pu.mutation.UniqueLimit(); ok {
 		if err := product.UniqueLimitValidator(v); err != nil {
 			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
+		}
+	}
+	if v, ok := pu.mutation.PaymentModel(); ok {
+		if err := product.PaymentModelValidator(v); err != nil {
+			return &ValidationError{Name: "payment_model", err: fmt.Errorf(`ent: validator failed for field "Product.payment_model": %w`, err)}
+		}
+	}
+	if v, ok := pu.mutation.ProductPeriod(); ok {
+		if err := product.ProductPeriodValidator(v); err != nil {
+			return &ValidationError{Name: "product_period", err: fmt.Errorf(`ent: validator failed for field "Product.product_period": %w`, err)}
 		}
 	}
 	return nil
@@ -542,6 +618,12 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.ExpiringTimeCleared() {
 		_spec.ClearField(product.FieldExpiringTime, field.TypeTime)
+	}
+	if value, ok := pu.mutation.PaymentModel(); ok {
+		_spec.SetField(product.FieldPaymentModel, field.TypeEnum, value)
+	}
+	if value, ok := pu.mutation.ProductPeriod(); ok {
+		_spec.SetField(product.FieldProductPeriod, field.TypeEnum, value)
 	}
 	if pu.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -671,6 +753,51 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bundle.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if pu.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.ReservationsTable,
+			Columns: []string{product.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RemovedReservationsIDs(); len(nodes) > 0 && !pu.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.ReservationsTable,
+			Columns: []string{product.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.ReservationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.ReservationsTable,
+			Columns: []string{product.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -953,6 +1080,34 @@ func (puo *ProductUpdateOne) ClearExpiringTime() *ProductUpdateOne {
 	return puo
 }
 
+// SetPaymentModel sets the "payment_model" field.
+func (puo *ProductUpdateOne) SetPaymentModel(em enum.PaymentModel) *ProductUpdateOne {
+	puo.mutation.SetPaymentModel(em)
+	return puo
+}
+
+// SetNillablePaymentModel sets the "payment_model" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillablePaymentModel(em *enum.PaymentModel) *ProductUpdateOne {
+	if em != nil {
+		puo.SetPaymentModel(*em)
+	}
+	return puo
+}
+
+// SetProductPeriod sets the "product_period" field.
+func (puo *ProductUpdateOne) SetProductPeriod(ep enum.ProductPeriod) *ProductUpdateOne {
+	puo.mutation.SetProductPeriod(ep)
+	return puo
+}
+
+// SetNillableProductPeriod sets the "product_period" field if the given value is not nil.
+func (puo *ProductUpdateOne) SetNillableProductPeriod(ep *enum.ProductPeriod) *ProductUpdateOne {
+	if ep != nil {
+		puo.SetProductPeriod(*ep)
+	}
+	return puo
+}
+
 // AddInvoiceIDs adds the "invoices" edge to the Invoice entity by IDs.
 func (puo *ProductUpdateOne) AddInvoiceIDs(ids ...int64) *ProductUpdateOne {
 	puo.mutation.AddInvoiceIDs(ids...)
@@ -996,6 +1151,21 @@ func (puo *ProductUpdateOne) AddBundles(b ...*Bundle) *ProductUpdateOne {
 		ids[i] = b[i].ID
 	}
 	return puo.AddBundleIDs(ids...)
+}
+
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by IDs.
+func (puo *ProductUpdateOne) AddReservationIDs(ids ...int64) *ProductUpdateOne {
+	puo.mutation.AddReservationIDs(ids...)
+	return puo
+}
+
+// AddReservations adds the "reservations" edges to the ProductReservation entity.
+func (puo *ProductUpdateOne) AddReservations(p ...*ProductReservation) *ProductUpdateOne {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return puo.AddReservationIDs(ids...)
 }
 
 // Mutation returns the ProductMutation object of the builder.
@@ -1066,6 +1236,27 @@ func (puo *ProductUpdateOne) RemoveBundles(b ...*Bundle) *ProductUpdateOne {
 	return puo.RemoveBundleIDs(ids...)
 }
 
+// ClearReservations clears all "reservations" edges to the ProductReservation entity.
+func (puo *ProductUpdateOne) ClearReservations() *ProductUpdateOne {
+	puo.mutation.ClearReservations()
+	return puo
+}
+
+// RemoveReservationIDs removes the "reservations" edge to ProductReservation entities by IDs.
+func (puo *ProductUpdateOne) RemoveReservationIDs(ids ...int64) *ProductUpdateOne {
+	puo.mutation.RemoveReservationIDs(ids...)
+	return puo
+}
+
+// RemoveReservations removes "reservations" edges to ProductReservation entities.
+func (puo *ProductUpdateOne) RemoveReservations(p ...*ProductReservation) *ProductUpdateOne {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return puo.RemoveReservationIDs(ids...)
+}
+
 // Where appends a list predicates to the ProductUpdate builder.
 func (puo *ProductUpdateOne) Where(ps ...predicate.Product) *ProductUpdateOne {
 	puo.mutation.Where(ps...)
@@ -1131,6 +1322,16 @@ func (puo *ProductUpdateOne) check() error {
 	if v, ok := puo.mutation.UniqueLimit(); ok {
 		if err := product.UniqueLimitValidator(v); err != nil {
 			return &ValidationError{Name: "unique_limit", err: fmt.Errorf(`ent: validator failed for field "Product.unique_limit": %w`, err)}
+		}
+	}
+	if v, ok := puo.mutation.PaymentModel(); ok {
+		if err := product.PaymentModelValidator(v); err != nil {
+			return &ValidationError{Name: "payment_model", err: fmt.Errorf(`ent: validator failed for field "Product.payment_model": %w`, err)}
+		}
+	}
+	if v, ok := puo.mutation.ProductPeriod(); ok {
+		if err := product.ProductPeriodValidator(v); err != nil {
+			return &ValidationError{Name: "product_period", err: fmt.Errorf(`ent: validator failed for field "Product.product_period": %w`, err)}
 		}
 	}
 	return nil
@@ -1239,6 +1440,12 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 	}
 	if puo.mutation.ExpiringTimeCleared() {
 		_spec.ClearField(product.FieldExpiringTime, field.TypeTime)
+	}
+	if value, ok := puo.mutation.PaymentModel(); ok {
+		_spec.SetField(product.FieldPaymentModel, field.TypeEnum, value)
+	}
+	if value, ok := puo.mutation.ProductPeriod(); ok {
+		_spec.SetField(product.FieldProductPeriod, field.TypeEnum, value)
 	}
 	if puo.mutation.InvoicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1368,6 +1575,51 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(bundle.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if puo.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.ReservationsTable,
+			Columns: []string{product.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RemovedReservationsIDs(); len(nodes) > 0 && !puo.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.ReservationsTable,
+			Columns: []string{product.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.ReservationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   product.ReservationsTable,
+			Columns: []string{product.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

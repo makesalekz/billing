@@ -14,7 +14,9 @@ import (
 	"github.com/shopspring/decimal"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 )
 
 // InvoiceUpdate is the builder for updating Invoice entities.
@@ -196,23 +198,37 @@ func (iu *InvoiceUpdate) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpdate 
 	return iu
 }
 
-// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
-func (iu *InvoiceUpdate) SetAppleStoreTransactionID(s string) *InvoiceUpdate {
-	iu.mutation.SetAppleStoreTransactionID(s)
+// SetExternalTransactionID sets the "external_transaction_id" field.
+func (iu *InvoiceUpdate) SetExternalTransactionID(s string) *InvoiceUpdate {
+	iu.mutation.SetExternalTransactionID(s)
 	return iu
 }
 
-// SetNillableAppleStoreTransactionID sets the "apple_store_transaction_id" field if the given value is not nil.
-func (iu *InvoiceUpdate) SetNillableAppleStoreTransactionID(s *string) *InvoiceUpdate {
+// SetNillableExternalTransactionID sets the "external_transaction_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableExternalTransactionID(s *string) *InvoiceUpdate {
 	if s != nil {
-		iu.SetAppleStoreTransactionID(*s)
+		iu.SetExternalTransactionID(*s)
 	}
 	return iu
 }
 
-// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
-func (iu *InvoiceUpdate) ClearAppleStoreTransactionID() *InvoiceUpdate {
-	iu.mutation.ClearAppleStoreTransactionID()
+// ClearExternalTransactionID clears the value of the "external_transaction_id" field.
+func (iu *InvoiceUpdate) ClearExternalTransactionID() *InvoiceUpdate {
+	iu.mutation.ClearExternalTransactionID()
+	return iu
+}
+
+// SetPaymentProvider sets the "payment_provider" field.
+func (iu *InvoiceUpdate) SetPaymentProvider(ep enum.PaymentProvider) *InvoiceUpdate {
+	iu.mutation.SetPaymentProvider(ep)
+	return iu
+}
+
+// SetNillablePaymentProvider sets the "payment_provider" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillablePaymentProvider(ep *enum.PaymentProvider) *InvoiceUpdate {
+	if ep != nil {
+		iu.SetPaymentProvider(*ep)
+	}
 	return iu
 }
 
@@ -230,9 +246,76 @@ func (iu *InvoiceUpdate) SetNillableIsTrial(b *bool) *InvoiceUpdate {
 	return iu
 }
 
+// SetPaymentProfileID sets the "payment_profile_id" field.
+func (iu *InvoiceUpdate) SetPaymentProfileID(i int64) *InvoiceUpdate {
+	iu.mutation.SetPaymentProfileID(i)
+	return iu
+}
+
+// SetNillablePaymentProfileID sets the "payment_profile_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillablePaymentProfileID(i *int64) *InvoiceUpdate {
+	if i != nil {
+		iu.SetPaymentProfileID(*i)
+	}
+	return iu
+}
+
+// ClearPaymentProfileID clears the value of the "payment_profile_id" field.
+func (iu *InvoiceUpdate) ClearPaymentProfileID() *InvoiceUpdate {
+	iu.mutation.ClearPaymentProfileID()
+	return iu
+}
+
+// SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
+func (iu *InvoiceUpdate) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdate {
+	return iu.SetPaymentProfileID(p.ID)
+}
+
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by IDs.
+func (iu *InvoiceUpdate) AddReservationIDs(ids ...int64) *InvoiceUpdate {
+	iu.mutation.AddReservationIDs(ids...)
+	return iu
+}
+
+// AddReservations adds the "reservations" edges to the ProductReservation entity.
+func (iu *InvoiceUpdate) AddReservations(p ...*ProductReservation) *InvoiceUpdate {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iu.AddReservationIDs(ids...)
+}
+
 // Mutation returns the InvoiceMutation object of the builder.
 func (iu *InvoiceUpdate) Mutation() *InvoiceMutation {
 	return iu.mutation
+}
+
+// ClearPaymentProfile clears the "payment_profile" edge to the PaymentProfile entity.
+func (iu *InvoiceUpdate) ClearPaymentProfile() *InvoiceUpdate {
+	iu.mutation.ClearPaymentProfile()
+	return iu
+}
+
+// ClearReservations clears all "reservations" edges to the ProductReservation entity.
+func (iu *InvoiceUpdate) ClearReservations() *InvoiceUpdate {
+	iu.mutation.ClearReservations()
+	return iu
+}
+
+// RemoveReservationIDs removes the "reservations" edge to ProductReservation entities by IDs.
+func (iu *InvoiceUpdate) RemoveReservationIDs(ids ...int64) *InvoiceUpdate {
+	iu.mutation.RemoveReservationIDs(ids...)
+	return iu
+}
+
+// RemoveReservations removes "reservations" edges to ProductReservation entities.
+func (iu *InvoiceUpdate) RemoveReservations(p ...*ProductReservation) *InvoiceUpdate {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iu.RemoveReservationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -272,6 +355,11 @@ func (iu *InvoiceUpdate) check() error {
 	if v, ok := iu.mutation.Status(); ok {
 		if err := invoice.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Invoice.status": %w`, err)}
+		}
+	}
+	if v, ok := iu.mutation.PaymentProvider(); ok {
+		if err := invoice.PaymentProviderValidator(v); err != nil {
+			return &ValidationError{Name: "payment_provider", err: fmt.Errorf(`ent: validator failed for field "Invoice.payment_provider": %w`, err)}
 		}
 	}
 	if iu.mutation.ProductCleared() && len(iu.mutation.ProductIDs()) > 0 {
@@ -340,14 +428,91 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := iu.mutation.IsPaidTillProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
 	}
-	if value, ok := iu.mutation.AppleStoreTransactionID(); ok {
-		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
+	if value, ok := iu.mutation.ExternalTransactionID(); ok {
+		_spec.SetField(invoice.FieldExternalTransactionID, field.TypeString, value)
 	}
-	if iu.mutation.AppleStoreTransactionIDCleared() {
-		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
+	if iu.mutation.ExternalTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldExternalTransactionID, field.TypeString)
+	}
+	if value, ok := iu.mutation.PaymentProvider(); ok {
+		_spec.SetField(invoice.FieldPaymentProvider, field.TypeEnum, value)
 	}
 	if value, ok := iu.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+	}
+	if iu.mutation.PaymentProfileCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.PaymentProfileIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedReservationsIDs(); len(nodes) > 0 && !iu.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.ReservationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(iu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
@@ -536,23 +701,37 @@ func (iuo *InvoiceUpdateOne) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpd
 	return iuo
 }
 
-// SetAppleStoreTransactionID sets the "apple_store_transaction_id" field.
-func (iuo *InvoiceUpdateOne) SetAppleStoreTransactionID(s string) *InvoiceUpdateOne {
-	iuo.mutation.SetAppleStoreTransactionID(s)
+// SetExternalTransactionID sets the "external_transaction_id" field.
+func (iuo *InvoiceUpdateOne) SetExternalTransactionID(s string) *InvoiceUpdateOne {
+	iuo.mutation.SetExternalTransactionID(s)
 	return iuo
 }
 
-// SetNillableAppleStoreTransactionID sets the "apple_store_transaction_id" field if the given value is not nil.
-func (iuo *InvoiceUpdateOne) SetNillableAppleStoreTransactionID(s *string) *InvoiceUpdateOne {
+// SetNillableExternalTransactionID sets the "external_transaction_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableExternalTransactionID(s *string) *InvoiceUpdateOne {
 	if s != nil {
-		iuo.SetAppleStoreTransactionID(*s)
+		iuo.SetExternalTransactionID(*s)
 	}
 	return iuo
 }
 
-// ClearAppleStoreTransactionID clears the value of the "apple_store_transaction_id" field.
-func (iuo *InvoiceUpdateOne) ClearAppleStoreTransactionID() *InvoiceUpdateOne {
-	iuo.mutation.ClearAppleStoreTransactionID()
+// ClearExternalTransactionID clears the value of the "external_transaction_id" field.
+func (iuo *InvoiceUpdateOne) ClearExternalTransactionID() *InvoiceUpdateOne {
+	iuo.mutation.ClearExternalTransactionID()
+	return iuo
+}
+
+// SetPaymentProvider sets the "payment_provider" field.
+func (iuo *InvoiceUpdateOne) SetPaymentProvider(ep enum.PaymentProvider) *InvoiceUpdateOne {
+	iuo.mutation.SetPaymentProvider(ep)
+	return iuo
+}
+
+// SetNillablePaymentProvider sets the "payment_provider" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillablePaymentProvider(ep *enum.PaymentProvider) *InvoiceUpdateOne {
+	if ep != nil {
+		iuo.SetPaymentProvider(*ep)
+	}
 	return iuo
 }
 
@@ -570,9 +749,76 @@ func (iuo *InvoiceUpdateOne) SetNillableIsTrial(b *bool) *InvoiceUpdateOne {
 	return iuo
 }
 
+// SetPaymentProfileID sets the "payment_profile_id" field.
+func (iuo *InvoiceUpdateOne) SetPaymentProfileID(i int64) *InvoiceUpdateOne {
+	iuo.mutation.SetPaymentProfileID(i)
+	return iuo
+}
+
+// SetNillablePaymentProfileID sets the "payment_profile_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillablePaymentProfileID(i *int64) *InvoiceUpdateOne {
+	if i != nil {
+		iuo.SetPaymentProfileID(*i)
+	}
+	return iuo
+}
+
+// ClearPaymentProfileID clears the value of the "payment_profile_id" field.
+func (iuo *InvoiceUpdateOne) ClearPaymentProfileID() *InvoiceUpdateOne {
+	iuo.mutation.ClearPaymentProfileID()
+	return iuo
+}
+
+// SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
+func (iuo *InvoiceUpdateOne) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdateOne {
+	return iuo.SetPaymentProfileID(p.ID)
+}
+
+// AddReservationIDs adds the "reservations" edge to the ProductReservation entity by IDs.
+func (iuo *InvoiceUpdateOne) AddReservationIDs(ids ...int64) *InvoiceUpdateOne {
+	iuo.mutation.AddReservationIDs(ids...)
+	return iuo
+}
+
+// AddReservations adds the "reservations" edges to the ProductReservation entity.
+func (iuo *InvoiceUpdateOne) AddReservations(p ...*ProductReservation) *InvoiceUpdateOne {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iuo.AddReservationIDs(ids...)
+}
+
 // Mutation returns the InvoiceMutation object of the builder.
 func (iuo *InvoiceUpdateOne) Mutation() *InvoiceMutation {
 	return iuo.mutation
+}
+
+// ClearPaymentProfile clears the "payment_profile" edge to the PaymentProfile entity.
+func (iuo *InvoiceUpdateOne) ClearPaymentProfile() *InvoiceUpdateOne {
+	iuo.mutation.ClearPaymentProfile()
+	return iuo
+}
+
+// ClearReservations clears all "reservations" edges to the ProductReservation entity.
+func (iuo *InvoiceUpdateOne) ClearReservations() *InvoiceUpdateOne {
+	iuo.mutation.ClearReservations()
+	return iuo
+}
+
+// RemoveReservationIDs removes the "reservations" edge to ProductReservation entities by IDs.
+func (iuo *InvoiceUpdateOne) RemoveReservationIDs(ids ...int64) *InvoiceUpdateOne {
+	iuo.mutation.RemoveReservationIDs(ids...)
+	return iuo
+}
+
+// RemoveReservations removes "reservations" edges to ProductReservation entities.
+func (iuo *InvoiceUpdateOne) RemoveReservations(p ...*ProductReservation) *InvoiceUpdateOne {
+	ids := make([]int64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iuo.RemoveReservationIDs(ids...)
 }
 
 // Where appends a list predicates to the InvoiceUpdate builder.
@@ -625,6 +871,11 @@ func (iuo *InvoiceUpdateOne) check() error {
 	if v, ok := iuo.mutation.Status(); ok {
 		if err := invoice.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Invoice.status": %w`, err)}
+		}
+	}
+	if v, ok := iuo.mutation.PaymentProvider(); ok {
+		if err := invoice.PaymentProviderValidator(v); err != nil {
+			return &ValidationError{Name: "payment_provider", err: fmt.Errorf(`ent: validator failed for field "Invoice.payment_provider": %w`, err)}
 		}
 	}
 	if iuo.mutation.ProductCleared() && len(iuo.mutation.ProductIDs()) > 0 {
@@ -710,14 +961,91 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	if value, ok := iuo.mutation.IsPaidTillProcessed(); ok {
 		_spec.SetField(invoice.FieldIsPaidTillProcessed, field.TypeBool, value)
 	}
-	if value, ok := iuo.mutation.AppleStoreTransactionID(); ok {
-		_spec.SetField(invoice.FieldAppleStoreTransactionID, field.TypeString, value)
+	if value, ok := iuo.mutation.ExternalTransactionID(); ok {
+		_spec.SetField(invoice.FieldExternalTransactionID, field.TypeString, value)
 	}
-	if iuo.mutation.AppleStoreTransactionIDCleared() {
-		_spec.ClearField(invoice.FieldAppleStoreTransactionID, field.TypeString)
+	if iuo.mutation.ExternalTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldExternalTransactionID, field.TypeString)
+	}
+	if value, ok := iuo.mutation.PaymentProvider(); ok {
+		_spec.SetField(invoice.FieldPaymentProvider, field.TypeEnum, value)
 	}
 	if value, ok := iuo.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+	}
+	if iuo.mutation.PaymentProfileCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.PaymentProfileIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.PaymentProfileTable,
+			Columns: []string{invoice.PaymentProfileColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentprofile.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedReservationsIDs(); len(nodes) > 0 && !iuo.mutation.ReservationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.ReservationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   invoice.ReservationsTable,
+			Columns: []string{invoice.ReservationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(productreservation.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(iuo.modifiers...)
 	_node = &Invoice{config: iuo.config}

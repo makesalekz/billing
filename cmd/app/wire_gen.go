@@ -47,23 +47,39 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	productRepo := data.NewProductsRepo(dataData)
 	productUseCase := biz.NewProductUseCase(productRepo)
 	productService := service.NewProductService(productUseCase)
+	productReservationRepo := data.NewProductReservationRepo(dataData)
 	invoicesRepo := data.NewInvoicesRepo(dataData)
+	invoicesManager := biz.NewInvoicesManager(logger, productRepo, productReservationRepo, invoicesRepo)
 	conn, cleanup2, err := data.NewNatsClient(bootstrap)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
 	iQueueManager := nats.NewQueueManager(configConfig, conn, logger)
-	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesRepo, itemsRepo, productRepo, iQueueManager)
+	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesManager, invoicesRepo, itemsRepo, productRepo, productReservationRepo, iQueueManager)
 	invoiceService := service.NewInvoiceService(invoicesUseCase)
 	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)
 	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo)
 	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
-	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService, productService, invoiceService, subscriptionService, appleStoreService)
+	ovpClient, err := data.NewOvpClient(configConfig, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
+	paymentUseCase, err := biz.NewPaymentUsecase(logger, ovpClient, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo, invoicesManager)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	paymentsService := service.NewPaymentsService(paymentUseCase)
+	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService, productService, invoiceService, subscriptionService, appleStoreService, paymentsService)
 	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor)
-	cronServer := server.NewCronServer(logger, invoicesUseCase)
+	cronServer := server.NewCronServer(logger, invoicesUseCase, paymentUseCase)
 	app := newApp(logger, configConfig, grpcServer, httpServer, cronServer)
 	return app, func() {
 		cleanup2()

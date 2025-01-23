@@ -3,11 +3,13 @@
 package product
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 )
 
 const (
@@ -47,12 +49,18 @@ const (
 	FieldIsExpiring = "is_expiring"
 	// FieldExpiringTime holds the string denoting the expiring_time field in the database.
 	FieldExpiringTime = "expiring_time"
+	// FieldPaymentModel holds the string denoting the payment_model field in the database.
+	FieldPaymentModel = "payment_model"
+	// FieldProductPeriod holds the string denoting the product_period field in the database.
+	FieldProductPeriod = "product_period"
 	// EdgeInvoices holds the string denoting the invoices edge name in mutations.
 	EdgeInvoices = "invoices"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
 	EdgeSubscriptions = "subscriptions"
 	// EdgeBundles holds the string denoting the bundles edge name in mutations.
 	EdgeBundles = "bundles"
+	// EdgeReservations holds the string denoting the reservations edge name in mutations.
+	EdgeReservations = "reservations"
 	// Table holds the table name of the product in the database.
 	Table = "products"
 	// InvoicesTable is the table that holds the invoices relation/edge.
@@ -76,6 +84,13 @@ const (
 	BundlesInverseTable = "bundles"
 	// BundlesColumn is the table column denoting the bundles relation/edge.
 	BundlesColumn = "product_id"
+	// ReservationsTable is the table that holds the reservations relation/edge.
+	ReservationsTable = "product_reservations"
+	// ReservationsInverseTable is the table name for the ProductReservation entity.
+	// It exists in this package in order to avoid circular dependency with the "productreservation" package.
+	ReservationsInverseTable = "product_reservations"
+	// ReservationsColumn is the table column denoting the reservations relation/edge.
+	ReservationsColumn = "product_reservations"
 )
 
 // Columns holds all SQL columns for product fields.
@@ -97,6 +112,8 @@ var Columns = []string{
 	FieldUniqueLimit,
 	FieldIsExpiring,
 	FieldExpiringTime,
+	FieldPaymentModel,
+	FieldProductPeriod,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -142,6 +159,30 @@ var (
 	// DefaultIsExpiring holds the default value on creation for the "is_expiring" field.
 	DefaultIsExpiring bool
 )
+
+const DefaultPaymentModel enum.PaymentModel = "RECURRENT"
+
+// PaymentModelValidator is a validator for the "payment_model" field enum values. It is called by the builders before save.
+func PaymentModelValidator(pm enum.PaymentModel) error {
+	switch pm {
+	case "ONE_TIME", "RECURRENT":
+		return nil
+	default:
+		return fmt.Errorf("product: invalid enum value for payment_model field: %q", pm)
+	}
+}
+
+const DefaultProductPeriod enum.ProductPeriod = "month"
+
+// ProductPeriodValidator is a validator for the "product_period" field enum values. It is called by the builders before save.
+func ProductPeriodValidator(pp enum.ProductPeriod) error {
+	switch pp {
+	case "day", "week", "month", "year", "unlimited":
+		return nil
+	default:
+		return fmt.Errorf("product: invalid enum value for product_period field: %q", pp)
+	}
+}
 
 // OrderOption defines the ordering options for the Product queries.
 type OrderOption func(*sql.Selector)
@@ -231,6 +272,16 @@ func ByExpiringTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExpiringTime, opts...).ToFunc()
 }
 
+// ByPaymentModel orders the results by the payment_model field.
+func ByPaymentModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPaymentModel, opts...).ToFunc()
+}
+
+// ByProductPeriod orders the results by the product_period field.
+func ByProductPeriod(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProductPeriod, opts...).ToFunc()
+}
+
 // ByInvoicesCount orders the results by invoices count.
 func ByInvoicesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -272,6 +323,20 @@ func ByBundles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newBundlesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByReservationsCount orders the results by reservations count.
+func ByReservationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReservationsStep(), opts...)
+	}
+}
+
+// ByReservations orders the results by reservations terms.
+func ByReservations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReservationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newInvoicesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -291,5 +356,12 @@ func newBundlesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(BundlesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, BundlesTable, BundlesColumn),
+	)
+}
+func newReservationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReservationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReservationsTable, ReservationsColumn),
 	)
 }

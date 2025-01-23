@@ -11,8 +11,10 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
 	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/item"
+	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
@@ -153,6 +155,33 @@ func (f TraverseItem) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.ItemQuery", q)
 }
 
+// The PaymentProfileFunc type is an adapter to allow the use of ordinary function as a Querier.
+type PaymentProfileFunc func(context.Context, *ent.PaymentProfileQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f PaymentProfileFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.PaymentProfileQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.PaymentProfileQuery", q)
+}
+
+// The TraversePaymentProfile type is an adapter to allow the use of ordinary function as Traverser.
+type TraversePaymentProfile func(context.Context, *ent.PaymentProfileQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraversePaymentProfile) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraversePaymentProfile) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.PaymentProfileQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.PaymentProfileQuery", q)
+}
+
 // The ProductFunc type is an adapter to allow the use of ordinary function as a Querier.
 type ProductFunc func(context.Context, *ent.ProductQuery) (ent.Value, error)
 
@@ -178,6 +207,33 @@ func (f TraverseProduct) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.ProductQuery", q)
+}
+
+// The ProductReservationFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ProductReservationFunc func(context.Context, *ent.ProductReservationQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ProductReservationFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ProductReservationQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ProductReservationQuery", q)
+}
+
+// The TraverseProductReservation type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseProductReservation func(context.Context, *ent.ProductReservationQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseProductReservation) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseProductReservation) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ProductReservationQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ProductReservationQuery", q)
 }
 
 // The SubscriptionsFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -216,8 +272,12 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.InvoiceQuery, predicate.Invoice, invoice.OrderOption]{typ: ent.TypeInvoice, tq: q}, nil
 	case *ent.ItemQuery:
 		return &query[*ent.ItemQuery, predicate.Item, item.OrderOption]{typ: ent.TypeItem, tq: q}, nil
+	case *ent.PaymentProfileQuery:
+		return &query[*ent.PaymentProfileQuery, predicate.PaymentProfile, paymentprofile.OrderOption]{typ: ent.TypePaymentProfile, tq: q}, nil
 	case *ent.ProductQuery:
 		return &query[*ent.ProductQuery, predicate.Product, product.OrderOption]{typ: ent.TypeProduct, tq: q}, nil
+	case *ent.ProductReservationQuery:
+		return &query[*ent.ProductReservationQuery, predicate.ProductReservation, productreservation.OrderOption]{typ: ent.TypeProductReservation, tq: q}, nil
 	case *ent.SubscriptionsQuery:
 		return &query[*ent.SubscriptionsQuery, predicate.Subscriptions, subscriptions.OrderOption]{typ: ent.TypeSubscriptions, tq: q}, nil
 	default:
