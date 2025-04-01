@@ -640,7 +640,9 @@ func (pq *ProductQuery) loadReservations(ctx context.Context, query *ProductRese
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(productreservation.FieldProductID)
+	}
 	query.Where(predicate.ProductReservation(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(product.ReservationsColumn), fks...))
 	}))
@@ -649,13 +651,10 @@ func (pq *ProductQuery) loadReservations(ctx context.Context, query *ProductRese
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.product_reservations
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "product_reservations" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.ProductID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "product_reservations" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "product_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

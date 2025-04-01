@@ -38,10 +38,8 @@ type ProductReservation struct {
 	ExpirationTime time.Time `json:"expiration_time,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProductReservationQuery when eager-loading is set.
-	Edges                ProductReservationEdges `json:"edges"`
-	invoice_reservations *int64
-	product_reservations *int64
-	selectValues         sql.SelectValues
+	Edges        ProductReservationEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // ProductReservationEdges holds the relations/edges for other nodes in the graph.
@@ -88,10 +86,6 @@ func (*ProductReservation) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case productreservation.FieldCreatedAt, productreservation.FieldUpdatedAt, productreservation.FieldExpirationTime:
 			values[i] = new(sql.NullTime)
-		case productreservation.ForeignKeys[0]: // invoice_reservations
-			values[i] = new(sql.NullInt64)
-		case productreservation.ForeignKeys[1]: // product_reservations
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -160,20 +154,6 @@ func (pr *ProductReservation) assignValues(columns []string, values []any) error
 				return fmt.Errorf("unexpected type %T for field expiration_time", values[i])
 			} else if value.Valid {
 				pr.ExpirationTime = value.Time
-			}
-		case productreservation.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field invoice_reservations", value)
-			} else if value.Valid {
-				pr.invoice_reservations = new(int64)
-				*pr.invoice_reservations = int64(value.Int64)
-			}
-		case productreservation.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field product_reservations", value)
-			} else if value.Valid {
-				pr.product_reservations = new(int64)
-				*pr.product_reservations = int64(value.Int64)
 			}
 		default:
 			pr.selectValues.Set(columns[i], values[i])

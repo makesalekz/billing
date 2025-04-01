@@ -26,7 +26,6 @@ type ProductReservationQuery struct {
 	predicates  []predicate.ProductReservation
 	withProduct *ProductQuery
 	withInvoice *InvoiceQuery
-	withFKs     bool
 	modifiers   []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -408,19 +407,12 @@ func (prq *ProductReservationQuery) prepareQuery(ctx context.Context) error {
 func (prq *ProductReservationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProductReservation, error) {
 	var (
 		nodes       = []*ProductReservation{}
-		withFKs     = prq.withFKs
 		_spec       = prq.querySpec()
 		loadedTypes = [2]bool{
 			prq.withProduct != nil,
 			prq.withInvoice != nil,
 		}
 	)
-	if prq.withProduct != nil || prq.withInvoice != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, productreservation.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProductReservation).scanValues(nil, columns)
 	}
@@ -461,10 +453,7 @@ func (prq *ProductReservationQuery) loadProduct(ctx context.Context, query *Prod
 	ids := make([]int64, 0, len(nodes))
 	nodeids := make(map[int64][]*ProductReservation)
 	for i := range nodes {
-		if nodes[i].product_reservations == nil {
-			continue
-		}
-		fk := *nodes[i].product_reservations
+		fk := nodes[i].ProductID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -481,7 +470,7 @@ func (prq *ProductReservationQuery) loadProduct(ctx context.Context, query *Prod
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "product_reservations" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "product_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -493,10 +482,7 @@ func (prq *ProductReservationQuery) loadInvoice(ctx context.Context, query *Invo
 	ids := make([]int64, 0, len(nodes))
 	nodeids := make(map[int64][]*ProductReservation)
 	for i := range nodes {
-		if nodes[i].invoice_reservations == nil {
-			continue
-		}
-		fk := *nodes[i].invoice_reservations
+		fk := nodes[i].InvoiceID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -513,7 +499,7 @@ func (prq *ProductReservationQuery) loadInvoice(ctx context.Context, query *Invo
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "invoice_reservations" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "invoice_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -549,6 +535,12 @@ func (prq *ProductReservationQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != productreservation.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if prq.withProduct != nil {
+			_spec.Node.AddColumnOnce(productreservation.FieldProductID)
+		}
+		if prq.withInvoice != nil {
+			_spec.Node.AddColumnOnce(productreservation.FieldInvoiceID)
 		}
 	}
 	if ps := prq.predicates; len(ps) > 0 {

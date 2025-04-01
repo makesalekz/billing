@@ -48,11 +48,15 @@ func (ProductReservation) Edges() []ent.Edge {
 		edge.From("product", Product.Type).
 			Ref("reservations").
 			Unique().
-			Required(),
+			Required().
+			Immutable().
+			Field("product_id"),
 		edge.From("invoice", Invoice.Type).
 			Ref("reservations").
 			Unique().
-			Required(),
+			Required().
+			Immutable().
+			Field("invoice_id"),
 	}
 }
 

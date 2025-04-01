@@ -44,14 +44,14 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "product" package.
 	ProductInverseTable = "products"
 	// ProductColumn is the table column denoting the product relation/edge.
-	ProductColumn = "product_reservations"
+	ProductColumn = "product_id"
 	// InvoiceTable is the table that holds the invoice relation/edge.
 	InvoiceTable = "product_reservations"
 	// InvoiceInverseTable is the table name for the Invoice entity.
 	// It exists in this package in order to avoid circular dependency with the "invoice" package.
 	InvoiceInverseTable = "invoices"
 	// InvoiceColumn is the table column denoting the invoice relation/edge.
-	InvoiceColumn = "invoice_reservations"
+	InvoiceColumn = "invoice_id"
 )
 
 // Columns holds all SQL columns for productreservation fields.
@@ -67,22 +67,10 @@ var Columns = []string{
 	FieldExpirationTime,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "product_reservations"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"invoice_reservations",
-	"product_reservations",
-}
-
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}

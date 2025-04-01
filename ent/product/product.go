@@ -90,7 +90,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "productreservation" package.
 	ReservationsInverseTable = "product_reservations"
 	// ReservationsColumn is the table column denoting the reservations relation/edge.
-	ReservationsColumn = "product_reservations"
+	ReservationsColumn = "product_id"
 )
 
 // Columns holds all SQL columns for product fields.
