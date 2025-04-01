@@ -6375,6 +6375,21 @@ func (m *ProductReservationMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetProductID sets the "product_id" field.
+func (m *ProductReservationMutation) SetProductID(i int64) {
+	m.product_id = &i
+	m.addproduct_id = nil
+}
+
+// ProductID returns the value of the "product_id" field in the mutation.
+func (m *ProductReservationMutation) ProductID() (r int64, exists bool) {
+	v := m.product_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
 // OldProductID returns the old "product_id" field's value of the ProductReservation entity.
 // If the ProductReservation object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
@@ -6414,6 +6429,21 @@ func (m *ProductReservationMutation) AddedProductID() (r int64, exists bool) {
 func (m *ProductReservationMutation) ResetProductID() {
 	m.product_id = nil
 	m.addproduct_id = nil
+}
+
+// SetInvoiceID sets the "invoice_id" field.
+func (m *ProductReservationMutation) SetInvoiceID(i int64) {
+	m.invoice_id = &i
+	m.addinvoice_id = nil
+}
+
+// InvoiceID returns the value of the "invoice_id" field in the mutation.
+func (m *ProductReservationMutation) InvoiceID() (r int64, exists bool) {
+	v := m.invoice_id
+	if v == nil {
+		return
+	}
+	return *v, true
 }
 
 // OldInvoiceID returns the old "invoice_id" field's value of the ProductReservation entity.

@@ -53,6 +53,18 @@ func (prc *ProductReservationCreate) SetNillableUpdatedAt(t *time.Time) *Product
 	return prc
 }
 
+// SetProductID sets the "product_id" field.
+func (prc *ProductReservationCreate) SetProductID(i int64) *ProductReservationCreate {
+	prc.mutation.SetProductID(i)
+	return prc
+}
+
+// SetInvoiceID sets the "invoice_id" field.
+func (prc *ProductReservationCreate) SetInvoiceID(i int64) *ProductReservationCreate {
+	prc.mutation.SetInvoiceID(i)
+	return prc
+}
+
 // SetUserID sets the "user_id" field.
 func (prc *ProductReservationCreate) SetUserID(i int64) *ProductReservationCreate {
 	prc.mutation.SetUserID(i)
