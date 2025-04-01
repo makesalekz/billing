@@ -119,21 +119,9 @@ func (prc *ProductReservationCreate) SetID(i int64) *ProductReservationCreate {
 	return prc
 }
 
-// SetProductID sets the "product" edge to the Product entity by ID.
-func (prc *ProductReservationCreate) SetProductID(id int64) *ProductReservationCreate {
-	prc.mutation.SetProductID(id)
-	return prc
-}
-
 // SetProduct sets the "product" edge to the Product entity.
 func (prc *ProductReservationCreate) SetProduct(p *Product) *ProductReservationCreate {
 	return prc.SetProductID(p.ID)
-}
-
-// SetInvoiceID sets the "invoice" edge to the Invoice entity by ID.
-func (prc *ProductReservationCreate) SetInvoiceID(id int64) *ProductReservationCreate {
-	prc.mutation.SetInvoiceID(id)
-	return prc
 }
 
 // SetInvoice sets the "invoice" edge to the Invoice entity.
@@ -281,14 +269,6 @@ func (prc *ProductReservationCreate) createSpec() (*ProductReservation, *sqlgrap
 		_spec.SetField(productreservation.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := prc.mutation.ProductID(); ok {
-		_spec.SetField(productreservation.FieldProductID, field.TypeInt64, value)
-		_node.ProductID = value
-	}
-	if value, ok := prc.mutation.InvoiceID(); ok {
-		_spec.SetField(productreservation.FieldInvoiceID, field.TypeInt64, value)
-		_node.InvoiceID = value
-	}
 	if value, ok := prc.mutation.UserID(); ok {
 		_spec.SetField(productreservation.FieldUserID, field.TypeInt64, value)
 		_node.UserID = value
@@ -319,7 +299,7 @@ func (prc *ProductReservationCreate) createSpec() (*ProductReservation, *sqlgrap
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.product_reservations = &nodes[0]
+		_node.ProductID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := prc.mutation.InvoiceIDs(); len(nodes) > 0 {
@@ -336,7 +316,7 @@ func (prc *ProductReservationCreate) createSpec() (*ProductReservation, *sqlgrap
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.invoice_reservations = &nodes[0]
+		_node.InvoiceID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

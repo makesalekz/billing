@@ -6179,10 +6179,6 @@ type ProductReservationMutation struct {
 	id                   *int64
 	created_at           *time.Time
 	updated_at           *time.Time
-	product_id           *int64
-	addproduct_id        *int64
-	invoice_id           *int64
-	addinvoice_id        *int64
 	user_id              *int64
 	adduser_id           *int64
 	reserved_quantity    *int64
@@ -6377,13 +6373,12 @@ func (m *ProductReservationMutation) ResetUpdatedAt() {
 
 // SetProductID sets the "product_id" field.
 func (m *ProductReservationMutation) SetProductID(i int64) {
-	m.product_id = &i
-	m.addproduct_id = nil
+	m.product = &i
 }
 
 // ProductID returns the value of the "product_id" field in the mutation.
 func (m *ProductReservationMutation) ProductID() (r int64, exists bool) {
-	v := m.product_id
+	v := m.product
 	if v == nil {
 		return
 	}
@@ -6407,39 +6402,19 @@ func (m *ProductReservationMutation) OldProductID(ctx context.Context) (v int64,
 	return oldValue.ProductID, nil
 }
 
-// AddProductID adds i to the "product_id" field.
-func (m *ProductReservationMutation) AddProductID(i int64) {
-	if m.addproduct_id != nil {
-		*m.addproduct_id += i
-	} else {
-		m.addproduct_id = &i
-	}
-}
-
-// AddedProductID returns the value that was added to the "product_id" field in this mutation.
-func (m *ProductReservationMutation) AddedProductID() (r int64, exists bool) {
-	v := m.addproduct_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetProductID resets all changes to the "product_id" field.
 func (m *ProductReservationMutation) ResetProductID() {
-	m.product_id = nil
-	m.addproduct_id = nil
+	m.product = nil
 }
 
 // SetInvoiceID sets the "invoice_id" field.
 func (m *ProductReservationMutation) SetInvoiceID(i int64) {
-	m.invoice_id = &i
-	m.addinvoice_id = nil
+	m.invoice = &i
 }
 
 // InvoiceID returns the value of the "invoice_id" field in the mutation.
 func (m *ProductReservationMutation) InvoiceID() (r int64, exists bool) {
-	v := m.invoice_id
+	v := m.invoice
 	if v == nil {
 		return
 	}
@@ -6463,28 +6438,9 @@ func (m *ProductReservationMutation) OldInvoiceID(ctx context.Context) (v int64,
 	return oldValue.InvoiceID, nil
 }
 
-// AddInvoiceID adds i to the "invoice_id" field.
-func (m *ProductReservationMutation) AddInvoiceID(i int64) {
-	if m.addinvoice_id != nil {
-		*m.addinvoice_id += i
-	} else {
-		m.addinvoice_id = &i
-	}
-}
-
-// AddedInvoiceID returns the value that was added to the "invoice_id" field in this mutation.
-func (m *ProductReservationMutation) AddedInvoiceID() (r int64, exists bool) {
-	v := m.addinvoice_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetInvoiceID resets all changes to the "invoice_id" field.
 func (m *ProductReservationMutation) ResetInvoiceID() {
-	m.invoice_id = nil
-	m.addinvoice_id = nil
+	m.invoice = nil
 }
 
 // SetUserID sets the "user_id" field.
@@ -6671,27 +6627,15 @@ func (m *ProductReservationMutation) ResetExpirationTime() {
 	m.expiration_time = nil
 }
 
-// SetProductID sets the "product" edge to the Product entity by id.
-func (m *ProductReservationMutation) SetProductID(id int64) {
-	m.product = &id
-}
-
 // ClearProduct clears the "product" edge to the Product entity.
 func (m *ProductReservationMutation) ClearProduct() {
 	m.clearedproduct = true
+	m.clearedFields[productreservation.FieldProductID] = struct{}{}
 }
 
 // ProductCleared reports if the "product" edge to the Product entity was cleared.
 func (m *ProductReservationMutation) ProductCleared() bool {
 	return m.clearedproduct
-}
-
-// ProductID returns the "product" edge ID in the mutation.
-func (m *ProductReservationMutation) ProductID() (id int64, exists bool) {
-	if m.product != nil {
-		return *m.product, true
-	}
-	return
 }
 
 // ProductIDs returns the "product" edge IDs in the mutation.
@@ -6710,27 +6654,15 @@ func (m *ProductReservationMutation) ResetProduct() {
 	m.clearedproduct = false
 }
 
-// SetInvoiceID sets the "invoice" edge to the Invoice entity by id.
-func (m *ProductReservationMutation) SetInvoiceID(id int64) {
-	m.invoice = &id
-}
-
 // ClearInvoice clears the "invoice" edge to the Invoice entity.
 func (m *ProductReservationMutation) ClearInvoice() {
 	m.clearedinvoice = true
+	m.clearedFields[productreservation.FieldInvoiceID] = struct{}{}
 }
 
 // InvoiceCleared reports if the "invoice" edge to the Invoice entity was cleared.
 func (m *ProductReservationMutation) InvoiceCleared() bool {
 	return m.clearedinvoice
-}
-
-// InvoiceID returns the "invoice" edge ID in the mutation.
-func (m *ProductReservationMutation) InvoiceID() (id int64, exists bool) {
-	if m.invoice != nil {
-		return *m.invoice, true
-	}
-	return
 }
 
 // InvoiceIDs returns the "invoice" edge IDs in the mutation.
@@ -6790,10 +6722,10 @@ func (m *ProductReservationMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, productreservation.FieldUpdatedAt)
 	}
-	if m.product_id != nil {
+	if m.product != nil {
 		fields = append(fields, productreservation.FieldProductID)
 	}
-	if m.invoice_id != nil {
+	if m.invoice != nil {
 		fields = append(fields, productreservation.FieldInvoiceID)
 	}
 	if m.user_id != nil {
@@ -6930,12 +6862,6 @@ func (m *ProductReservationMutation) SetField(name string, value ent.Value) erro
 // this mutation.
 func (m *ProductReservationMutation) AddedFields() []string {
 	var fields []string
-	if m.addproduct_id != nil {
-		fields = append(fields, productreservation.FieldProductID)
-	}
-	if m.addinvoice_id != nil {
-		fields = append(fields, productreservation.FieldInvoiceID)
-	}
 	if m.adduser_id != nil {
 		fields = append(fields, productreservation.FieldUserID)
 	}
@@ -6950,10 +6876,6 @@ func (m *ProductReservationMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ProductReservationMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case productreservation.FieldProductID:
-		return m.AddedProductID()
-	case productreservation.FieldInvoiceID:
-		return m.AddedInvoiceID()
 	case productreservation.FieldUserID:
 		return m.AddedUserID()
 	case productreservation.FieldReservedQuantity:
@@ -6967,20 +6889,6 @@ func (m *ProductReservationMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ProductReservationMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case productreservation.FieldProductID:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddProductID(v)
-		return nil
-	case productreservation.FieldInvoiceID:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddInvoiceID(v)
-		return nil
 	case productreservation.FieldUserID:
 		v, ok := value.(int64)
 		if !ok {

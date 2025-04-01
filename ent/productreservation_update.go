@@ -12,9 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
-	"gitlab.calendaria.team/services/finance/billing/ent/product"
 	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
 )
 
@@ -87,43 +85,9 @@ func (pru *ProductReservationUpdate) SetNillableExpirationTime(t *time.Time) *Pr
 	return pru
 }
 
-// SetProductID sets the "product" edge to the Product entity by ID.
-func (pru *ProductReservationUpdate) SetProductID(id int64) *ProductReservationUpdate {
-	pru.mutation.SetProductID(id)
-	return pru
-}
-
-// SetProduct sets the "product" edge to the Product entity.
-func (pru *ProductReservationUpdate) SetProduct(p *Product) *ProductReservationUpdate {
-	return pru.SetProductID(p.ID)
-}
-
-// SetInvoiceID sets the "invoice" edge to the Invoice entity by ID.
-func (pru *ProductReservationUpdate) SetInvoiceID(id int64) *ProductReservationUpdate {
-	pru.mutation.SetInvoiceID(id)
-	return pru
-}
-
-// SetInvoice sets the "invoice" edge to the Invoice entity.
-func (pru *ProductReservationUpdate) SetInvoice(i *Invoice) *ProductReservationUpdate {
-	return pru.SetInvoiceID(i.ID)
-}
-
 // Mutation returns the ProductReservationMutation object of the builder.
 func (pru *ProductReservationUpdate) Mutation() *ProductReservationMutation {
 	return pru.mutation
-}
-
-// ClearProduct clears the "product" edge to the Product entity.
-func (pru *ProductReservationUpdate) ClearProduct() *ProductReservationUpdate {
-	pru.mutation.ClearProduct()
-	return pru
-}
-
-// ClearInvoice clears the "invoice" edge to the Invoice entity.
-func (pru *ProductReservationUpdate) ClearInvoice() *ProductReservationUpdate {
-	pru.mutation.ClearInvoice()
-	return pru
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -216,64 +180,6 @@ func (pru *ProductReservationUpdate) sqlSave(ctx context.Context) (n int, err er
 	if value, ok := pru.mutation.ExpirationTime(); ok {
 		_spec.SetField(productreservation.FieldExpirationTime, field.TypeTime, value)
 	}
-	if pru.mutation.ProductCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   productreservation.ProductTable,
-			Columns: []string{productreservation.ProductColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(product.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pru.mutation.ProductIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   productreservation.ProductTable,
-			Columns: []string{productreservation.ProductColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(product.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if pru.mutation.InvoiceCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   productreservation.InvoiceTable,
-			Columns: []string{productreservation.InvoiceColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(invoice.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pru.mutation.InvoiceIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   productreservation.InvoiceTable,
-			Columns: []string{productreservation.InvoiceColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(invoice.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	_spec.AddModifiers(pru.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, pru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -351,43 +257,9 @@ func (pruo *ProductReservationUpdateOne) SetNillableExpirationTime(t *time.Time)
 	return pruo
 }
 
-// SetProductID sets the "product" edge to the Product entity by ID.
-func (pruo *ProductReservationUpdateOne) SetProductID(id int64) *ProductReservationUpdateOne {
-	pruo.mutation.SetProductID(id)
-	return pruo
-}
-
-// SetProduct sets the "product" edge to the Product entity.
-func (pruo *ProductReservationUpdateOne) SetProduct(p *Product) *ProductReservationUpdateOne {
-	return pruo.SetProductID(p.ID)
-}
-
-// SetInvoiceID sets the "invoice" edge to the Invoice entity by ID.
-func (pruo *ProductReservationUpdateOne) SetInvoiceID(id int64) *ProductReservationUpdateOne {
-	pruo.mutation.SetInvoiceID(id)
-	return pruo
-}
-
-// SetInvoice sets the "invoice" edge to the Invoice entity.
-func (pruo *ProductReservationUpdateOne) SetInvoice(i *Invoice) *ProductReservationUpdateOne {
-	return pruo.SetInvoiceID(i.ID)
-}
-
 // Mutation returns the ProductReservationMutation object of the builder.
 func (pruo *ProductReservationUpdateOne) Mutation() *ProductReservationMutation {
 	return pruo.mutation
-}
-
-// ClearProduct clears the "product" edge to the Product entity.
-func (pruo *ProductReservationUpdateOne) ClearProduct() *ProductReservationUpdateOne {
-	pruo.mutation.ClearProduct()
-	return pruo
-}
-
-// ClearInvoice clears the "invoice" edge to the Invoice entity.
-func (pruo *ProductReservationUpdateOne) ClearInvoice() *ProductReservationUpdateOne {
-	pruo.mutation.ClearInvoice()
-	return pruo
 }
 
 // Where appends a list predicates to the ProductReservationUpdate builder.
@@ -509,64 +381,6 @@ func (pruo *ProductReservationUpdateOne) sqlSave(ctx context.Context) (_node *Pr
 	}
 	if value, ok := pruo.mutation.ExpirationTime(); ok {
 		_spec.SetField(productreservation.FieldExpirationTime, field.TypeTime, value)
-	}
-	if pruo.mutation.ProductCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   productreservation.ProductTable,
-			Columns: []string{productreservation.ProductColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(product.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pruo.mutation.ProductIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   productreservation.ProductTable,
-			Columns: []string{productreservation.ProductColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(product.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if pruo.mutation.InvoiceCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   productreservation.InvoiceTable,
-			Columns: []string{productreservation.InvoiceColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(invoice.FieldID, field.TypeInt64),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pruo.mutation.InvoiceIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   productreservation.InvoiceTable,
-			Columns: []string{productreservation.InvoiceColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(invoice.FieldID, field.TypeInt64),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(pruo.modifiers...)
 	_node = &ProductReservation{config: pruo.config}

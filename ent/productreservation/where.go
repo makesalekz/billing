@@ -191,26 +191,6 @@ func ProductIDNotIn(vs ...int64) predicate.ProductReservation {
 	return predicate.ProductReservation(sql.FieldNotIn(FieldProductID, vs...))
 }
 
-// ProductIDGT applies the GT predicate on the "product_id" field.
-func ProductIDGT(v int64) predicate.ProductReservation {
-	return predicate.ProductReservation(sql.FieldGT(FieldProductID, v))
-}
-
-// ProductIDGTE applies the GTE predicate on the "product_id" field.
-func ProductIDGTE(v int64) predicate.ProductReservation {
-	return predicate.ProductReservation(sql.FieldGTE(FieldProductID, v))
-}
-
-// ProductIDLT applies the LT predicate on the "product_id" field.
-func ProductIDLT(v int64) predicate.ProductReservation {
-	return predicate.ProductReservation(sql.FieldLT(FieldProductID, v))
-}
-
-// ProductIDLTE applies the LTE predicate on the "product_id" field.
-func ProductIDLTE(v int64) predicate.ProductReservation {
-	return predicate.ProductReservation(sql.FieldLTE(FieldProductID, v))
-}
-
 // InvoiceIDEQ applies the EQ predicate on the "invoice_id" field.
 func InvoiceIDEQ(v int64) predicate.ProductReservation {
 	return predicate.ProductReservation(sql.FieldEQ(FieldInvoiceID, v))
@@ -229,26 +209,6 @@ func InvoiceIDIn(vs ...int64) predicate.ProductReservation {
 // InvoiceIDNotIn applies the NotIn predicate on the "invoice_id" field.
 func InvoiceIDNotIn(vs ...int64) predicate.ProductReservation {
 	return predicate.ProductReservation(sql.FieldNotIn(FieldInvoiceID, vs...))
-}
-
-// InvoiceIDGT applies the GT predicate on the "invoice_id" field.
-func InvoiceIDGT(v int64) predicate.ProductReservation {
-	return predicate.ProductReservation(sql.FieldGT(FieldInvoiceID, v))
-}
-
-// InvoiceIDGTE applies the GTE predicate on the "invoice_id" field.
-func InvoiceIDGTE(v int64) predicate.ProductReservation {
-	return predicate.ProductReservation(sql.FieldGTE(FieldInvoiceID, v))
-}
-
-// InvoiceIDLT applies the LT predicate on the "invoice_id" field.
-func InvoiceIDLT(v int64) predicate.ProductReservation {
-	return predicate.ProductReservation(sql.FieldLT(FieldInvoiceID, v))
-}
-
-// InvoiceIDLTE applies the LTE predicate on the "invoice_id" field.
-func InvoiceIDLTE(v int64) predicate.ProductReservation {
-	return predicate.ProductReservation(sql.FieldLTE(FieldInvoiceID, v))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.

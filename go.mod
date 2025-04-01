@@ -1,11 +1,9 @@
 module gitlab.calendaria.team/services/finance/billing
 
-go 1.23.2
-
-toolchain go1.24.0
+go 1.23.1
 
 require (
-	entgo.io/ent v0.14.2
+	entgo.io/ent v0.14.4
 	github.com/go-kratos/kratos/contrib/metrics/prometheus/v2 v2.0.0-20240322155018-41971ffa647a
 	github.com/go-kratos/kratos/v2 v2.7.3
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -17,7 +15,7 @@ require (
 	github.com/prometheus/client_golang v1.18.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shopspring/decimal v1.4.0
-	gitlab.calendaria.team/services/finance/onevisionpay v0.0.1-alfa18
+	gitlab.calendaria.team/services/finance/onevisionpay v0.0.1-alfa22
 	gitlab.calendaria.team/services/utils v0.3.15
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/exp v0.0.0-20240110193028-0dcbfd608b1e

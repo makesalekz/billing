@@ -168,14 +168,12 @@ var (
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "product_id", Type: field.TypeInt64},
-		{Name: "invoice_id", Type: field.TypeInt64},
 		{Name: "user_id", Type: field.TypeInt64},
 		{Name: "reserved_quantity", Type: field.TypeInt64, Default: 1},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"PENDING", "COMPLETED", "EXPIRED", "CANCELLED"}, Default: "PENDING"},
 		{Name: "expiration_time", Type: field.TypeTime},
-		{Name: "invoice_reservations", Type: field.TypeInt64},
-		{Name: "product_reservations", Type: field.TypeInt64},
+		{Name: "invoice_id", Type: field.TypeInt64},
+		{Name: "product_id", Type: field.TypeInt64},
 	}
 	// ProductReservationsTable holds the schema information for the "product_reservations" table.
 	ProductReservationsTable = &schema.Table{
@@ -185,13 +183,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "product_reservations_invoices_reservations",
-				Columns:    []*schema.Column{ProductReservationsColumns[9]},
+				Columns:    []*schema.Column{ProductReservationsColumns[7]},
 				RefColumns: []*schema.Column{InvoicesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "product_reservations_products_reservations",
-				Columns:    []*schema.Column{ProductReservationsColumns[10]},
+				Columns:    []*schema.Column{ProductReservationsColumns[8]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
