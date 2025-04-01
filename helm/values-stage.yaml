@@ -1,5 +1,5 @@
+useRollout: true
 image:
-  # image config
   repository:
   tag:
   pullPolicy: IfNotPresent
