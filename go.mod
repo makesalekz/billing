@@ -2,6 +2,8 @@ module gitlab.calendaria.team/services/finance/billing
 
 go 1.23.2
 
+toolchain go1.24.0
+
 require (
 	entgo.io/ent v0.14.1
 	github.com/go-kratos/kratos/contrib/metrics/prometheus/v2 v2.0.0-20240322155018-41971ffa647a
