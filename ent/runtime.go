@@ -2,4 +2,4 @@
 
 package ent
 
-// The schema-stitching logic is generated in gitlab.calendaria.team/services/tenants/ent/runtime/runtime.go
+// The schema-stitching logic is generated in gitlab.calendaria.team/services/finance/billing/ent/runtime/runtime.go

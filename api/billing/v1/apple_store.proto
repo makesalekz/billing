@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package billing.v1;
+
+import "api/utils/v1/models.proto";
+
+option go_package = "gitlab.calendaria.team/services/finance/billing/api/billing/v1;billing_v1";
+option java_multiple_files = true;
+option java_package = "billing.v1";
+
+
+service AppleStore {
+  rpc ProcessServerNotification(ProcessServerNotificationRequest) returns (utils.v1.EmptyReply);
+}
+
+message ProcessServerNotificationRequest {
+  string signedPayload = 1;
+}

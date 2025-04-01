@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package billing.v1;
+
+import "api/utils/v1/models.proto";
+import "api/billing/v1/models.proto";
+
+option go_package = "gitlab.calendaria.team/services/finance/billing/api/billing/v1;billing_v1";
+option java_multiple_files = true;
+option java_package = "billing.v1";
+
+service Invoices {
+  rpc GetInvoice(GetInvoiceRequest) returns (InvoiceReply);
+  rpc ListInvoices(ListInvoicesRequest) returns (ListInvoicesReply);
+}
+
+
+message GetInvoiceRequest {
+  int64 id = 1;
+}
+
+message InvoiceReply {
+  Invoice invoice = 1;
+}
+
+message ListInvoicesRequest {
+  string status = 1;
+  int64 productId =2;
+  bool paid = 3;
+  int64 subscriptionId = 4;
+  utils.v1.PaginateRequest pagination = 5;
+}
+
+message ListInvoicesReply {
+  repeated Invoice invoices = 1;
+  utils.v1.PaginateReply pagination = 2;
+}

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "dummy/internal/conf;conf";
+option go_package = "gitlab.calendaria.team/services/finance/billing/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
@@ -30,4 +30,6 @@ message Server {
 message Discovery {
   string iam = 1;
   google.protobuf.Duration iam_timeout = 2;
+  string notifications = 3;
+  google.protobuf.Duration notifications_timeout = 4;
 }
