@@ -1,6 +1,6 @@
 include:
   - project: 'deploy/dev'
-    file: '/go-app-v2.yml'
+    file: '/go-app-v3.yml'
     ref: 'main'
 
 lint dev:
@@ -14,9 +14,6 @@ build dev:
 
 deploy dev:
   extends: .deploy-dev
-  variables:
-    SERVICE_NAME: finance-billing
-    DB_PORT: 54420
 
 cleanup:
   extends: .cleanup
