@@ -4,15 +4,11 @@ COPY . /src
 WORKDIR /src
 ARG TOKEN
 
-RUN mkdir -p -m 0700 ~/.ssh && \
-    ssh-keyscan gitlab.calendaria.team >> ~/.ssh/known_hosts && \
-    git config --global url.ssh://git@gitlab.calendaria.team.insteadOf https://gitlab.calendaria.team && \
-    touch .env && \
-    echo "machine gitlab.calendaria.team login gitlab-ci-token password ${TOKEN}" > ~/.netrc && \
-    chmod 600 ~/.netrc && \
-    go env -w GO111MODULE='on' GOPRIVATE='gitlab.calendaria.team'
+RUN git config --global url.https://gitlab-ci-token:${TOKEN}@gitlab.calendaria.team.insteadOf https://gitlab.calendaria.team && \
+    export GOPRIVATE=gitlab.calendaria.team && \
+    touch .env
 
-RUN --mount=type=ssh,id=rsa make build
+RUN make build
 
 FROM debian:stable-slim
 
