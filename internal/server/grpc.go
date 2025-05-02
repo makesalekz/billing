@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/internal/conf"
 	"gitlab.calendaria.team/services/finance/billing/internal/service"
@@ -12,6 +14,7 @@ import (
 	prom "github.com/go-kratos/kratos/contrib/metrics/prometheus/v2"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/middleware/selector"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 )
 
@@ -32,11 +35,15 @@ func NewGRPCServer(
 		panic(err)
 	}
 
+	skipAppleStoreWebhooks := func(ctx context.Context, operation string) bool {
+		return operation != "/billing.v1.AppleStore/ProcessServerNotification"
+	}
+
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
 			metadata.Server(),
-			auth.Server(jwtp),
+			selector.Server(auth.Server(jwtp)).Match(skipAppleStoreWebhooks).Build(),
 			metrics.Server(
 				metrics.WithSeconds(prom.NewHistogram(_metricSeconds)),
 				metrics.WithRequests(prom.NewCounter(_metricRequests)),

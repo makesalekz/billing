@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"log"
+	"math/rand"
+	"os"
 	"strconv"
 	"time"
 
@@ -27,16 +30,50 @@ type AppleStoreUsecase struct {
 	invoices      data.InvoicesRepo
 	subscriptions data.SubscriptionsRepo
 	product       data.ProductRepo
+	jwtParser     data.JWTParser
 }
 
-func NewAppleStoreUsecase(invoices data.InvoicesRepo) *AppleStoreUsecase {
+func NewAppleStoreUsecase(
+	invoices data.InvoicesRepo,
+	subscriptions data.SubscriptionsRepo,
+	product data.ProductRepo,
+	jwtParser data.JWTParser,
+) *AppleStoreUsecase {
 	return &AppleStoreUsecase{
-		invoices: invoices,
+		invoices:      invoices,
+		subscriptions: subscriptions,
+		product:       product,
+		jwtParser:     jwtParser,
 	}
 }
 
 func (uc *AppleStoreUsecase) ProcessPayload(ctx context.Context, payload data.Payload) error {
 	var err error
+
+	if payload.NotificationType == data.TypeTest {
+		if os.Getenv("DEBUG") == "true" {
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			notificationTypes := []data.NotificationType{
+				data.TypeSubscribed,
+				data.TypeDidRenew,
+				data.TypeOfferRedeemed,
+				data.TypeExpired,
+				data.TypeDidFailToRenew,
+				data.TypeRevoke,
+			}
+			randomType := notificationTypes[r.Intn(len(notificationTypes))]
+
+			log.Printf("DEBUG: Received TEST notification, simulating %s", randomType)
+
+			simulatedPayload := payload
+			simulatedPayload.NotificationType = randomType
+
+			return uc.ProcessPayload(ctx, simulatedPayload)
+		}
+
+		log.Printf("Received test notification")
+		return nil
+	}
 
 	if payload.NotificationType == data.TypeSubscribed ||
 		payload.NotificationType == data.TypeDidRenew ||
@@ -57,7 +94,7 @@ func (uc *AppleStoreUsecase) ProcessPayload(ctx context.Context, payload data.Pa
 func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload data.Payload) error {
 	var transaction data.JWSTransaction
 
-	decodedTransaction, err := data.ParseAppleSignedBody(payload.Data.SignedTransactionInfo)
+	decodedTransaction, err := uc.jwtParser.ParseAppleSignedBody(payload.Data.SignedTransactionInfo)
 	if err != nil {
 		return v1.ErrorInternal("failed to parse signed transaction info")
 	}
@@ -120,20 +157,22 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 
 	paidAt := time.Unix(transaction.PurchaseDate/milliUnits, 0)
 	paidTill := time.Unix(transaction.ExpiresDate/milliUnits, 0)
-	_, err = uc.invoices.CreateInvoice(ctx, data.InvoiceDto{
-		UserID:                  subscription.UserID,
-		TenantID:                subscription.TenantID,
-		AppID:                   subscription.AppID,
-		ProductID:               productEnt.ID,
-		Amount:                  transaction.Quantity,
-		Price:                   decimal.New(transaction.Price, -3),
-		Status:                  enum.Paid,
-		SubscriptionID:          subscription.ID,
-		PaidAt:                  &paidAt,
-		PaidTill:                &paidTill,
-		AppleStoreTransactionID: &transaction.OriginalTransactionID,
-		IsTrial:                 transaction.OfferDiscountType == "FREE_TRIAL",
-	})
+	_, err = uc.invoices.CreateInvoice(
+		ctx, data.InvoiceDto{
+			UserID:                  subscription.UserID,
+			TenantID:                subscription.TenantID,
+			AppID:                   subscription.AppID,
+			ProductID:               productEnt.ID,
+			Amount:                  transaction.Quantity,
+			Price:                   decimal.New(transaction.Price, -3),
+			Status:                  enum.Paid,
+			SubscriptionID:          subscription.ID,
+			PaidAt:                  &paidAt,
+			PaidTill:                &paidTill,
+			AppleStoreTransactionID: &transaction.OriginalTransactionID,
+			IsTrial:                 transaction.OfferDiscountType == "FREE_TRIAL",
+		},
+	)
 	if err != nil {
 		return err
 	}
@@ -144,7 +183,7 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 func (uc *AppleStoreUsecase) processExpired(ctx context.Context, payload data.Payload) error {
 	var transaction data.JWSTransaction
 
-	decodedTransaction, err := data.ParseAppleSignedBody(payload.Data.SignedTransactionInfo)
+	decodedTransaction, err := uc.jwtParser.ParseAppleSignedBody(payload.Data.SignedTransactionInfo)
 	if err != nil {
 		return v1.ErrorInternal("failed to parse signed transaction info")
 	}
@@ -185,7 +224,8 @@ func (uc *AppleStoreUsecase) processExpired(ctx context.Context, payload data.Pa
 }
 
 func extractUserIDFromUUID(uid uuid.UUID) int64 {
-	reconstructedActorID := int64( //nolint:gosec // reconstructed actor id cannot be negative
+	reconstructedActorID := int64(
+		//nolint:gosec // reconstructed actor id cannot be negative
 		binary.BigEndian.Uint64(
 			[]byte{
 				uid[8], uid[9], uid[10], uid[11], uid[12], uid[13], uid[14], uid[15],
@@ -197,7 +237,8 @@ func extractUserIDFromUUID(uid uuid.UUID) int64 {
 }
 
 func extractTenantIDFromUUID(uid uuid.UUID) int64 {
-	reconstructedTenantID := int64( //nolint:gosec // reconstructed tenant id cannot be negative
+	reconstructedTenantID := int64(
+		//nolint:gosec // reconstructed tenant id cannot be negative
 		binary.BigEndian.Uint64(
 			[]byte{
 				uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7],

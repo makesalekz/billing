@@ -162,7 +162,10 @@ cover:
 .PHONY: mock
 # generate mock - (example here)
 mock:
-	mockgen -source internal/data/teams.go -destination internal/data/mock/teams.go -package mock
+	mockgen -source internal/data/invoices.go -destination internal/data/mock/invoices.go -package mock
+	mockgen -source internal/data/subscription.go -destination internal/data/mock/subscription.go -package mock
+	mockgen -source internal/data/products.go -destination internal/data/mock/products.go -package mock
+	mockgen -source internal/data/models.go -destination internal/data/mock/jwt_parser.go -package mock
 
 # show help
 help:

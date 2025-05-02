@@ -61,7 +61,8 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)
 	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo)
 	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
-	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
+	jwtParser := data.NewDefaultJWTParser()
+	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo, subscriptionsRepo, productRepo, jwtParser)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
 	ovpClient, err := data.NewOvpClient(configConfig, logger)
 	if err != nil {
