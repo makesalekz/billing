@@ -14,6 +14,10 @@ build dev:
 
 deploy dev:
   extends: .deploy-dev
+  variables:
+    SERVICE_NAME: finance-billing
+    DB_NAME: finance_billing
+
 
 cleanup:
   extends: .cleanup
