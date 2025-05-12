@@ -17,18 +17,11 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/internal/data/mock"
 )
 
-// createTestUUID создает UUID с заданными tenantID и userID в соответствующих байтах
 func createTestUUID(tenantID, userID int64) string {
-	// Создаем пустой UUID
 	u := make([]byte, 16)
 
-	// Записываем tenantID в первые 8 байт
 	binary.BigEndian.PutUint64(u[:8], uint64(tenantID))
-
-	// Записываем userID в последние 8 байт
 	binary.BigEndian.PutUint64(u[8:], uint64(userID))
-
-	// Создаем UUID из байт
 	return uuid.UUID(u).String()
 }
 
@@ -50,13 +43,11 @@ func TestAppleStoreUsecase_ProcessPayload(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Создаем тестовые данные
 	testUserID := int64(1)
 	testTenantID := int64(2)
 	testTransactionID := "test_transaction_id"
 	testAppID := "test_app_id"
 
-	// Создаем тестовый JWT payload с правильным форматом UUID
 	testSignedTransactionInfo := "test_jwt_token"
 	testJWTClaims := jwt.MapClaims{
 		"appAccountToken":       createTestUUID(testTenantID, testUserID),
