@@ -15,19 +15,21 @@ import (
 type AppleStoreService struct {
 	v1.UnimplementedAppleStoreServer
 
-	uc *biz.AppleStoreUsecase
+	uc        *biz.AppleStoreUsecase
+	JWTParser data.JWTParser
 }
 
 func NewAppleStoreService(uc *biz.AppleStoreUsecase) *AppleStoreService {
 	return &AppleStoreService{
-		uc: uc,
+		uc:        uc,
+		JWTParser: data.NewDefaultJWTParser(),
 	}
 }
 
 func (s *AppleStoreService) ProcessServerNotification(
 	ctx context.Context, req *v1.ProcessServerNotificationRequest,
 ) (*utils_v1.EmptyReply, error) {
-	decodedPayload, err := data.ParseAppleSignedBody(req.GetSignedPayload())
+	decodedPayload, err := s.JWTParser.ParseAppleSignedBody(req.GetSignedPayload())
 	if err != nil {
 		return nil, v1.ErrorInvalidRequest("failed to parse signed payload: %s", err.Error())
 	}

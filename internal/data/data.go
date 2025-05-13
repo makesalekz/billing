@@ -34,6 +34,7 @@ var ProviderSet = wire.NewSet(
 	NewPaymentProfileRepo,
 	NewProductReservationRepo,
 	NewOvpClient,
+	NewDefaultJWTParser,
 )
 
 const (

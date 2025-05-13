@@ -242,7 +242,17 @@ type RenewalInfo struct {
 	SignedDate                  int64
 }
 
-func ParseAppleSignedBody(signedBody string) (*jwt.Token, error) {
+type JWTParser interface {
+	ParseAppleSignedBody(signedBody string) (*jwt.Token, error)
+}
+
+type DefaultJWTParser struct{}
+
+func NewDefaultJWTParser() JWTParser {
+	return &DefaultJWTParser{}
+}
+
+func (p *DefaultJWTParser) ParseAppleSignedBody(signedBody string) (*jwt.Token, error) {
 	parse, err := jwt.Parse(
 		signedBody, func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodECDSA); !ok {
