@@ -31,24 +31,24 @@ type OvpClient struct {
 	ServiceID          string
 }
 
-func NewOvpClient(config *config.Config, logger log.Logger) (*OvpClient, error) {
+func NewOvpClient(config *config.Config, logger log.Logger) *OvpClient {
 	uc := &OvpClient{
 		log: log.NewHelper(log.With(logger, "module", "data/ovp_client")),
 	}
 
 	if err := uc.loadConfig(config); err != nil {
 		uc.log.Fatalf("failed to load config: %v", err)
-		return nil, err
+		return uc
 	}
 
 	client, err := uc.initPaymentClient(config)
 	if err != nil {
 		uc.log.Fatalf("failed to init payment client: %v", err)
-		return nil, err
+		return uc
 	}
 	uc.paymentClient = client
 
-	return uc, nil
+	return uc
 }
 
 func (c *OvpClient) initPaymentClient(config *config.Config) (*onevisionpay.Client, error) {

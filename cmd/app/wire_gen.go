@@ -64,12 +64,7 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	jwtParser := data.NewDefaultJWTParser()
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo, subscriptionsRepo, productRepo, jwtParser)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
-	ovpClient, err := data.NewOvpClient(configConfig, logger)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
+	ovpClient := data.NewOvpClient(configConfig, logger)
 	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
 	paymentUseCase, err := biz.NewPaymentUsecase(logger, ovpClient, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo, invoicesManager)
 	if err != nil {
