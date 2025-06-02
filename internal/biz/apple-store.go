@@ -225,7 +225,7 @@ func (uc *AppleStoreUsecase) processExpired(ctx context.Context, payload data.Pa
 
 func extractUserIDFromUUID(uid uuid.UUID) int64 {
 	reconstructedActorID := int64(
-		//nolint:gosec // reconstructed actor id cannot be negative
+
 		binary.BigEndian.Uint64(
 			[]byte{
 				uid[8], uid[9], uid[10], uid[11], uid[12], uid[13], uid[14], uid[15],
@@ -238,7 +238,7 @@ func extractUserIDFromUUID(uid uuid.UUID) int64 {
 
 func extractTenantIDFromUUID(uid uuid.UUID) int64 {
 	reconstructedTenantID := int64(
-		//nolint:gosec // reconstructed tenant id cannot be negative
+
 		binary.BigEndian.Uint64(
 			[]byte{
 				uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7],
