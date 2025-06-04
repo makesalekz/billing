@@ -35,7 +35,7 @@ func NewAppleStoreReliabilityUseCase(
 	}
 }
 
-// CheckMissedS2SNotifications checks for missed S2S notifications from Apple
+// CheckMissedS2SNotifications checks for missed S2S notifications from Apple.
 func (uc *AppleStoreReliabilityUseCase) CheckMissedS2SNotifications(ctx context.Context) error {
 	uc.log.Info("Starting check for missed S2S notifications")
 
