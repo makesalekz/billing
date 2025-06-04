@@ -139,9 +139,6 @@ func (c *Client) Request(method, endpoint string, requestBody interface{}) ([]by
 func (c *Client) CreatePayment(req PaymentRequest) (*StatusResponse, error) {
 	endpoint := "/payment/create"
 
-	if c.Environment == Sandbox {
-		// req.
-	}
 	// Используем метод Request для выполнения запроса
 	responseBytes, err := c.Request("POST", endpoint, req)
 	if err != nil {

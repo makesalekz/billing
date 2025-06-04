@@ -129,12 +129,12 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 		return v1.ErrorDatabaseQuery("failed to get user and tenant ID: %s", err.Error())
 	}
 
-	productID, err := strconv.Atoi(transaction.ProductID)
+	_, err = strconv.Atoi(transaction.ProductID)
 	if err != nil {
 		return v1.ErrorInvalidRequest("product id is not valid: %s", err.Error())
 	}
 
-	productID = 11 // todo: Remove hardcoded product ID
+	productID := 11 // todo: Remove hardcoded product ID
 
 	productEnt, err := uc.product.GetProduct(ctx, int64(productID))
 	if err != nil {
@@ -244,12 +244,12 @@ func (uc *AppleStoreUsecase) ClientNotification(
 		return nil, nil, fmt.Errorf("failed to validate transaction with Apple: %w", err)
 	}
 
-	productID, err := strconv.Atoi(validatedTransaction.ProductID)
+	_, err = strconv.Atoi(validatedTransaction.ProductID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid product ID: %w", err)
 	}
 
-	productID = 11 // TODO: Remove hardcoded product ID
+	productID := 11 // TODO: Remove hardcoded product ID
 
 	productEnt, err := uc.product.GetProduct(ctx, int64(productID))
 	if err != nil {
