@@ -10,7 +10,7 @@ import (
 
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/internal/data/onvisionpay"
+	onevisionpay "gitlab.calendaria.team/services/finance/billing/internal/data/onvisionpay"
 	"gitlab.calendaria.team/services/utils/v4/config"
 )
 

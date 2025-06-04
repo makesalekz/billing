@@ -67,7 +67,6 @@ func (s *AppleStoreService) ProcessServerNotification(
 func (s *AppleStoreService) ClientNotification(
 	ctx context.Context, req *v1.ProcessServerNotificationRequest,
 ) (*v1.ClientNotificationReply, error) {
-
 	actorID := auth.GetActorIdFromContext(ctx)
 	if actorID == 0 {
 		return nil, v1.ErrorUnauthorized("actor ID is required")

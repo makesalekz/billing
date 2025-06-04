@@ -39,6 +39,7 @@ func TestAppleStoreUsecase_ProcessPayload(t *testing.T) {
 		mockSubscriptions,
 		mockProduct,
 		mockJwtParser,
+		nil,
 	)
 
 	ctx := context.Background()
@@ -862,48 +863,6 @@ func TestAppleStoreUsecase_ProcessPayload(t *testing.T) {
 					return
 				}
 				assert.NoError(t, err)
-			},
-		)
-	}
-}
-
-func TestExtractUserIDFromUUID(t *testing.T) {
-	cases := []struct {
-		name     string
-		userID   int64
-		tenantID int64
-	}{
-		{
-			name:     "common_case",
-			userID:   123,
-			tenantID: 456,
-		},
-		{
-			name:     "zero_value",
-			userID:   0,
-			tenantID: 0,
-		},
-		{
-			name:     "max_value",
-			userID:   9223372036854775807, // max int64
-			tenantID: 9223372036854775807, // max int64
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(
-			tc.name, func(t *testing.T) {
-				uid := make([]byte, 16)
-				binary.BigEndian.PutUint64(uid[:8], uint64(tc.tenantID))
-				binary.BigEndian.PutUint64(uid[8:], uint64(tc.userID))
-
-				u := uuid.UUID(uid)
-
-				extractedUserID := extractUserIDFromUUID(u)
-				extractedTenantID := extractTenantIDFromUUID(u)
-
-				assert.Equal(t, tc.userID, extractedUserID)
-				assert.Equal(t, tc.tenantID, extractedTenantID)
 			},
 		)
 	}

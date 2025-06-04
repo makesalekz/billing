@@ -14,7 +14,7 @@ type CronServer struct {
 	cron *cron.Cron
 }
 
-// NewCronServer
+// NewCronServer.
 func NewCronServer(
 	logger log.Logger,
 	invoice *biz.InvoicesUseCase,
