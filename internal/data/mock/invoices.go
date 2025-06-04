@@ -142,6 +142,22 @@ func (mr *MockInvoicesRepoMockRecorder) GetInvoicesToRevoke(ctx, paidTill interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInvoicesToRevoke", reflect.TypeOf((*MockInvoicesRepo)(nil).GetInvoicesToRevoke), ctx, paidTill)
 }
 
+// GetUserAndTenantIDByOriginalTransactionID mocks base method.
+func (m *MockInvoicesRepo) GetUserAndTenantIDByOriginalTransactionID(ctx context.Context, originalTransactionID string) (int64, int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserAndTenantIDByOriginalTransactionID", ctx, originalTransactionID)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetUserAndTenantIDByOriginalTransactionID indicates an expected call of GetUserAndTenantIDByOriginalTransactionID.
+func (mr *MockInvoicesRepoMockRecorder) GetUserAndTenantIDByOriginalTransactionID(ctx, originalTransactionID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAndTenantIDByOriginalTransactionID", reflect.TypeOf((*MockInvoicesRepo)(nil).GetUserAndTenantIDByOriginalTransactionID), ctx, originalTransactionID)
+}
+
 // ListInvoices mocks base method.
 func (m *MockInvoicesRepo) ListInvoices(ctx context.Context, filter data.InvoiceFilter, paginate *utils_v1.PaginateRequest) ([]*ent.Invoice, error) {
 	m.ctrl.T.Helper()

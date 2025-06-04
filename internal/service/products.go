@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/internal/biz"
 	"gitlab.calendaria.team/services/finance/billing/internal/data"
@@ -70,10 +71,12 @@ func (s *ProductService) CreateProduct(ctx context.Context, req *v1.CreateProduc
 
 	if len(req.GetProduct().GetBundles()) > 0 {
 		for _, bundle := range req.GetProduct().GetBundles() {
-			productDto.Bundles = append(productDto.Bundles, data.BundleDto{
-				ItemID: bundle.GetItemId(),
-				Amount: bundle.GetAmount(),
-			})
+			productDto.Bundles = append(
+				productDto.Bundles, data.BundleDto{
+					ItemID: bundle.GetItemId(),
+					Amount: bundle.GetAmount(),
+				},
+			)
 		}
 	}
 
@@ -135,10 +138,12 @@ func (s *ProductService) UpdateProduct(ctx context.Context, req *v1.UpdateProduc
 
 	if len(req.GetProduct().GetBundles()) > 0 {
 		for _, bundle := range req.GetProduct().GetBundles() {
-			productDto.Bundles = append(productDto.Bundles, data.BundleDto{
-				ItemID: bundle.GetItemId(),
-				Amount: bundle.GetAmount(),
-			})
+			productDto.Bundles = append(
+				productDto.Bundles, data.BundleDto{
+					ItemID: bundle.GetItemId(),
+					Amount: bundle.GetAmount(),
+				},
+			)
 		}
 	}
 

@@ -25,6 +25,7 @@ type InvoicesRepo interface {
 	GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoicesToRevoke(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoice, error)
+	GetUserAndTenantIDByOriginalTransactionID(ctx context.Context, originalTransactionID string) (int64, int64, error)
 }
 
 type invoicesRepo struct {
@@ -62,6 +63,10 @@ func (r *invoicesRepo) CreateInvoice(ctx context.Context, dto InvoiceDto) (*ent.
 	if dto.AppleStoreTransactionID != nil {
 		query.SetExternalTransactionID(*dto.AppleStoreTransactionID)
 		query.SetPaymentProvider(enum.AppStore)
+	}
+
+	if dto.OriginalAppleTransactionID != nil {
+		query.SetOriginalAppleTransactionID(*dto.OriginalAppleTransactionID)
 	}
 
 	if dto.OneVisionTransactionID != nil {
@@ -278,4 +283,17 @@ func (r *invoicesRepo) GetInvoicesToRevoke(ctx context.Context, paidTill *time.T
 		},
 	).Limit(int(BackgroundProcessPageSize)).
 		All(ctx)
+}
+
+func (r *invoicesRepo) GetUserAndTenantIDByOriginalTransactionID(
+	ctx context.Context, originalTransactionID string,
+) (int64, int64, error) {
+	invoiceData, err := r.db.Invoice.Query().
+		Where(invoice.OriginalAppleTransactionID(originalTransactionID)).
+		Only(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return invoiceData.UserID, invoiceData.TenantID, nil
 }

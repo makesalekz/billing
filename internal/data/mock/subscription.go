@@ -82,6 +82,21 @@ func (mr *MockSubscriptionsRepoMockRecorder) DeleteSubscription(ctx, actorID, su
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSubscription", reflect.TypeOf((*MockSubscriptionsRepo)(nil).DeleteSubscription), ctx, actorID, subscriptionID)
 }
 
+// GetActiveAppleSubscriptions mocks base method.
+func (m *MockSubscriptionsRepo) GetActiveAppleSubscriptions(ctx context.Context) ([]*ent.Subscriptions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetActiveAppleSubscriptions", ctx)
+	ret0, _ := ret[0].([]*ent.Subscriptions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetActiveAppleSubscriptions indicates an expected call of GetActiveAppleSubscriptions.
+func (mr *MockSubscriptionsRepoMockRecorder) GetActiveAppleSubscriptions(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveAppleSubscriptions", reflect.TypeOf((*MockSubscriptionsRepo)(nil).GetActiveAppleSubscriptions), ctx)
+}
+
 // GetSubscription mocks base method.
 func (m *MockSubscriptionsRepo) GetSubscription(ctx context.Context, actorID, tenantID int64, appID string, subscriptionID int64, withInvoices bool) (*ent.Subscriptions, error) {
 	m.ctrl.T.Helper()

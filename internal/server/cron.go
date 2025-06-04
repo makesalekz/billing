@@ -14,11 +14,12 @@ type CronServer struct {
 	cron *cron.Cron
 }
 
-// NewCronServer
+// NewCronServer.
 func NewCronServer(
 	logger log.Logger,
 	invoice *biz.InvoicesUseCase,
 	payments *biz.PaymentUseCase,
+	appleReliability *biz.AppleStoreReliabilityUseCase,
 ) *CronServer {
 	cs := &CronServer{
 		log:  log.NewHelper(log.With(logger, "module", "server/cron")),
@@ -26,6 +27,7 @@ func NewCronServer(
 	}
 
 	cs.processInvoices(invoice, payments)
+	cs.processAppleReliability(appleReliability)
 
 	return cs
 }
@@ -43,6 +45,21 @@ func (cs *CronServer) processInvoices(uc *biz.InvoicesUseCase, pc *biz.PaymentUs
 	)
 	if err != nil {
 		cs.log.Errorf("failed on cron entryId: %v, err: %v", entryId, err)
+		return
+	}
+}
+
+func (cs *CronServer) processAppleReliability(arc *biz.AppleStoreReliabilityUseCase) {
+	entryId, err := cs.cron.AddFunc(
+		"0 0 * * *", func() {
+			ctx := context.Background()
+			if err := arc.CheckMissedS2SNotifications(ctx); err != nil {
+				cs.log.Errorf("failed to check missed S2S notifications: %v", err)
+			}
+		},
+	)
+	if err != nil {
+		cs.log.Errorf("failed to add daily S2S check cron: %v, err: %v", entryId, err)
 		return
 	}
 }

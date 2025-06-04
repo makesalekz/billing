@@ -260,6 +260,20 @@ func (ic *InvoiceCreate) SetNillablePaymentProfileID(i *int64) *InvoiceCreate {
 	return ic
 }
 
+// SetOriginalAppleTransactionID sets the "original_apple_transaction_id" field.
+func (ic *InvoiceCreate) SetOriginalAppleTransactionID(s string) *InvoiceCreate {
+	ic.mutation.SetOriginalAppleTransactionID(s)
+	return ic
+}
+
+// SetNillableOriginalAppleTransactionID sets the "original_apple_transaction_id" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableOriginalAppleTransactionID(s *string) *InvoiceCreate {
+	if s != nil {
+		ic.SetOriginalAppleTransactionID(*s)
+	}
+	return ic
+}
+
 // SetID sets the "id" field.
 func (ic *InvoiceCreate) SetID(i int64) *InvoiceCreate {
 	ic.mutation.SetID(i)
@@ -541,6 +555,10 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
 		_node.IsTrial = value
+	}
+	if value, ok := ic.mutation.OriginalAppleTransactionID(); ok {
+		_spec.SetField(invoice.FieldOriginalAppleTransactionID, field.TypeString, value)
+		_node.OriginalAppleTransactionID = &value
 	}
 	if nodes := ic.mutation.ProductIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -865,6 +883,24 @@ func (u *InvoiceUpsert) ClearPaymentProfileID() *InvoiceUpsert {
 	return u
 }
 
+// SetOriginalAppleTransactionID sets the "original_apple_transaction_id" field.
+func (u *InvoiceUpsert) SetOriginalAppleTransactionID(v string) *InvoiceUpsert {
+	u.Set(invoice.FieldOriginalAppleTransactionID, v)
+	return u
+}
+
+// UpdateOriginalAppleTransactionID sets the "original_apple_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateOriginalAppleTransactionID() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldOriginalAppleTransactionID)
+	return u
+}
+
+// ClearOriginalAppleTransactionID clears the value of the "original_apple_transaction_id" field.
+func (u *InvoiceUpsert) ClearOriginalAppleTransactionID() *InvoiceUpsert {
+	u.SetNull(invoice.FieldOriginalAppleTransactionID)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -1166,6 +1202,27 @@ func (u *InvoiceUpsertOne) UpdatePaymentProfileID() *InvoiceUpsertOne {
 func (u *InvoiceUpsertOne) ClearPaymentProfileID() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearPaymentProfileID()
+	})
+}
+
+// SetOriginalAppleTransactionID sets the "original_apple_transaction_id" field.
+func (u *InvoiceUpsertOne) SetOriginalAppleTransactionID(v string) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetOriginalAppleTransactionID(v)
+	})
+}
+
+// UpdateOriginalAppleTransactionID sets the "original_apple_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateOriginalAppleTransactionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateOriginalAppleTransactionID()
+	})
+}
+
+// ClearOriginalAppleTransactionID clears the value of the "original_apple_transaction_id" field.
+func (u *InvoiceUpsertOne) ClearOriginalAppleTransactionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearOriginalAppleTransactionID()
 	})
 }
 
@@ -1636,6 +1693,27 @@ func (u *InvoiceUpsertBulk) UpdatePaymentProfileID() *InvoiceUpsertBulk {
 func (u *InvoiceUpsertBulk) ClearPaymentProfileID() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearPaymentProfileID()
+	})
+}
+
+// SetOriginalAppleTransactionID sets the "original_apple_transaction_id" field.
+func (u *InvoiceUpsertBulk) SetOriginalAppleTransactionID(v string) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetOriginalAppleTransactionID(v)
+	})
+}
+
+// UpdateOriginalAppleTransactionID sets the "original_apple_transaction_id" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateOriginalAppleTransactionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateOriginalAppleTransactionID()
+	})
+}
+
+// ClearOriginalAppleTransactionID clears the value of the "original_apple_transaction_id" field.
+func (u *InvoiceUpsertBulk) ClearOriginalAppleTransactionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearOriginalAppleTransactionID()
 	})
 }
 

@@ -147,6 +147,11 @@ func PaymentProfileID(v int64) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldPaymentProfileID, v))
 }
 
+// OriginalAppleTransactionID applies equality check predicate on the "original_apple_transaction_id" field. It's identical to OriginalAppleTransactionIDEQ.
+func OriginalAppleTransactionID(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldOriginalAppleTransactionID, v))
+}
+
 // UserIDEQ applies the EQ predicate on the "user_id" field.
 func UserIDEQ(v int64) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldUserID, v))
@@ -850,6 +855,81 @@ func PaymentProfileIDIsNil() predicate.Invoice {
 // PaymentProfileIDNotNil applies the NotNil predicate on the "payment_profile_id" field.
 func PaymentProfileIDNotNil() predicate.Invoice {
 	return predicate.Invoice(sql.FieldNotNull(FieldPaymentProfileID))
+}
+
+// OriginalAppleTransactionIDEQ applies the EQ predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDEQ(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDNEQ applies the NEQ predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDNEQ(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDIn applies the In predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDIn(vs ...string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldOriginalAppleTransactionID, vs...))
+}
+
+// OriginalAppleTransactionIDNotIn applies the NotIn predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDNotIn(vs ...string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldOriginalAppleTransactionID, vs...))
+}
+
+// OriginalAppleTransactionIDGT applies the GT predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDGT(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDGTE applies the GTE predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDGTE(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDLT applies the LT predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDLT(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDLTE applies the LTE predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDLTE(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDContains applies the Contains predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDContains(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldContains(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDHasPrefix applies the HasPrefix predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDHasPrefix(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldHasPrefix(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDHasSuffix applies the HasSuffix predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDHasSuffix(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldHasSuffix(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDIsNil applies the IsNil predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldOriginalAppleTransactionID))
+}
+
+// OriginalAppleTransactionIDNotNil applies the NotNil predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldOriginalAppleTransactionID))
+}
+
+// OriginalAppleTransactionIDEqualFold applies the EqualFold predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDEqualFold(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEqualFold(FieldOriginalAppleTransactionID, v))
+}
+
+// OriginalAppleTransactionIDContainsFold applies the ContainsFold predicate on the "original_apple_transaction_id" field.
+func OriginalAppleTransactionIDContainsFold(v string) predicate.Invoice {
+	return predicate.Invoice(sql.FieldContainsFold(FieldOriginalAppleTransactionID, v))
 }
 
 // HasProduct applies the HasEdge predicate on the "product" edge.

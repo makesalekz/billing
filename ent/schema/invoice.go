@@ -45,6 +45,10 @@ func (Invoice) Fields() []ent.Field {
 		field.Enum("payment_provider").GoType(enum.PaymentProvider("")).Default(enum.AppStore.Value()),
 		field.Bool("is_trial").Default(false),
 		field.Int64("payment_profile_id").Optional().Nillable(),
+		field.String("original_apple_transaction_id").
+			Optional().
+			Nillable().
+			Comment("Original Apple transaction ID для связи транзакций с одной подпиской"),
 	}
 }
 

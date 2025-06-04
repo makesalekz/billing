@@ -2,8 +2,8 @@ package biz
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
@@ -31,6 +30,7 @@ type AppleStoreUsecase struct {
 	subscriptions data.SubscriptionsRepo
 	product       data.ProductRepo
 	jwtParser     data.JWTParser
+	appleClient   data.AppleStoreClient
 }
 
 func NewAppleStoreUsecase(
@@ -38,12 +38,14 @@ func NewAppleStoreUsecase(
 	subscriptions data.SubscriptionsRepo,
 	product data.ProductRepo,
 	jwtParser data.JWTParser,
+	appleClient data.AppleStoreClient,
 ) *AppleStoreUsecase {
 	return &AppleStoreUsecase{
 		invoices:      invoices,
 		subscriptions: subscriptions,
 		product:       product,
 		jwtParser:     jwtParser,
+		appleClient:   appleClient,
 	}
 }
 
@@ -114,18 +116,25 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 		return v1.ErrorInvalidRequest("failed to parse signed transaction: %s", err.Error())
 	}
 
-	uid, err := uuid.Parse(transaction.AppAccountToken)
+	userID, tenantID, err := uc.invoices.GetUserAndTenantIDByOriginalTransactionID(
+		ctx,
+		transaction.OriginalTransactionID,
+	)
 	if err != nil {
-		return v1.ErrorInvalidRequest("failed to parse app account token: %s", err.Error())
+		if ent.IsNotFound(err) {
+			return v1.ErrorInvalidRequest(
+				"user or tenant not found for transaction: %s", transaction.OriginalTransactionID,
+			)
+		}
+		return v1.ErrorDatabaseQuery("failed to get user and tenant ID: %s", err.Error())
 	}
 
-	userID := extractUserIDFromUUID(uid)
-	tenantID := extractTenantIDFromUUID(uid)
-
-	productID, err := strconv.Atoi(transaction.ProductID)
+	_, err = strconv.Atoi(transaction.ProductID)
 	if err != nil {
 		return v1.ErrorInvalidRequest("product id is not valid: %s", err.Error())
 	}
+
+	productID := 11 // todo: Remove hardcoded product ID
 
 	productEnt, err := uc.product.GetProduct(ctx, int64(productID))
 	if err != nil {
@@ -159,18 +168,19 @@ func (uc *AppleStoreUsecase) processSubscription(ctx context.Context, payload da
 	paidTill := time.Unix(transaction.ExpiresDate/milliUnits, 0)
 	_, err = uc.invoices.CreateInvoice(
 		ctx, data.InvoiceDto{
-			UserID:                  subscription.UserID,
-			TenantID:                subscription.TenantID,
-			AppID:                   subscription.AppID,
-			ProductID:               productEnt.ID,
-			Amount:                  transaction.Quantity,
-			Price:                   decimal.New(transaction.Price, -3),
-			Status:                  enum.Paid,
-			SubscriptionID:          subscription.ID,
-			PaidAt:                  &paidAt,
-			PaidTill:                &paidTill,
-			AppleStoreTransactionID: &transaction.OriginalTransactionID,
-			IsTrial:                 transaction.OfferDiscountType == "FREE_TRIAL",
+			UserID:                     subscription.UserID,
+			TenantID:                   subscription.TenantID,
+			AppID:                      subscription.AppID,
+			ProductID:                  productEnt.ID,
+			Amount:                     transaction.Quantity,
+			Price:                      decimal.New(transaction.Price, -3),
+			Status:                     enum.Paid,
+			SubscriptionID:             subscription.ID,
+			PaidAt:                     &paidAt,
+			PaidTill:                   &paidTill,
+			AppleStoreTransactionID:    &transaction.TransactionID,
+			OriginalAppleTransactionID: &transaction.OriginalTransactionID,
+			IsTrial:                    transaction.OfferDiscountType == "FREE_TRIAL",
 		},
 	)
 	if err != nil {
@@ -223,28 +233,75 @@ func (uc *AppleStoreUsecase) processExpired(ctx context.Context, payload data.Pa
 	return nil
 }
 
-func extractUserIDFromUUID(uid uuid.UUID) int64 {
-	reconstructedActorID := int64(
+func (uc *AppleStoreUsecase) ClientNotification(
+	ctx context.Context, userID,
+	tenantID int64, transaction data.JWSTransaction,
+) (
+	*ent.Invoice, *ent.Subscriptions, error,
+) {
+	validatedTransaction, err := uc.appleClient.ValidateTransaction(ctx, transaction.TransactionID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to validate transaction with Apple: %w", err)
+	}
 
-		binary.BigEndian.Uint64(
-			[]byte{
-				uid[8], uid[9], uid[10], uid[11], uid[12], uid[13], uid[14], uid[15],
-			},
-		),
+	_, err = strconv.Atoi(validatedTransaction.ProductID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid product ID: %w", err)
+	}
+
+	productID := 11 // TODO: Remove hardcoded product ID
+
+	productEnt, err := uc.product.GetProduct(ctx, int64(productID))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get product: %w", err)
+	}
+
+	subscription, err := uc.subscriptions.GetSubscriptionByOriginalAppleTransactionID(
+		ctx,
+		validatedTransaction.OriginalTransactionID, false,
 	)
+	if err != nil && !ent.IsNotFound(err) {
+		return nil, nil, fmt.Errorf("failed to get subscription: %w", err)
+	}
 
-	return reconstructedActorID
-}
-
-func extractTenantIDFromUUID(uid uuid.UUID) int64 {
-	reconstructedTenantID := int64(
-
-		binary.BigEndian.Uint64(
-			[]byte{
-				uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7],
+	if ent.IsNotFound(err) {
+		subscription, err = uc.subscriptions.CreateSubscription(
+			ctx, userID, tenantID, productEnt.AppID,
+			data.SubscriptionDto{
+				UserID:    userID,
+				TenantID:  tenantID,
+				AppID:     productEnt.AppID,
+				ProductID: productEnt.ID,
 			},
-		),
-	)
+		)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create subscription: %w", err)
+		}
+	}
 
-	return reconstructedTenantID
+	paidAt := time.Unix(validatedTransaction.PurchaseDate/milliUnits, 0)
+	paidTill := time.Unix(validatedTransaction.ExpiresDate/milliUnits, 0)
+
+	invoice, err := uc.invoices.CreateInvoice(
+		ctx, data.InvoiceDto{
+			UserID:                     subscription.UserID,
+			TenantID:                   subscription.TenantID,
+			AppID:                      subscription.AppID,
+			ProductID:                  productEnt.ID,
+			Amount:                     validatedTransaction.Quantity,
+			Price:                      decimal.New(validatedTransaction.Price, -3),
+			Status:                     enum.Paid,
+			SubscriptionID:             subscription.ID,
+			PaidAt:                     &paidAt,
+			PaidTill:                   &paidTill,
+			AppleStoreTransactionID:    &validatedTransaction.TransactionID,
+			OriginalAppleTransactionID: &validatedTransaction.OriginalTransactionID,
+			IsTrial:                    validatedTransaction.OfferDiscountType == "FREE_TRIAL",
+		},
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create invoice: %w", err)
+	}
+
+	return invoice, subscription, nil
 }

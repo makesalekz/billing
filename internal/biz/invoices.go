@@ -15,7 +15,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
 	"gitlab.calendaria.team/services/finance/billing/internal/data"
 	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
-	u_nats "gitlab.calendaria.team/services/utils/v2/nats"
+	u_nats "gitlab.calendaria.team/services/utils/v4/nats"
 )
 
 type InvoicesList struct {

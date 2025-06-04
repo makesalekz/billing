@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	AppleStore_ProcessServerNotification_FullMethodName = "/billing.v1.AppleStore/ProcessServerNotification"
+	AppleStore_ClientNotification_FullMethodName        = "/billing.v1.AppleStore/ClientNotification"
 )
 
 // AppleStoreClient is the client API for AppleStore service.
@@ -28,6 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AppleStoreClient interface {
 	ProcessServerNotification(ctx context.Context, in *ProcessServerNotificationRequest, opts ...grpc.CallOption) (*v1.EmptyReply, error)
+	ClientNotification(ctx context.Context, in *ProcessServerNotificationRequest, opts ...grpc.CallOption) (*ClientNotificationReply, error)
 }
 
 type appleStoreClient struct {
@@ -48,11 +50,22 @@ func (c *appleStoreClient) ProcessServerNotification(ctx context.Context, in *Pr
 	return out, nil
 }
 
+func (c *appleStoreClient) ClientNotification(ctx context.Context, in *ProcessServerNotificationRequest, opts ...grpc.CallOption) (*ClientNotificationReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ClientNotificationReply)
+	err := c.cc.Invoke(ctx, AppleStore_ClientNotification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AppleStoreServer is the server API for AppleStore service.
 // All implementations must embed UnimplementedAppleStoreServer
 // for forward compatibility.
 type AppleStoreServer interface {
 	ProcessServerNotification(context.Context, *ProcessServerNotificationRequest) (*v1.EmptyReply, error)
+	ClientNotification(context.Context, *ProcessServerNotificationRequest) (*ClientNotificationReply, error)
 	mustEmbedUnimplementedAppleStoreServer()
 }
 
@@ -65,6 +78,9 @@ type UnimplementedAppleStoreServer struct{}
 
 func (UnimplementedAppleStoreServer) ProcessServerNotification(context.Context, *ProcessServerNotificationRequest) (*v1.EmptyReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessServerNotification not implemented")
+}
+func (UnimplementedAppleStoreServer) ClientNotification(context.Context, *ProcessServerNotificationRequest) (*ClientNotificationReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientNotification not implemented")
 }
 func (UnimplementedAppleStoreServer) mustEmbedUnimplementedAppleStoreServer() {}
 func (UnimplementedAppleStoreServer) testEmbeddedByValue()                    {}
@@ -105,6 +121,24 @@ func _AppleStore_ProcessServerNotification_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AppleStore_ClientNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessServerNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AppleStoreServer).ClientNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AppleStore_ClientNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AppleStoreServer).ClientNotification(ctx, req.(*ProcessServerNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AppleStore_ServiceDesc is the grpc.ServiceDesc for AppleStore service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -115,6 +149,10 @@ var AppleStore_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProcessServerNotification",
 			Handler:    _AppleStore_ProcessServerNotification_Handler,
+		},
+		{
+			MethodName: "ClientNotification",
+			Handler:    _AppleStore_ClientNotification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

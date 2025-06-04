@@ -14,10 +14,10 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/internal/data"
 	"gitlab.calendaria.team/services/finance/billing/internal/server"
 	"gitlab.calendaria.team/services/finance/billing/internal/service"
-	"gitlab.calendaria.team/services/utils/v1/config"
-	"gitlab.calendaria.team/services/utils/v2/jwt"
-	"gitlab.calendaria.team/services/utils/v2/nats"
-	"gitlab.calendaria.team/services/utils/v2/tracing"
+	"gitlab.calendaria.team/services/utils/v4/config"
+	"gitlab.calendaria.team/services/utils/v4/jwt"
+	"gitlab.calendaria.team/services/utils/v4/nats"
+	"gitlab.calendaria.team/services/utils/v4/tracing"
 )
 
 import (
@@ -28,16 +28,16 @@ import (
 
 // wireApp init kratos application.
 func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(), error) {
-	configConfig, err := config.NewConfig()
+	iConfig, err := config.NewConfig()
 	if err != nil {
 		return nil, nil, err
 	}
-	iJwtProcessor, err := jwt.NewJwtProcessor(configConfig)
+	iJwtProcessor, err := jwt.NewJwtProcessor(iConfig)
 	if err != nil {
 		return nil, nil, err
 	}
-	tracer := tracing.NewTracer(configConfig)
-	dataData, cleanup, err := data.NewData(bootstrap, configConfig, logger)
+	iTracer := tracing.NewTracer(iConfig)
+	dataData, cleanup, err := data.NewData(bootstrap, iConfig, logger)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -55,16 +55,22 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 		cleanup()
 		return nil, nil, err
 	}
-	iQueueManager := nats.NewQueueManager(configConfig, conn, logger)
+	iQueueManager := nats.NewQueueManager(iConfig, conn, logger)
 	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesManager, invoicesRepo, itemsRepo, productRepo, productReservationRepo, iQueueManager)
 	invoiceService := service.NewInvoiceService(invoicesUseCase)
 	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)
 	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo)
 	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
 	jwtParser := data.NewDefaultJWTParser()
-	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo, subscriptionsRepo, productRepo, jwtParser)
+	appleStoreClient, err := data.NewAppleStoreClient(iConfig, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo, subscriptionsRepo, productRepo, jwtParser, appleStoreClient)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
-	ovpClient := data.NewOvpClient(configConfig, logger)
+	ovpClient := data.NewOvpClient(iConfig, logger)
 	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
 	paymentUseCase, err := biz.NewPaymentUsecase(logger, ovpClient, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo, invoicesManager)
 	if err != nil {
@@ -73,10 +79,11 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 		return nil, nil, err
 	}
 	paymentsService := service.NewPaymentsService(paymentUseCase)
-	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService, productService, invoiceService, subscriptionService, appleStoreService, paymentsService)
+	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, iTracer, itemService, productService, invoiceService, subscriptionService, appleStoreService, paymentsService)
 	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor)
-	cronServer := server.NewCronServer(logger, invoicesUseCase, paymentUseCase)
-	app := newApp(logger, configConfig, grpcServer, httpServer, cronServer)
+	appleStoreReliabilityUseCase := biz.NewAppleStoreReliabilityUseCase(subscriptionsRepo, invoicesRepo, appleStoreClient, jwtParser, logger)
+	cronServer := server.NewCronServer(logger, invoicesUseCase, paymentUseCase, appleStoreReliabilityUseCase)
+	app := newApp(logger, iConfig, grpcServer, httpServer, cronServer)
 	return app, func() {
 		cleanup2()
 		cleanup()

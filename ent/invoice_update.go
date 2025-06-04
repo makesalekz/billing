@@ -266,6 +266,26 @@ func (iu *InvoiceUpdate) ClearPaymentProfileID() *InvoiceUpdate {
 	return iu
 }
 
+// SetOriginalAppleTransactionID sets the "original_apple_transaction_id" field.
+func (iu *InvoiceUpdate) SetOriginalAppleTransactionID(s string) *InvoiceUpdate {
+	iu.mutation.SetOriginalAppleTransactionID(s)
+	return iu
+}
+
+// SetNillableOriginalAppleTransactionID sets the "original_apple_transaction_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableOriginalAppleTransactionID(s *string) *InvoiceUpdate {
+	if s != nil {
+		iu.SetOriginalAppleTransactionID(*s)
+	}
+	return iu
+}
+
+// ClearOriginalAppleTransactionID clears the value of the "original_apple_transaction_id" field.
+func (iu *InvoiceUpdate) ClearOriginalAppleTransactionID() *InvoiceUpdate {
+	iu.mutation.ClearOriginalAppleTransactionID()
+	return iu
+}
+
 // SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
 func (iu *InvoiceUpdate) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdate {
 	return iu.SetPaymentProfileID(p.ID)
@@ -439,6 +459,12 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := iu.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+	}
+	if value, ok := iu.mutation.OriginalAppleTransactionID(); ok {
+		_spec.SetField(invoice.FieldOriginalAppleTransactionID, field.TypeString, value)
+	}
+	if iu.mutation.OriginalAppleTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldOriginalAppleTransactionID, field.TypeString)
 	}
 	if iu.mutation.PaymentProfileCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -769,6 +795,26 @@ func (iuo *InvoiceUpdateOne) ClearPaymentProfileID() *InvoiceUpdateOne {
 	return iuo
 }
 
+// SetOriginalAppleTransactionID sets the "original_apple_transaction_id" field.
+func (iuo *InvoiceUpdateOne) SetOriginalAppleTransactionID(s string) *InvoiceUpdateOne {
+	iuo.mutation.SetOriginalAppleTransactionID(s)
+	return iuo
+}
+
+// SetNillableOriginalAppleTransactionID sets the "original_apple_transaction_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableOriginalAppleTransactionID(s *string) *InvoiceUpdateOne {
+	if s != nil {
+		iuo.SetOriginalAppleTransactionID(*s)
+	}
+	return iuo
+}
+
+// ClearOriginalAppleTransactionID clears the value of the "original_apple_transaction_id" field.
+func (iuo *InvoiceUpdateOne) ClearOriginalAppleTransactionID() *InvoiceUpdateOne {
+	iuo.mutation.ClearOriginalAppleTransactionID()
+	return iuo
+}
+
 // SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
 func (iuo *InvoiceUpdateOne) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdateOne {
 	return iuo.SetPaymentProfileID(p.ID)
@@ -972,6 +1018,12 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	}
 	if value, ok := iuo.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+	}
+	if value, ok := iuo.mutation.OriginalAppleTransactionID(); ok {
+		_spec.SetField(invoice.FieldOriginalAppleTransactionID, field.TypeString, value)
+	}
+	if iuo.mutation.OriginalAppleTransactionIDCleared() {
+		_spec.ClearField(invoice.FieldOriginalAppleTransactionID, field.TypeString)
 	}
 	if iuo.mutation.PaymentProfileCleared() {
 		edge := &sqlgraph.EdgeSpec{

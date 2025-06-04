@@ -62,6 +62,8 @@ type Invoice struct {
 	IsTrial bool `json:"is_trial,omitempty"`
 	// PaymentProfileID holds the value of the "payment_profile_id" field.
 	PaymentProfileID *int64 `json:"payment_profile_id,omitempty"`
+	// Original Apple transaction ID для связи транзакций с одной подпиской
+	OriginalAppleTransactionID *string `json:"original_apple_transaction_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InvoiceQuery when eager-loading is set.
 	Edges        InvoiceEdges `json:"edges"`
@@ -136,7 +138,7 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case invoice.FieldID, invoice.FieldUserID, invoice.FieldTenantID, invoice.FieldProductID, invoice.FieldAmount, invoice.FieldSubscriptionID, invoice.FieldPaymentProfileID:
 			values[i] = new(sql.NullInt64)
-		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus, invoice.FieldExternalTransactionID, invoice.FieldPaymentProvider:
+		case invoice.FieldAppID, invoice.FieldCurrency, invoice.FieldStatus, invoice.FieldExternalTransactionID, invoice.FieldPaymentProvider, invoice.FieldOriginalAppleTransactionID:
 			values[i] = new(sql.NullString)
 		case invoice.FieldPaidAt, invoice.FieldPaidTill, invoice.FieldRevokedAt:
 			values[i] = new(sql.NullTime)
@@ -287,6 +289,13 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 				i.PaymentProfileID = new(int64)
 				*i.PaymentProfileID = value.Int64
 			}
+		case invoice.FieldOriginalAppleTransactionID:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field original_apple_transaction_id", values[j])
+			} else if value.Valid {
+				i.OriginalAppleTransactionID = new(string)
+				*i.OriginalAppleTransactionID = value.String
+			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
 		}
@@ -413,6 +422,11 @@ func (i *Invoice) String() string {
 	if v := i.PaymentProfileID; v != nil {
 		builder.WriteString("payment_profile_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := i.OriginalAppleTransactionID; v != nil {
+		builder.WriteString("original_apple_transaction_id=")
+		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')
 	return builder.String()
