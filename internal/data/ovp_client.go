@@ -10,8 +10,8 @@ import (
 
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/onevisionpay"
-	"gitlab.calendaria.team/services/utils/v1/config"
+	"gitlab.calendaria.team/services/finance/billing/internal/data/onvisionpay"
+	"gitlab.calendaria.team/services/utils/v4/config"
 )
 
 const (
@@ -31,7 +31,7 @@ type OvpClient struct {
 	ServiceID          string
 }
 
-func NewOvpClient(config *config.Config, logger log.Logger) *OvpClient {
+func NewOvpClient(config config.IConfig, logger log.Logger) *OvpClient {
 	uc := &OvpClient{
 		log: log.NewHelper(log.With(logger, "module", "data/ovp_client")),
 	}
@@ -51,7 +51,7 @@ func NewOvpClient(config *config.Config, logger log.Logger) *OvpClient {
 	return uc
 }
 
-func (c *OvpClient) initPaymentClient(config *config.Config) (*onevisionpay.Client, error) {
+func (c *OvpClient) initPaymentClient(config config.IConfig) (*onevisionpay.Client, error) {
 	debug := os.Getenv("DEBUG") != ""
 	env := onevisionpay.Production
 	if debug {
@@ -69,19 +69,19 @@ func (c *OvpClient) initPaymentClient(config *config.Config) (*onevisionpay.Clie
 	return onevisionpay.NewClient(apiKey, apiSecret, env)
 }
 
-func (c *OvpClient) loadConfig(config *config.Config) error {
+func (c *OvpClient) loadConfig(config config.IConfig) error {
 	var err error
-	c.PaymentSuccessURL, err = config.Value("PAYMENT_SUCCESS_URL").String()
+	c.PaymentSuccessURL, err = config.GetValue("PAYMENT_SUCCESS_URL")
 	if err != nil {
 		return err
 	}
 
-	c.PaymentCallbackURL, err = config.Value("PAYMENT_CALLBACK_URL").String()
+	c.PaymentCallbackURL, err = config.GetValue("PAYMENT_CALLBACK_URL")
 	if err != nil {
 		return err
 	}
 
-	c.PaymentFailureURL, err = config.Value("PAYMENT_FAILURE_URL").String()
+	c.PaymentFailureURL, err = config.GetValue("PAYMENT_FAILURE_URL")
 	if err != nil {
 		return err
 	}

@@ -6,9 +6,9 @@ import (
 
 	"gitlab.calendaria.team/services/finance/billing/ent"
 	"gitlab.calendaria.team/services/finance/billing/internal/conf"
-	u_config "gitlab.calendaria.team/services/utils/v1/config"
-	u_jwt "gitlab.calendaria.team/services/utils/v2/jwt"
-	u_tracing "gitlab.calendaria.team/services/utils/v2/tracing"
+	u_config "gitlab.calendaria.team/services/utils/v4/config"
+	u_jwt "gitlab.calendaria.team/services/utils/v4/jwt"
+	u_tracing "gitlab.calendaria.team/services/utils/v4/tracing"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -35,6 +35,7 @@ var ProviderSet = wire.NewSet(
 	NewProductReservationRepo,
 	NewOvpClient,
 	NewDefaultJWTParser,
+	NewAppleStoreClient,
 )
 
 const (
@@ -48,7 +49,7 @@ type Data struct {
 }
 
 // NewData .
-func NewData(bc *conf.Bootstrap, c *u_config.Config, logger log.Logger) (*Data, func(), error) {
+func NewData(bc *conf.Bootstrap, c u_config.IConfig, logger log.Logger) (*Data, func(), error) {
 	l := log.NewHelper(logger)
 
 	dbDsn := bc.GetDb() // read from local config

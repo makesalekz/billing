@@ -6,8 +6,8 @@ import (
 
 	"gitlab.calendaria.team/services/finance/billing/internal/conf"
 	"gitlab.calendaria.team/services/finance/billing/internal/server"
-	"gitlab.calendaria.team/services/utils/v1/config"
 	u_log "gitlab.calendaria.team/services/utils/v1/log"
+	"gitlab.calendaria.team/services/utils/v4/config"
 
 	"github.com/go-kratos/kratos/v2"
 	kconfig "github.com/go-kratos/kratos/v2/config"
@@ -36,7 +36,7 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "config.yaml", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, c *config.Config, gs *grpc.Server, hs *http.Server, cs *server.CronServer) *kratos.App {
+func newApp(logger log.Logger, c config.IConfig, gs *grpc.Server, hs *http.Server, cs *server.CronServer) *kratos.App {
 	return kratos.New(
 		kratos.ID(id),
 		kratos.Name(c.GetAppName()),
@@ -55,7 +55,8 @@ func newApp(logger log.Logger, c *config.Config, gs *grpc.Server, hs *http.Serve
 
 func main() {
 	flag.Parse()
-	logger := log.With(u_log.NewStdLogger(),
+	logger := log.With(
+		u_log.NewStdLogger(),
 		"ts", log.DefaultTimestamp,
 		"caller", log.DefaultCaller,
 		"service.id", id,

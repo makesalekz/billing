@@ -804,43 +804,44 @@ func (m *BundleMutation) ResetEdge(name string) error {
 // InvoiceMutation represents an operation that mutates the Invoice nodes in the graph.
 type InvoiceMutation struct {
 	config
-	op                      Op
-	typ                     string
-	id                      *int64
-	user_id                 *int64
-	adduser_id              *int64
-	tenant_id               *int64
-	addtenant_id            *int64
-	app_id                  *string
-	amount                  *int64
-	addamount               *int64
-	price                   *decimal.Decimal
-	addprice                *decimal.Decimal
-	currency                *string
-	status                  *enum.InvoiceStatus
-	paid_at                 *time.Time
-	paid_till               *time.Time
-	is_revoked              *bool
-	revoked_at              *time.Time
-	is_revoked_processed    *bool
-	is_paid_at_processed    *bool
-	is_paid_till_processed  *bool
-	external_transaction_id *string
-	payment_provider        *enum.PaymentProvider
-	is_trial                *bool
-	clearedFields           map[string]struct{}
-	product                 *int64
-	clearedproduct          bool
-	subscriptions           *int64
-	clearedsubscriptions    bool
-	payment_profile         *int64
-	clearedpayment_profile  bool
-	reservations            map[int64]struct{}
-	removedreservations     map[int64]struct{}
-	clearedreservations     bool
-	done                    bool
-	oldValue                func(context.Context) (*Invoice, error)
-	predicates              []predicate.Invoice
+	op                            Op
+	typ                           string
+	id                            *int64
+	user_id                       *int64
+	adduser_id                    *int64
+	tenant_id                     *int64
+	addtenant_id                  *int64
+	app_id                        *string
+	amount                        *int64
+	addamount                     *int64
+	price                         *decimal.Decimal
+	addprice                      *decimal.Decimal
+	currency                      *string
+	status                        *enum.InvoiceStatus
+	paid_at                       *time.Time
+	paid_till                     *time.Time
+	is_revoked                    *bool
+	revoked_at                    *time.Time
+	is_revoked_processed          *bool
+	is_paid_at_processed          *bool
+	is_paid_till_processed        *bool
+	external_transaction_id       *string
+	payment_provider              *enum.PaymentProvider
+	is_trial                      *bool
+	original_apple_transaction_id *string
+	clearedFields                 map[string]struct{}
+	product                       *int64
+	clearedproduct                bool
+	subscriptions                 *int64
+	clearedsubscriptions          bool
+	payment_profile               *int64
+	clearedpayment_profile        bool
+	reservations                  map[int64]struct{}
+	removedreservations           map[int64]struct{}
+	clearedreservations           bool
+	done                          bool
+	oldValue                      func(context.Context) (*Invoice, error)
+	predicates                    []predicate.Invoice
 }
 
 var _ ent.Mutation = (*InvoiceMutation)(nil)
@@ -1825,6 +1826,55 @@ func (m *InvoiceMutation) ResetPaymentProfileID() {
 	delete(m.clearedFields, invoice.FieldPaymentProfileID)
 }
 
+// SetOriginalAppleTransactionID sets the "original_apple_transaction_id" field.
+func (m *InvoiceMutation) SetOriginalAppleTransactionID(s string) {
+	m.original_apple_transaction_id = &s
+}
+
+// OriginalAppleTransactionID returns the value of the "original_apple_transaction_id" field in the mutation.
+func (m *InvoiceMutation) OriginalAppleTransactionID() (r string, exists bool) {
+	v := m.original_apple_transaction_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOriginalAppleTransactionID returns the old "original_apple_transaction_id" field's value of the Invoice entity.
+// If the Invoice object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InvoiceMutation) OldOriginalAppleTransactionID(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOriginalAppleTransactionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOriginalAppleTransactionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOriginalAppleTransactionID: %w", err)
+	}
+	return oldValue.OriginalAppleTransactionID, nil
+}
+
+// ClearOriginalAppleTransactionID clears the value of the "original_apple_transaction_id" field.
+func (m *InvoiceMutation) ClearOriginalAppleTransactionID() {
+	m.original_apple_transaction_id = nil
+	m.clearedFields[invoice.FieldOriginalAppleTransactionID] = struct{}{}
+}
+
+// OriginalAppleTransactionIDCleared returns if the "original_apple_transaction_id" field was cleared in this mutation.
+func (m *InvoiceMutation) OriginalAppleTransactionIDCleared() bool {
+	_, ok := m.clearedFields[invoice.FieldOriginalAppleTransactionID]
+	return ok
+}
+
+// ResetOriginalAppleTransactionID resets all changes to the "original_apple_transaction_id" field.
+func (m *InvoiceMutation) ResetOriginalAppleTransactionID() {
+	m.original_apple_transaction_id = nil
+	delete(m.clearedFields, invoice.FieldOriginalAppleTransactionID)
+}
+
 // ClearProduct clears the "product" edge to the Product entity.
 func (m *InvoiceMutation) ClearProduct() {
 	m.clearedproduct = true
@@ -2007,7 +2057,7 @@ func (m *InvoiceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InvoiceMutation) Fields() []string {
-	fields := make([]string, 0, 20)
+	fields := make([]string, 0, 21)
 	if m.user_id != nil {
 		fields = append(fields, invoice.FieldUserID)
 	}
@@ -2068,6 +2118,9 @@ func (m *InvoiceMutation) Fields() []string {
 	if m.payment_profile != nil {
 		fields = append(fields, invoice.FieldPaymentProfileID)
 	}
+	if m.original_apple_transaction_id != nil {
+		fields = append(fields, invoice.FieldOriginalAppleTransactionID)
+	}
 	return fields
 }
 
@@ -2116,6 +2169,8 @@ func (m *InvoiceMutation) Field(name string) (ent.Value, bool) {
 		return m.IsTrial()
 	case invoice.FieldPaymentProfileID:
 		return m.PaymentProfileID()
+	case invoice.FieldOriginalAppleTransactionID:
+		return m.OriginalAppleTransactionID()
 	}
 	return nil, false
 }
@@ -2165,6 +2220,8 @@ func (m *InvoiceMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldIsTrial(ctx)
 	case invoice.FieldPaymentProfileID:
 		return m.OldPaymentProfileID(ctx)
+	case invoice.FieldOriginalAppleTransactionID:
+		return m.OldOriginalAppleTransactionID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Invoice field %s", name)
 }
@@ -2314,6 +2371,13 @@ func (m *InvoiceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPaymentProfileID(v)
 		return nil
+	case invoice.FieldOriginalAppleTransactionID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOriginalAppleTransactionID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Invoice field %s", name)
 }
@@ -2413,6 +2477,9 @@ func (m *InvoiceMutation) ClearedFields() []string {
 	if m.FieldCleared(invoice.FieldPaymentProfileID) {
 		fields = append(fields, invoice.FieldPaymentProfileID)
 	}
+	if m.FieldCleared(invoice.FieldOriginalAppleTransactionID) {
+		fields = append(fields, invoice.FieldOriginalAppleTransactionID)
+	}
 	return fields
 }
 
@@ -2444,6 +2511,9 @@ func (m *InvoiceMutation) ClearField(name string) error {
 		return nil
 	case invoice.FieldPaymentProfileID:
 		m.ClearPaymentProfileID()
+		return nil
+	case invoice.FieldOriginalAppleTransactionID:
+		m.ClearOriginalAppleTransactionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice nullable field %s", name)
@@ -2512,6 +2582,9 @@ func (m *InvoiceMutation) ResetField(name string) error {
 		return nil
 	case invoice.FieldPaymentProfileID:
 		m.ResetPaymentProfileID()
+		return nil
+	case invoice.FieldOriginalAppleTransactionID:
+		m.ResetOriginalAppleTransactionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice field %s", name)

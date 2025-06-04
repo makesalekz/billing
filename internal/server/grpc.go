@@ -7,9 +7,9 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/internal/conf"
 	"gitlab.calendaria.team/services/finance/billing/internal/service"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
-	"gitlab.calendaria.team/services/utils/v2/jwt"
-	"gitlab.calendaria.team/services/utils/v2/middlewares/auth"
-	u_tracing "gitlab.calendaria.team/services/utils/v2/tracing"
+	"gitlab.calendaria.team/services/utils/v4/jwt"
+	"gitlab.calendaria.team/services/utils/v4/middlewares/auth"
+	u_tracing "gitlab.calendaria.team/services/utils/v4/tracing"
 
 	prom "github.com/go-kratos/kratos/contrib/metrics/prometheus/v2"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
@@ -22,7 +22,7 @@ import (
 func NewGRPCServer(
 	c *conf.Bootstrap,
 	jwtp jwt.IJwtProcessor,
-	tracer *u_tracing.Tracer,
+	tracer u_tracing.ITracer,
 	itemService *service.ItemService,
 	productService *service.ProductService,
 	invoiceService *service.InvoiceService,

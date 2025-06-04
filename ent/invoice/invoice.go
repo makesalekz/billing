@@ -55,6 +55,8 @@ const (
 	FieldIsTrial = "is_trial"
 	// FieldPaymentProfileID holds the string denoting the payment_profile_id field in the database.
 	FieldPaymentProfileID = "payment_profile_id"
+	// FieldOriginalAppleTransactionID holds the string denoting the original_apple_transaction_id field in the database.
+	FieldOriginalAppleTransactionID = "original_apple_transaction_id"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
 	EdgeProduct = "product"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
@@ -118,6 +120,7 @@ var Columns = []string{
 	FieldPaymentProvider,
 	FieldIsTrial,
 	FieldPaymentProfileID,
+	FieldOriginalAppleTransactionID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -277,6 +280,11 @@ func ByIsTrial(opts ...sql.OrderTermOption) OrderOption {
 // ByPaymentProfileID orders the results by the payment_profile_id field.
 func ByPaymentProfileID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPaymentProfileID, opts...).ToFunc()
+}
+
+// ByOriginalAppleTransactionID orders the results by the original_apple_transaction_id field.
+func ByOriginalAppleTransactionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOriginalAppleTransactionID, opts...).ToFunc()
 }
 
 // ByProductField orders the results by product field.

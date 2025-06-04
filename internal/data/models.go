@@ -133,9 +133,10 @@ type InvoiceDto struct {
 	IsPaidTillProcessed *bool
 	RecurrentProfileID  *int64
 
-	AppleStoreTransactionID *string
-	OneVisionTransactionID  *string
-	IsTrial                 bool
+	AppleStoreTransactionID    *string
+	OriginalAppleTransactionID *string
+	OneVisionTransactionID     *string
+	IsTrial                    bool
 }
 
 type InvoiceFilter struct {
@@ -334,4 +335,17 @@ type ProductReservationDto struct {
 	Status              enum.ReservationStatus
 
 	ExpirationTime *time.Time
+}
+
+type AppleStoreResponse struct {
+	SignedTransactionInfo string `json:"signedTransactionInfo"`
+}
+
+type AppleStoreHistoryResponse struct {
+	BundleID           string   `json:"bundleId"`
+	AppAppleID         int64    `json:"appAppleId"`
+	Environment        string   `json:"environment"`
+	HasMore            bool     `json:"hasMore"`
+	Revision           string   `json:"revision"`
+	SignedTransactions []string `json:"signedTransactions"`
 }

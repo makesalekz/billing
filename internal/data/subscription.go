@@ -29,6 +29,7 @@ type SubscriptionsRepo interface {
 	ListSubscriptions(
 		ctx context.Context, actorID int64, withInvoices bool, paginate *utils_v1.PaginateRequest,
 	) ([]*ent.Subscriptions, error)
+	GetActiveAppleSubscriptions(ctx context.Context) ([]*ent.Subscriptions, error)
 }
 
 type subscriptionsRepo struct {
@@ -128,5 +129,28 @@ func (r *subscriptionsRepo) ListSubscriptions(
 		).
 		WithInvoices().
 		Limit(int(paginate.GetLimit())).
+		All(ctx)
+}
+
+func (r *subscriptionsRepo) GetActiveAppleSubscriptions(ctx context.Context) ([]*ent.Subscriptions, error) {
+	return r.db.Subscriptions.Query().
+		Where(
+			subscriptions.HasInvoicesWith(
+				invoice.PaymentProviderEQ(enum.AppStore),
+				invoice.StatusEQ(enum.Paid),
+				invoice.IsRevoked(false),
+				invoice.PaidTillGT(time.Now()),
+				invoice.OriginalAppleTransactionIDNotNil(),
+			),
+		).
+		WithInvoices(func(q *ent.InvoiceQuery) {
+			q.Where(
+				invoice.PaymentProviderEQ(enum.AppStore),
+				invoice.StatusEQ(enum.Paid),
+				invoice.IsRevoked(false),
+				invoice.PaidTillGT(time.Now()),
+				invoice.OriginalAppleTransactionIDNotNil(),
+			)
+		}).
 		All(ctx)
 }

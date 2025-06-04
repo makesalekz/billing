@@ -41,3 +41,56 @@ bin/
 .env
 .docker
 configs/config.yaml
+
+# Added by Task Master AI
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+# Task files
+tasks.json
+tasks/ 
+/.cursor/rules/billing-logic.mdc
+/.cursor/rules/cursor_rules.mdc
+/.cursor/rules/dev_workflow.mdc
+/.cursor/rules/development-workflow.mdc
+/.cursor/rules/entity-relationships.mdc
+/.cursor/rules/project-structure.mdc
+/.cursor/rules/self_improve.mdc
+/.cursor/rules/service-architecture.mdc
+/.cursor/rules/taskmaster.mdc
+/.cursor/mcp.json
+/.roo/rules/billing-logic.md
+/.roo/rules/dev_workflow.md
+/.roo/rules/development-workflow.md
+/.roo/rules/entity-relationships.md
+/.roo/rules/project-structure.md
+/.roo/rules/roo_rules.md
+/.roo/rules/self_improve.md
+/.roo/rules/service-architecture.md
+/.roo/rules/taskmaster.md
+/.roo/rules-architect/architect-rules
+/.roo/rules-ask/ask-rules
+/.roo/rules-boomerang/boomerang-rules
+/.roo/rules-code/code-rules
+/.roo/rules-debug/debug-rules
+/.roo/rules-test/test-rules
+/.taskmaster/docs/prd.txt
+/.taskmaster/templates/example_prd.txt
+/.taskmaster/config.json
+/.roomodes
+/.windsurfrules
