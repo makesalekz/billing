@@ -133,6 +133,7 @@ type PaymentClient interface {
 	CreateSubscription(ctx context.Context, req TtpRecurrentCreateRequest) (*TtpSubscriptionResponse, error)
 	CancelSubscription(ctx context.Context, subscriptionId string) (*TtpSubscriptionResponse, error)
 	Refund(ctx context.Context, req TtpRefundRequest) (*TtpResponse, error)
+	GetTransaction(ctx context.Context, transactionId int64) (*TtpResponse, error)
 }
 
 const maxResponseSize = 1 << 20 // 1 MB
@@ -325,6 +326,21 @@ func (c *TtpClient) Refund(ctx context.Context, req TtpRefundRequest) (*TtpRespo
 	var resp TtpResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return nil, fmt.Errorf("unmarshal refund response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+func (c *TtpClient) GetTransaction(ctx context.Context, transactionId int64) (*TtpResponse, error) {
+	reqBody := map[string]int64{"TransactionId": transactionId}
+	body, err := c.doRequest(ctx, http.MethodPost, "/payments/get", reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp TtpResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, fmt.Errorf("unmarshal transaction response: %w", err)
 	}
 
 	return &resp, nil

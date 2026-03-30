@@ -440,6 +440,16 @@ func (uc *PaymentUseCase) GetPaymentStatus(ctx context.Context, txID string, act
 		return &v1.GetPaymentStatusResponse{Found: false}, nil
 	}
 
+	// If invoice is still CREATED, poll TTP for actual status
+	if invoice.Status == enum.Created && uc.paymentClient != nil {
+		txIDInt, _ := strconv.ParseInt(txID, 10, 64)
+		if txIDInt > 0 {
+			uc.pollAndProcessTransaction(ctx, invoice, txIDInt)
+			// Re-read invoice after potential update
+			invoice, _ = uc.invoicesRepo.FindByExternalTransactionID(ctx, txID)
+		}
+	}
+
 	resp := &v1.GetPaymentStatusResponse{
 		Found:     true,
 		Status:    string(invoice.Status),
@@ -462,6 +472,38 @@ func (uc *PaymentUseCase) GetPaymentStatus(ctx context.Context, txID string, act
 	}
 
 	return resp, nil
+}
+
+// pollAndProcessTransaction checks TTP for transaction status and processes if completed.
+func (uc *PaymentUseCase) pollAndProcessTransaction(ctx context.Context, invoice *ent.Invoice, txID int64) {
+	ttpResp, err := uc.paymentClient.GetTransaction(ctx, txID)
+	if err != nil {
+		uc.log.Errorf("Failed to poll TTP for tx %d: %v", txID, err)
+		return
+	}
+
+	if !ttpResp.Success {
+		return
+	}
+
+	switch ttpResp.Model.Status {
+	case TtpStatusCompleted, TtpStatusAuthorized:
+		product, err := uc.productRepo.GetProduct(ctx, invoice.ProductID)
+		if err != nil {
+			uc.log.Errorf("Failed to get product %d: %v", invoice.ProductID, err)
+			return
+		}
+		err = uc.handleCompletedPayment(ctx, invoice, product,
+			ttpResp.Model.Token,
+			ttpResp.Model.CardFirstSix+ttpResp.Model.CardLastFour,
+			"", "")
+		if err != nil {
+			uc.log.Errorf("Failed to process polled payment for invoice %d: %v", invoice.ID, err)
+		}
+	case TtpStatusDeclined, "Failed":
+		txIDStr := strconv.FormatInt(txID, 10)
+		uc.handleFailedPayment(ctx, invoice, txIDStr)
+	}
 }
 
 func (uc *PaymentUseCase) CancelSubscription(ctx context.Context, subscriptionID int64) error {
