@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
@@ -104,7 +103,6 @@ func (uc *SubscriptionsUseCase) GetSubscriptionStatus(
 	if len(subs) == 0 {
 		return &v1.SubscriptionStatusReply{
 			HasSubscription: false,
-			Plan:            "starter",
 			Status:          "expired",
 		}, nil
 	}
@@ -128,7 +126,6 @@ func (uc *SubscriptionsUseCase) GetSubscriptionStatus(
 	if bestInvoice == nil || bestSub == nil {
 		return &v1.SubscriptionStatusReply{
 			HasSubscription: false,
-			Plan:            "starter",
 			Status:          "expired",
 		}, nil
 	}
@@ -143,7 +140,6 @@ func (uc *SubscriptionsUseCase) GetSubscriptionStatus(
 
 	if bestProduct != nil {
 		reply.ProductName = bestProduct.Name
-		reply.Plan = extractPlanSlug(bestProduct.Name)
 	}
 
 	now := time.Now()
@@ -168,21 +164,6 @@ func (uc *SubscriptionsUseCase) GetSubscriptionStatus(
 	}
 
 	return reply, nil
-}
-
-// extractPlanSlug extracts "pro" from "Qalai Pro Monthly"
-func extractPlanSlug(name string) string {
-	words := strings.Fields(strings.ToLower(name))
-	if len(words) < 2 {
-		return "starter"
-	}
-	last := words[len(words)-1]
-	if last == "monthly" || last == "yearly" {
-		words = words[1 : len(words)-1]
-	} else {
-		words = words[1:]
-	}
-	return strings.Join(words, "-")
 }
 
 func ReplySubscription(sub *ent.Subscriptions) *v1.Subscription {

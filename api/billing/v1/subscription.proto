@@ -19,14 +19,13 @@ message GetSubscriptionStatusRequest {}
 
 message SubscriptionStatusReply {
   bool hasSubscription = 1;
-  string plan = 2;
-  int64 productId = 3;
-  string productName = 4;
-  string status = 5;
-  string paidTill = 6;
-  bool autoRenew = 7;
-  int64 subscriptionId = 8;
-  string cancelledAt = 9;
+  int64 productId = 2;
+  string productName = 3;
+  string status = 4;
+  string paidTill = 5;
+  bool autoRenew = 6;
+  int64 subscriptionId = 7;
+  string cancelledAt = 8;
 }
 
 message GetSubscriptionRequest {
