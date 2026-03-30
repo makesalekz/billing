@@ -1,13 +1,10 @@
 -- TipTopPay migration: schema changes + Qalai AI products seed
 
--- 1. Add TIP_TOP_PAYMENT to payment_provider enum
-ALTER TYPE payment_provider ADD VALUE IF NOT EXISTS 'TIP_TOP_PAYMENT';
-
--- 2. Add ttp_subscription_id column to invoices
+-- 1. Add ttp_subscription_id column to invoices
 ALTER TABLE "invoices" ADD COLUMN IF NOT EXISTS "ttp_subscription_id" character varying NULL;
 
--- 3. Remove immutable constraint on subscription_id (allow UPDATE)
--- Ent handles this via generated code, no ALTER needed for constraint
+-- 2. payment_provider is character varying, no ALTER TYPE needed
+-- TIP_TOP_PAYMENT is a new value handled by application code
 
 -- =============================================
 -- SEED DATA: Qalai AI Items, Products, Bundles
