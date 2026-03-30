@@ -444,9 +444,13 @@ func (uc *PaymentUseCase) GetPaymentStatus(ctx context.Context, txID string, act
 	if invoice.Status == enum.Created && uc.paymentClient != nil {
 		txIDInt, _ := strconv.ParseInt(txID, 10, 64)
 		if txIDInt > 0 {
-			uc.pollAndProcessTransaction(ctx, invoice, txIDInt)
+			// Use background context to avoid gRPC deadline cancellation
+			bgCtx := context.Background()
+			uc.pollAndProcessTransaction(bgCtx, invoice, txIDInt)
 			// Re-read invoice after potential update
-			invoice, _ = uc.invoicesRepo.FindByExternalTransactionID(ctx, txID)
+			if updated, rerr := uc.invoicesRepo.FindByExternalTransactionID(bgCtx, txID); rerr == nil && updated != nil {
+				invoice = updated
+			}
 		}
 	}
 
