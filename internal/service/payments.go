@@ -2,9 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
-	"io"
-	"net/http"
 	"strconv"
 
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
@@ -107,18 +104,18 @@ func (s *PaymentsService) GetPaymentStatus(ctx context.Context, req *v1.GetPayme
 	return s.uc.GetPaymentStatus(ctx, txID, actorID)
 }
 
-func (s *PaymentsService) CheckWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {
-	code, message := s.uc.HandleCheckWebhook(ctx, req.GetBody(), req.GetHmacSignature())
+func (s *PaymentsService) CheckWebhook(ctx context.Context, req *v1.WebhookPayload) (*v1.WebhookResponse, error) {
+	code, message := s.uc.HandleCheckWebhook(ctx, req)
 	return &v1.WebhookResponse{Code: int32(code), Message: message}, nil
 }
 
-func (s *PaymentsService) PaymentWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {
-	code, message := s.uc.HandleWebhook(ctx, req.GetBody(), req.GetHmacSignature())
+func (s *PaymentsService) PaymentWebhook(ctx context.Context, req *v1.WebhookPayload) (*v1.WebhookResponse, error) {
+	code, message := s.uc.HandlePaymentWebhook(ctx, req)
 	return &v1.WebhookResponse{Code: int32(code), Message: message}, nil
 }
 
-func (s *PaymentsService) RecurrentWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {
-	code, message := s.uc.HandleRecurrentWebhook(ctx, req.GetBody(), req.GetHmacSignature())
+func (s *PaymentsService) RecurrentWebhook(ctx context.Context, req *v1.WebhookPayload) (*v1.WebhookResponse, error) {
+	code, message := s.uc.HandleRecurrentWebhook(ctx, req)
 	return &v1.WebhookResponse{Code: int32(code), Message: message}, nil
 }
 
@@ -130,46 +127,5 @@ func (s *PaymentsService) PaymentCallback(
 	return &utils_v1.EmptyReply{}, nil
 }
 
-const maxWebhookBodySize = 64 * 1024 // 64 KB
-
-// HandleWebhookHTTP handles TipTopPay webhook notifications via HTTP.
-func (s *PaymentsService) HandleWebhookHTTP(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, maxWebhookBodySize)
-	defer r.Body.Close()
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read body", http.StatusBadRequest)
-		return
-	}
-
-	hmacSignature := r.Header.Get("Content-HMAC")
-
-	code, message := s.uc.HandleWebhook(r.Context(), body, hmacSignature)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	resp := map[string]any{"Code": code, "Message": message}
-	json.NewEncoder(w).Encode(resp) //nolint:errcheck
-}
-
-// HandleRecurrentWebhookHTTP handles TTP recurrent payment webhooks via HTTP.
-func (s *PaymentsService) HandleRecurrentWebhookHTTP(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, maxWebhookBodySize)
-	defer r.Body.Close()
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read body", http.StatusBadRequest)
-		return
-	}
-
-	hmacSignature := r.Header.Get("Content-HMAC")
-
-	code, message := s.uc.HandleRecurrentWebhook(r.Context(), body, hmacSignature)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	resp := map[string]any{"Code": code, "Message": message}
-	json.NewEncoder(w).Encode(resp) //nolint:errcheck
-}
+// HTTP webhook handlers removed — webhooks are now parsed on BFF side
+// and forwarded via gRPC as WebhookPayload

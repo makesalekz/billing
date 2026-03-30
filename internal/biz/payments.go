@@ -307,23 +307,11 @@ func (uc *PaymentUseCase) handleFailedPayment(ctx context.Context, invoice *ent.
 }
 
 // HandleCheckWebhook validates a payment before TTP processes it.
-func (uc *PaymentUseCase) HandleCheckWebhook(ctx context.Context, body []byte, hmacSignature string) (int, string) {
-	if !uc.paymentClient.VerifyWebhookHMAC(body, hmacSignature) {
-		uc.log.Errorf("Invalid Check webhook HMAC")
-		return 13, "Invalid signature"
-	}
+func (uc *PaymentUseCase) HandleCheckWebhook(ctx context.Context, p *v1.WebhookPayload) (int, string) {
+	uc.log.Infof("Check webhook: InvoiceId=%s, Amount=%.2f", p.GetInvoiceId(), p.GetAmount())
 
-	payload, err := data.ParseWebhookPayload(body)
+	invoiceID, err := strconv.ParseInt(p.GetInvoiceId(), 10, 64)
 	if err != nil {
-		uc.log.Errorf("Failed to unmarshal Check webhook: %v", err)
-		return 13, "Invalid payload"
-	}
-
-	uc.log.Infof("Check webhook: InvoiceId=%s, Amount=%.2f", payload.InvoiceId, payload.Amount)
-
-	invoiceID, err := strconv.ParseInt(payload.InvoiceId, 10, 64)
-	if err != nil {
-		uc.log.Errorf("Invalid InvoiceId in Check: %s", payload.InvoiceId)
 		return 100, "Invalid InvoiceId"
 	}
 
@@ -341,84 +329,67 @@ func (uc *PaymentUseCase) HandleCheckWebhook(ctx context.Context, body []byte, h
 	return 0, "OK"
 }
 
-// HandleWebhook processes TTP webhook notifications.
-func (uc *PaymentUseCase) HandleWebhook(ctx context.Context, body []byte, hmacSignature string) (int, string) {
-	if !uc.paymentClient.VerifyWebhookHMAC(body, hmacSignature) {
-		uc.log.Errorf("Invalid webhook HMAC signature")
-		return 13, "Invalid signature"
-	}
+// HandlePaymentWebhook processes TTP Pay/Fail webhook.
+func (uc *PaymentUseCase) HandlePaymentWebhook(ctx context.Context, p *v1.WebhookPayload) (int, string) {
+	uc.log.Infof("Payment webhook: TransactionId=%d, Status=%s, InvoiceId=%s",
+		p.GetTransactionId(), p.GetStatus(), p.GetInvoiceId())
 
-	payload, err := data.ParseWebhookPayload(body)
+	invoiceID, err := strconv.ParseInt(p.GetInvoiceId(), 10, 64)
 	if err != nil {
-		uc.log.Errorf("Failed to unmarshal webhook payload: %v", err)
-		return 13, "Invalid payload"
-	}
-
-	uc.log.Infof("Webhook received: TransactionId=%d, Status=%s, InvoiceId=%s",
-		payload.TransactionId, payload.Status, payload.InvoiceId)
-
-	invoiceID, err := strconv.ParseInt(payload.InvoiceId, 10, 64)
-	if err != nil {
-		uc.log.Errorf("Invalid InvoiceId in webhook: %s", payload.InvoiceId)
 		return 13, "Invalid InvoiceId"
 	}
 
 	invoice, err := uc.invoicesRepo.GetInvoiceByID(ctx, invoiceID)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			uc.log.Errorf("Invoice not found: %d", invoiceID)
 			return 13, "Invoice not found"
 		}
-		uc.log.Errorf("Failed to get invoice %d: %v", invoiceID, err)
 		return 13, "Internal error"
 	}
 
-	switch payload.Status {
+	switch p.GetStatus() {
 	case TtpStatusAuthorized, TtpStatusCompleted:
-		uc.handlePayWebhook(ctx, invoice, payload)
-	case TtpStatusDeclined:
-		txID := strconv.FormatInt(payload.TransactionId, 10)
+		product, prodErr := uc.productRepo.GetProduct(ctx, invoice.ProductID)
+		if prodErr != nil {
+			uc.log.Errorf("Failed to get product for invoice %v: %v", invoice.ID, prodErr)
+			return 13, "Product not found"
+		}
+		err = uc.handleCompletedPayment(ctx, invoice, product,
+			p.GetToken(), p.GetCardFirstSix()+p.GetCardLastFour(),
+			p.GetName(), p.GetEmail())
+		if err != nil {
+			uc.log.Errorf("Failed to process pay webhook for invoice %v: %v", invoice.ID, err)
+		}
+	case TtpStatusDeclined, "Failed":
+		txID := strconv.FormatInt(p.GetTransactionId(), 10)
 		uc.handleFailedPayment(ctx, invoice, txID)
 	default:
-		uc.log.Warnf("Unknown webhook status: %s for invoice: %d", payload.Status, invoiceID)
+		uc.log.Warnf("Unknown webhook status: %s for invoice: %d", p.GetStatus(), invoiceID)
 	}
 
 	return 0, "OK"
 }
 
-// HandleRecurrentWebhook processes TTP recurrent payment webhooks.
-func (uc *PaymentUseCase) HandleRecurrentWebhook(ctx context.Context, body []byte, hmacSignature string) (int, string) {
-	if !uc.paymentClient.VerifyWebhookHMAC(body, hmacSignature) {
-		return 13, "Invalid signature"
-	}
-
-	payload, err := data.ParseWebhookPayload(body)
-	if err != nil {
-		uc.log.Errorf("Failed to unmarshal recurrent webhook: %v", err)
-		return 13, "Invalid payload"
-	}
-
+// HandleRecurrentWebhook processes TTP recurrent payment webhook.
+func (uc *PaymentUseCase) HandleRecurrentWebhook(ctx context.Context, p *v1.WebhookPayload) (int, string) {
 	uc.log.Infof("Recurrent webhook: SubscriptionId=%s, TransactionId=%d, Amount=%.2f",
-		payload.SubscriptionId, payload.TransactionId, payload.Amount)
+		p.GetSubscriptionId(), p.GetTransactionId(), p.GetAmount())
 
-	// Find original invoice by TTP subscription ID to get product/user context
-	originalInvoice, err := uc.invoicesRepo.FindByTtpSubscriptionID(ctx, payload.SubscriptionId)
+	originalInvoice, err := uc.invoicesRepo.FindByTtpSubscriptionID(ctx, p.GetSubscriptionId())
 	if err != nil {
-		uc.log.Errorf("Failed to find invoice for TTP subscription %s: %v", payload.SubscriptionId, err)
+		uc.log.Errorf("Failed to find invoice for TTP subscription %s: %v", p.GetSubscriptionId(), err)
 		return 13, "Subscription not found"
 	}
 
 	product, err := uc.productRepo.GetProduct(ctx, originalInvoice.ProductID)
 	if err != nil {
-		uc.log.Errorf("Failed to get product %d: %v", originalInvoice.ProductID, err)
 		return 13, "Product not found"
 	}
 
-	// Idempotency: check if invoice for this transaction already exists
-	txID := strconv.FormatInt(payload.TransactionId, 10)
+	txID := strconv.FormatInt(p.GetTransactionId(), 10)
 	existing, _ := uc.invoicesRepo.FindByExternalTransactionID(ctx, txID)
 	if existing != nil {
-		uc.log.Infof("Recurrent invoice for transaction %s already exists (id=%d)", txID, existing.ID)
+		uc.log.Infof("Recurrent invoice for tx %s already exists", txID)
 		return 0, "OK"
 	}
 
@@ -430,18 +401,19 @@ func (uc *PaymentUseCase) HandleRecurrentWebhook(ctx context.Context, body []byt
 		subscriptionID = *originalInvoice.SubscriptionID
 	}
 
+	subID := p.GetSubscriptionId()
 	newInvoice, err := uc.invoicesRepo.CreateInvoice(ctx, data.InvoiceDto{
-		TenantID:          originalInvoice.TenantID,
-		UserID:            originalInvoice.UserID,
-		AppID:             originalInvoice.AppID,
-		ProductID:         originalInvoice.ProductID,
-		Amount:            originalInvoice.Amount,
-		Status:            enum.Paid,
-		SubscriptionID:    subscriptionID,
-		PaidAt:            &paidAt,
-		PaidTill:          &paidTill,
-		TtpTransactionID:  &txID,
-		TtpSubscriptionID: &payload.SubscriptionId,
+		TenantID:           originalInvoice.TenantID,
+		UserID:             originalInvoice.UserID,
+		AppID:              originalInvoice.AppID,
+		ProductID:          originalInvoice.ProductID,
+		Amount:             originalInvoice.Amount,
+		Status:             enum.Paid,
+		SubscriptionID:     subscriptionID,
+		PaidAt:             &paidAt,
+		PaidTill:           &paidTill,
+		TtpTransactionID:   &txID,
+		TtpSubscriptionID:  &subID,
 		RecurrentProfileID: originalInvoice.PaymentProfileID,
 	})
 	if err != nil {
@@ -449,23 +421,10 @@ func (uc *PaymentUseCase) HandleRecurrentWebhook(ctx context.Context, body []byt
 		return 13, "Failed to create invoice"
 	}
 
-	uc.log.Infof("Recurrent invoice %d created for subscription %s", newInvoice.ID, payload.SubscriptionId)
+	uc.log.Infof("Recurrent invoice %d created for subscription %s", newInvoice.ID, p.GetSubscriptionId())
 	return 0, "OK"
 }
 
-func (uc *PaymentUseCase) handlePayWebhook(ctx context.Context, invoice *ent.Invoice, payload *data.TtpWebhookPayload) {
-	product, err := uc.productRepo.GetProduct(ctx, invoice.ProductID)
-	if err != nil {
-		uc.log.Errorf("Failed to get product for invoice %v: %v", invoice.ID, err)
-		return
-	}
-
-	err = uc.handleCompletedPayment(ctx, invoice, product, payload.Token,
-		payload.CardFirstSix+payload.CardLastFour, payload.Name, payload.Email)
-	if err != nil {
-		uc.log.Errorf("Failed to process pay webhook for invoice %v: %v", invoice.ID, err)
-	}
-}
 
 func (uc *PaymentUseCase) GetPaymentStatus(ctx context.Context, txID string, actorID int64) (*v1.GetPaymentStatusResponse, error) {
 	invoice, err := uc.invoicesRepo.FindByExternalTransactionID(ctx, txID)

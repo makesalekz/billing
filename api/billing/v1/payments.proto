@@ -13,9 +13,9 @@ service Payments {
   rpc Complete3DS(Complete3DSRequest) returns (Complete3DSResponse);
   rpc GetPaymentStatus(GetPaymentStatusRequest) returns (GetPaymentStatusResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (utils.v1.EmptyReply);
-  rpc CheckWebhook(WebhookRequest) returns (WebhookResponse);
-  rpc PaymentWebhook(WebhookRequest) returns (WebhookResponse);
-  rpc RecurrentWebhook(WebhookRequest) returns (WebhookResponse);
+  rpc CheckWebhook(WebhookPayload) returns (WebhookResponse);
+  rpc PaymentWebhook(WebhookPayload) returns (WebhookResponse);
+  rpc RecurrentWebhook(WebhookPayload) returns (WebhookResponse);
   // Legacy OVP callback — kept for backward compatibility
   rpc PaymentCallback(PaymentCallbackRequest) returns (utils.v1.EmptyReply);
 }
@@ -90,10 +90,25 @@ message PayerInfo {
   string userToken = 5;
 }
 
-// TipTopPay webhook
-message WebhookRequest {
-  bytes body = 1;
-  string hmacSignature = 2;
+// TipTopPay webhook — parsed data from BFF (HMAC verified on BFF side)
+message WebhookPayload {
+  int64 transactionId = 1;
+  double amount = 2;
+  string currency = 3;
+  string status = 4;
+  string invoiceId = 5;
+  string accountId = 6;
+  string token = 7;
+  string subscriptionId = 8;
+  int32 reasonCode = 9;
+  string cardFirstSix = 10;
+  string cardLastFour = 11;
+  string cardExpDate = 12;
+  string cardType = 13;
+  string name = 14;
+  string email = 15;
+  string dateTime = 16;
+  string operationType = 17;
 }
 
 message WebhookResponse {
