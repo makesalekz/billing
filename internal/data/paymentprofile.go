@@ -24,15 +24,23 @@ func NewPaymentProfileRepo(d *Data) PaymentProfileRepo {
 }
 
 func (r *paymentProfileRepo) CreateProfile(ctx context.Context, dto PaymentProfileDto) (*ent.PaymentProfile, error) {
-	return r.db.PaymentProfile.Create().
+	query := r.db.PaymentProfile.Create().
 		SetUserID(dto.UserID).
 		SetPanMasked(dto.PanMasked).
 		SetHolder(dto.Holder).
-		SetEmail(*dto.Email).
-		SetPhone(*dto.Phone).
-		SetUserToken(dto.UserToken).
-		SetRecurrentToken(*dto.RecurrentToken).
-		Save(ctx)
+		SetUserToken(dto.UserToken)
+
+	if dto.Email != nil {
+		query.SetEmail(*dto.Email)
+	}
+	if dto.Phone != nil {
+		query.SetPhone(*dto.Phone)
+	}
+	if dto.RecurrentToken != nil {
+		query.SetRecurrentToken(*dto.RecurrentToken)
+	}
+
+	return query.Save(ctx)
 }
 
 func (r *paymentProfileRepo) GetProfileByUserID(ctx context.Context, userID int64) (*ent.PaymentProfile, error) {
