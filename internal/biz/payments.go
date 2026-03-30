@@ -98,6 +98,7 @@ func (uc *PaymentUseCase) CreatePayment(
 		Email:                email,
 	}
 
+	ctx = data.WithRequestID(ctx, strconv.FormatInt(invoice.ID, 10))
 	resp, err := uc.paymentClient.Charge(ctx, chargeReq)
 	if err != nil {
 		uc.log.Errorf("Failed to charge via TTP: %v", err)
@@ -413,10 +414,16 @@ func (uc *PaymentUseCase) HandleRecurrentWebhook(ctx context.Context, body []byt
 		return 13, "Product not found"
 	}
 
-	// Create new invoice for this billing period
+	// Idempotency: check if invoice for this transaction already exists
+	txID := strconv.FormatInt(payload.TransactionId, 10)
+	existing, _ := uc.invoicesRepo.FindByExternalTransactionID(ctx, txID)
+	if existing != nil {
+		uc.log.Infof("Recurrent invoice for transaction %s already exists (id=%d)", txID, existing.ID)
+		return 0, "OK"
+	}
+
 	paidAt := time.Now()
 	paidTill := paidAt.Add(calculateDuration(product.ProductPeriod))
-	txID := strconv.FormatInt(payload.TransactionId, 10)
 
 	var subscriptionID int64
 	if originalInvoice.SubscriptionID != nil {

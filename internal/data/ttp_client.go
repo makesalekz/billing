@@ -21,6 +21,15 @@ import (
 	"gitlab.calendaria.team/services/utils/v1/config"
 )
 
+type contextKey string
+
+const ctxKeyRequestID contextKey = "ttp_request_id"
+
+// WithRequestID adds idempotency key to context for TTP API calls.
+func WithRequestID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, ctxKeyRequestID, id)
+}
+
 const (
 	TtpBaseURLProduction = "https://api.tiptoppay.kz"
 	TtpDefaultTimeout    = 30 * time.Second
@@ -269,6 +278,10 @@ func (c *TtpClient) doRequest(ctx context.Context, method, path string, body any
 
 	req.Header.Set("Authorization", c.authHeaderVal)
 	req.Header.Set("Content-Type", "application/json")
+
+	if requestID := ctx.Value(ctxKeyRequestID); requestID != nil {
+		req.Header.Set("X-Request-ID", requestID.(string))
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
