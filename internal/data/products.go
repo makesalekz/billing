@@ -249,7 +249,7 @@ func (r *productsRepo) ListProducts(
 		Where(
 			product.AppID(appID),
 			product.IDGT(paginate.GetFromId()),
-		).Limit(int(paginate.GetLimit())).All(ctx)
+		).WithBundles().Limit(int(paginate.GetLimit())).All(ctx)
 }
 
 func (r *productsRepo) CountProducts(ctx context.Context, appID string) (int32, error) {

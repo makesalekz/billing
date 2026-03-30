@@ -108,8 +108,10 @@ func ReplyProduct(product *ent.Product) *v1.Product {
 		Left:        &product.Left,
 		IsUnique:    product.IsUnique,
 		UniqueLimit: &product.UniqueLimit,
-		IsExpiring:  product.IsExpiring,
-		Bundles:     nil,
+		IsExpiring:    product.IsExpiring,
+		Bundles:       nil,
+		PaymentModel:  string(product.PaymentModel),
+		PaymentPeriod: string(product.ProductPeriod),
 	}
 
 	if product.LimitedTill != nil {
