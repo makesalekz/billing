@@ -131,7 +131,6 @@ func (im *InvoicesManager) calculateInvoicePrice(
 		}
 
 		if isFirst {
-			invoiceDto.Price = decimal.NewFromInt(DefaultPriceForCardLink)
 			invoiceDto.IsTrial = true
 		}
 	}

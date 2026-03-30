@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -331,8 +330,8 @@ func (uc *PaymentUseCase) HandleCheckWebhook(ctx context.Context, body []byte, h
 		return 13, "Invalid signature"
 	}
 
-	var payload data.TtpWebhookPayload
-	if err := json.Unmarshal(body, &payload); err != nil {
+	payload, err := data.ParseWebhookPayload(body)
+	if err != nil {
 		uc.log.Errorf("Failed to unmarshal Check webhook: %v", err)
 		return 13, "Invalid payload"
 	}
@@ -366,8 +365,8 @@ func (uc *PaymentUseCase) HandleWebhook(ctx context.Context, body []byte, hmacSi
 		return 13, "Invalid signature"
 	}
 
-	var payload data.TtpWebhookPayload
-	if err := json.Unmarshal(body, &payload); err != nil {
+	payload, err := data.ParseWebhookPayload(body)
+	if err != nil {
 		uc.log.Errorf("Failed to unmarshal webhook payload: %v", err)
 		return 13, "Invalid payload"
 	}
@@ -393,7 +392,7 @@ func (uc *PaymentUseCase) HandleWebhook(ctx context.Context, body []byte, hmacSi
 
 	switch payload.Status {
 	case TtpStatusAuthorized, TtpStatusCompleted:
-		uc.handlePayWebhook(ctx, invoice, &payload)
+		uc.handlePayWebhook(ctx, invoice, payload)
 	case TtpStatusDeclined:
 		txID := strconv.FormatInt(payload.TransactionId, 10)
 		uc.handleFailedPayment(ctx, invoice, txID)
@@ -410,8 +409,8 @@ func (uc *PaymentUseCase) HandleRecurrentWebhook(ctx context.Context, body []byt
 		return 13, "Invalid signature"
 	}
 
-	var payload data.TtpWebhookPayload
-	if err := json.Unmarshal(body, &payload); err != nil {
+	payload, err := data.ParseWebhookPayload(body)
+	if err != nil {
 		uc.log.Errorf("Failed to unmarshal recurrent webhook: %v", err)
 		return 13, "Invalid payload"
 	}
