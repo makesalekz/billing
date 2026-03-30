@@ -444,6 +444,39 @@ func (uc *PaymentUseCase) handlePayWebhook(ctx context.Context, invoice *ent.Inv
 	}
 }
 
+func (uc *PaymentUseCase) GetPaymentStatus(ctx context.Context, txID string) (*v1.GetPaymentStatusResponse, error) {
+	invoice, err := uc.invoicesRepo.FindByExternalTransactionID(ctx, txID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return &v1.GetPaymentStatusResponse{Found: false}, nil
+		}
+		return nil, v1.ErrorDatabaseQuery("failed to find invoice: %v", err)
+	}
+
+	resp := &v1.GetPaymentStatusResponse{
+		Found:     true,
+		Status:    string(invoice.Status),
+		InvoiceId: invoice.ID,
+		ProductId: invoice.ProductID,
+		Price:     invoice.Price.String(),
+		Currency:  invoice.Currency,
+	}
+
+	product, err := uc.productRepo.GetProduct(ctx, invoice.ProductID)
+	if err == nil {
+		resp.ProductName = product.Name
+	}
+
+	if invoice.PaidAt != nil {
+		resp.PaidAt = invoice.PaidAt.Format(time.RFC3339)
+	}
+	if invoice.PaidTill != nil {
+		resp.PaidTill = invoice.PaidTill.Format(time.RFC3339)
+	}
+
+	return resp, nil
+}
+
 func (uc *PaymentUseCase) CancelSubscription(ctx context.Context, subscriptionID int64) error {
 	err := uc.subscriptionRepo.RevokeActiveSubscription(ctx, subscriptionID, time.Now())
 	if err != nil {

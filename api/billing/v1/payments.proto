@@ -11,11 +11,28 @@ option java_package = "billing.v1";
 service Payments {
   rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
   rpc Complete3DS(Complete3DSRequest) returns (Complete3DSResponse);
+  rpc GetPaymentStatus(GetPaymentStatusRequest) returns (GetPaymentStatusResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (utils.v1.EmptyReply);
   rpc PaymentWebhook(WebhookRequest) returns (WebhookResponse);
   rpc RecurrentWebhook(WebhookRequest) returns (WebhookResponse);
   // Legacy OVP callback — kept for backward compatibility
   rpc PaymentCallback(PaymentCallbackRequest) returns (utils.v1.EmptyReply);
+}
+
+message GetPaymentStatusRequest {
+  int64 transactionId = 1;
+}
+
+message GetPaymentStatusResponse {
+  bool found = 1;
+  string status = 2;
+  int64 invoiceId = 3;
+  int64 productId = 4;
+  string productName = 5;
+  string price = 6;
+  string currency = 7;
+  string paidAt = 8;
+  string paidTill = 9;
 }
 
 message CreatePaymentRequest {

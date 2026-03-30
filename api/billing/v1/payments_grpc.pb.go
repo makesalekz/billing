@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Payments_CreatePayment_FullMethodName      = "/billing.v1.Payments/CreatePayment"
 	Payments_Complete3DS_FullMethodName        = "/billing.v1.Payments/Complete3DS"
+	Payments_GetPaymentStatus_FullMethodName   = "/billing.v1.Payments/GetPaymentStatus"
 	Payments_CancelSubscription_FullMethodName = "/billing.v1.Payments/CancelSubscription"
 	Payments_PaymentWebhook_FullMethodName     = "/billing.v1.Payments/PaymentWebhook"
 	Payments_RecurrentWebhook_FullMethodName   = "/billing.v1.Payments/RecurrentWebhook"
@@ -34,6 +35,7 @@ const (
 type PaymentsClient interface {
 	CreatePayment(ctx context.Context, in *CreatePaymentRequest, opts ...grpc.CallOption) (*CreatePaymentResponse, error)
 	Complete3DS(ctx context.Context, in *Complete3DSRequest, opts ...grpc.CallOption) (*Complete3DSResponse, error)
+	GetPaymentStatus(ctx context.Context, in *GetPaymentStatusRequest, opts ...grpc.CallOption) (*GetPaymentStatusResponse, error)
 	CancelSubscription(ctx context.Context, in *CancelSubscriptionRequest, opts ...grpc.CallOption) (*v1.EmptyReply, error)
 	PaymentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
 	RecurrentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
@@ -63,6 +65,16 @@ func (c *paymentsClient) Complete3DS(ctx context.Context, in *Complete3DSRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Complete3DSResponse)
 	err := c.cc.Invoke(ctx, Payments_Complete3DS_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentsClient) GetPaymentStatus(ctx context.Context, in *GetPaymentStatusRequest, opts ...grpc.CallOption) (*GetPaymentStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPaymentStatusResponse)
+	err := c.cc.Invoke(ctx, Payments_GetPaymentStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +127,7 @@ func (c *paymentsClient) PaymentCallback(ctx context.Context, in *PaymentCallbac
 type PaymentsServer interface {
 	CreatePayment(context.Context, *CreatePaymentRequest) (*CreatePaymentResponse, error)
 	Complete3DS(context.Context, *Complete3DSRequest) (*Complete3DSResponse, error)
+	GetPaymentStatus(context.Context, *GetPaymentStatusRequest) (*GetPaymentStatusResponse, error)
 	CancelSubscription(context.Context, *CancelSubscriptionRequest) (*v1.EmptyReply, error)
 	PaymentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
 	RecurrentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
@@ -135,6 +148,9 @@ func (UnimplementedPaymentsServer) CreatePayment(context.Context, *CreatePayment
 }
 func (UnimplementedPaymentsServer) Complete3DS(context.Context, *Complete3DSRequest) (*Complete3DSResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Complete3DS not implemented")
+}
+func (UnimplementedPaymentsServer) GetPaymentStatus(context.Context, *GetPaymentStatusRequest) (*GetPaymentStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPaymentStatus not implemented")
 }
 func (UnimplementedPaymentsServer) CancelSubscription(context.Context, *CancelSubscriptionRequest) (*v1.EmptyReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelSubscription not implemented")
@@ -201,6 +217,24 @@ func _Payments_Complete3DS_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PaymentsServer).Complete3DS(ctx, req.(*Complete3DSRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Payments_GetPaymentStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPaymentStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentsServer).GetPaymentStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Payments_GetPaymentStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentsServer).GetPaymentStatus(ctx, req.(*GetPaymentStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -291,6 +325,10 @@ var Payments_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Complete3DS",
 			Handler:    _Payments_Complete3DS_Handler,
+		},
+		{
+			MethodName: "GetPaymentStatus",
+			Handler:    _Payments_GetPaymentStatus_Handler,
 		},
 		{
 			MethodName: "CancelSubscription",

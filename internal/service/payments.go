@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/internal/biz"
@@ -94,6 +95,11 @@ func (s *PaymentsService) CancelSubscription(
 		return nil, err
 	}
 	return &utils_v1.EmptyReply{}, nil
+}
+
+func (s *PaymentsService) GetPaymentStatus(ctx context.Context, req *v1.GetPaymentStatusRequest) (*v1.GetPaymentStatusResponse, error) {
+	txID := strconv.FormatInt(req.GetTransactionId(), 10)
+	return s.uc.GetPaymentStatus(ctx, txID)
 }
 
 func (s *PaymentsService) PaymentWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {
