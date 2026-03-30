@@ -235,10 +235,14 @@ func (r *productsRepo) DeleteProduct(ctx context.Context, productID int64) error
 		Exec(ctx)
 }
 
+func withBundlesAndItems(q *ent.BundleQuery) {
+	q.WithItem()
+}
+
 func (r *productsRepo) GetProduct(ctx context.Context, productID int64) (*ent.Product, error) {
 	return r.db.Product.Query().
 		Where(product.ID(productID)).
-		WithBundles().
+		WithBundles(withBundlesAndItems).
 		Only(ctx)
 }
 
@@ -249,7 +253,7 @@ func (r *productsRepo) ListProducts(
 		Where(
 			product.AppID(appID),
 			product.IDGT(paginate.GetFromId()),
-		).WithBundles().Limit(int(paginate.GetLimit())).All(ctx)
+		).WithBundles(withBundlesAndItems).Limit(int(paginate.GetLimit())).All(ctx)
 }
 
 func (r *productsRepo) CountProducts(ctx context.Context, appID string) (int32, error) {
