@@ -98,8 +98,13 @@ func (s *PaymentsService) CancelSubscription(
 }
 
 func (s *PaymentsService) GetPaymentStatus(ctx context.Context, req *v1.GetPaymentStatusRequest) (*v1.GetPaymentStatusResponse, error) {
+	actorID := auth.GetActorIdFromContext(ctx)
+	if actorID == 0 {
+		return nil, v1.ErrorEmptyActorId("actor id is empty")
+	}
+
 	txID := strconv.FormatInt(req.GetTransactionId(), 10)
-	return s.uc.GetPaymentStatus(ctx, txID)
+	return s.uc.GetPaymentStatus(ctx, txID, actorID)
 }
 
 func (s *PaymentsService) PaymentWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {

@@ -444,13 +444,17 @@ func (uc *PaymentUseCase) handlePayWebhook(ctx context.Context, invoice *ent.Inv
 	}
 }
 
-func (uc *PaymentUseCase) GetPaymentStatus(ctx context.Context, txID string) (*v1.GetPaymentStatusResponse, error) {
+func (uc *PaymentUseCase) GetPaymentStatus(ctx context.Context, txID string, actorID int64) (*v1.GetPaymentStatusResponse, error) {
 	invoice, err := uc.invoicesRepo.FindByExternalTransactionID(ctx, txID)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return &v1.GetPaymentStatusResponse{Found: false}, nil
 		}
 		return nil, v1.ErrorDatabaseQuery("failed to find invoice: %v", err)
+	}
+
+	if invoice.UserID != actorID {
+		return &v1.GetPaymentStatusResponse{Found: false}, nil
 	}
 
 	resp := &v1.GetPaymentStatusResponse{
