@@ -12,7 +12,7 @@ RUN mkdir -p -m 0700 ~/.ssh && \
     chmod 600 ~/.netrc && \
     go env -w GO111MODULE='on' GOPRIVATE='gitlab.calendaria.team'
 
-RUN --mount=type=ssh,id=rsa make build
+RUN --mount=type=ssh,id=rsa CGO_ENABLED=0 make build
 
 FROM alpine:3.21
 
