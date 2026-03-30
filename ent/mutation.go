@@ -3874,9 +3874,22 @@ func (m *PaymentProfileMutation) OldEmail(ctx context.Context) (v string, err er
 	return oldValue.Email, nil
 }
 
+// ClearEmail clears the value of the "email" field.
+func (m *PaymentProfileMutation) ClearEmail() {
+	m.email = nil
+	m.clearedFields[paymentprofile.FieldEmail] = struct{}{}
+}
+
+// EmailCleared returns if the "email" field was cleared in this mutation.
+func (m *PaymentProfileMutation) EmailCleared() bool {
+	_, ok := m.clearedFields[paymentprofile.FieldEmail]
+	return ok
+}
+
 // ResetEmail resets all changes to the "email" field.
 func (m *PaymentProfileMutation) ResetEmail() {
 	m.email = nil
+	delete(m.clearedFields, paymentprofile.FieldEmail)
 }
 
 // SetPhone sets the "phone" field.
@@ -3910,9 +3923,22 @@ func (m *PaymentProfileMutation) OldPhone(ctx context.Context) (v string, err er
 	return oldValue.Phone, nil
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (m *PaymentProfileMutation) ClearPhone() {
+	m.phone = nil
+	m.clearedFields[paymentprofile.FieldPhone] = struct{}{}
+}
+
+// PhoneCleared returns if the "phone" field was cleared in this mutation.
+func (m *PaymentProfileMutation) PhoneCleared() bool {
+	_, ok := m.clearedFields[paymentprofile.FieldPhone]
+	return ok
+}
+
 // ResetPhone resets all changes to the "phone" field.
 func (m *PaymentProfileMutation) ResetPhone() {
 	m.phone = nil
+	delete(m.clearedFields, paymentprofile.FieldPhone)
 }
 
 // SetUserToken sets the "user_token" field.
@@ -3946,9 +3972,22 @@ func (m *PaymentProfileMutation) OldUserToken(ctx context.Context) (v string, er
 	return oldValue.UserToken, nil
 }
 
+// ClearUserToken clears the value of the "user_token" field.
+func (m *PaymentProfileMutation) ClearUserToken() {
+	m.user_token = nil
+	m.clearedFields[paymentprofile.FieldUserToken] = struct{}{}
+}
+
+// UserTokenCleared returns if the "user_token" field was cleared in this mutation.
+func (m *PaymentProfileMutation) UserTokenCleared() bool {
+	_, ok := m.clearedFields[paymentprofile.FieldUserToken]
+	return ok
+}
+
 // ResetUserToken resets all changes to the "user_token" field.
 func (m *PaymentProfileMutation) ResetUserToken() {
 	m.user_token = nil
+	delete(m.clearedFields, paymentprofile.FieldUserToken)
 }
 
 // SetRecurrentToken sets the "recurrent_token" field.
@@ -4303,6 +4342,15 @@ func (m *PaymentProfileMutation) ClearedFields() []string {
 	if m.FieldCleared(paymentprofile.FieldDeletedAt) {
 		fields = append(fields, paymentprofile.FieldDeletedAt)
 	}
+	if m.FieldCleared(paymentprofile.FieldEmail) {
+		fields = append(fields, paymentprofile.FieldEmail)
+	}
+	if m.FieldCleared(paymentprofile.FieldPhone) {
+		fields = append(fields, paymentprofile.FieldPhone)
+	}
+	if m.FieldCleared(paymentprofile.FieldUserToken) {
+		fields = append(fields, paymentprofile.FieldUserToken)
+	}
 	if m.FieldCleared(paymentprofile.FieldRecurrentToken) {
 		fields = append(fields, paymentprofile.FieldRecurrentToken)
 	}
@@ -4322,6 +4370,15 @@ func (m *PaymentProfileMutation) ClearField(name string) error {
 	switch name {
 	case paymentprofile.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case paymentprofile.FieldEmail:
+		m.ClearEmail()
+		return nil
+	case paymentprofile.FieldPhone:
+		m.ClearPhone()
+		return nil
+	case paymentprofile.FieldUserToken:
+		m.ClearUserToken()
 		return nil
 	case paymentprofile.FieldRecurrentToken:
 		m.ClearRecurrentToken()

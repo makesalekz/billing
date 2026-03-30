@@ -89,15 +89,39 @@ func (ppc *PaymentProfileCreate) SetEmail(s string) *PaymentProfileCreate {
 	return ppc
 }
 
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (ppc *PaymentProfileCreate) SetNillableEmail(s *string) *PaymentProfileCreate {
+	if s != nil {
+		ppc.SetEmail(*s)
+	}
+	return ppc
+}
+
 // SetPhone sets the "phone" field.
 func (ppc *PaymentProfileCreate) SetPhone(s string) *PaymentProfileCreate {
 	ppc.mutation.SetPhone(s)
 	return ppc
 }
 
+// SetNillablePhone sets the "phone" field if the given value is not nil.
+func (ppc *PaymentProfileCreate) SetNillablePhone(s *string) *PaymentProfileCreate {
+	if s != nil {
+		ppc.SetPhone(*s)
+	}
+	return ppc
+}
+
 // SetUserToken sets the "user_token" field.
 func (ppc *PaymentProfileCreate) SetUserToken(s string) *PaymentProfileCreate {
 	ppc.mutation.SetUserToken(s)
+	return ppc
+}
+
+// SetNillableUserToken sets the "user_token" field if the given value is not nil.
+func (ppc *PaymentProfileCreate) SetNillableUserToken(s *string) *PaymentProfileCreate {
+	if s != nil {
+		ppc.SetUserToken(*s)
+	}
 	return ppc
 }
 
@@ -187,6 +211,18 @@ func (ppc *PaymentProfileCreate) defaults() error {
 		v := paymentprofile.DefaultUpdatedAt()
 		ppc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := ppc.mutation.Email(); !ok {
+		v := paymentprofile.DefaultEmail
+		ppc.mutation.SetEmail(v)
+	}
+	if _, ok := ppc.mutation.Phone(); !ok {
+		v := paymentprofile.DefaultPhone
+		ppc.mutation.SetPhone(v)
+	}
+	if _, ok := ppc.mutation.UserToken(); !ok {
+		v := paymentprofile.DefaultUserToken
+		ppc.mutation.SetUserToken(v)
+	}
 	return nil
 }
 
@@ -206,15 +242,6 @@ func (ppc *PaymentProfileCreate) check() error {
 	}
 	if _, ok := ppc.mutation.Holder(); !ok {
 		return &ValidationError{Name: "holder", err: errors.New(`ent: missing required field "PaymentProfile.holder"`)}
-	}
-	if _, ok := ppc.mutation.Email(); !ok {
-		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "PaymentProfile.email"`)}
-	}
-	if _, ok := ppc.mutation.Phone(); !ok {
-		return &ValidationError{Name: "phone", err: errors.New(`ent: missing required field "PaymentProfile.phone"`)}
-	}
-	if _, ok := ppc.mutation.UserToken(); !ok {
-		return &ValidationError{Name: "user_token", err: errors.New(`ent: missing required field "PaymentProfile.user_token"`)}
 	}
 	return nil
 }
@@ -399,6 +426,12 @@ func (u *PaymentProfileUpsert) UpdateEmail() *PaymentProfileUpsert {
 	return u
 }
 
+// ClearEmail clears the value of the "email" field.
+func (u *PaymentProfileUpsert) ClearEmail() *PaymentProfileUpsert {
+	u.SetNull(paymentprofile.FieldEmail)
+	return u
+}
+
 // SetPhone sets the "phone" field.
 func (u *PaymentProfileUpsert) SetPhone(v string) *PaymentProfileUpsert {
 	u.Set(paymentprofile.FieldPhone, v)
@@ -411,6 +444,12 @@ func (u *PaymentProfileUpsert) UpdatePhone() *PaymentProfileUpsert {
 	return u
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (u *PaymentProfileUpsert) ClearPhone() *PaymentProfileUpsert {
+	u.SetNull(paymentprofile.FieldPhone)
+	return u
+}
+
 // SetUserToken sets the "user_token" field.
 func (u *PaymentProfileUpsert) SetUserToken(v string) *PaymentProfileUpsert {
 	u.Set(paymentprofile.FieldUserToken, v)
@@ -420,6 +459,12 @@ func (u *PaymentProfileUpsert) SetUserToken(v string) *PaymentProfileUpsert {
 // UpdateUserToken sets the "user_token" field to the value that was provided on create.
 func (u *PaymentProfileUpsert) UpdateUserToken() *PaymentProfileUpsert {
 	u.SetExcluded(paymentprofile.FieldUserToken)
+	return u
+}
+
+// ClearUserToken clears the value of the "user_token" field.
+func (u *PaymentProfileUpsert) ClearUserToken() *PaymentProfileUpsert {
+	u.SetNull(paymentprofile.FieldUserToken)
 	return u
 }
 
@@ -550,6 +595,13 @@ func (u *PaymentProfileUpsertOne) UpdateEmail() *PaymentProfileUpsertOne {
 	})
 }
 
+// ClearEmail clears the value of the "email" field.
+func (u *PaymentProfileUpsertOne) ClearEmail() *PaymentProfileUpsertOne {
+	return u.Update(func(s *PaymentProfileUpsert) {
+		s.ClearEmail()
+	})
+}
+
 // SetPhone sets the "phone" field.
 func (u *PaymentProfileUpsertOne) SetPhone(v string) *PaymentProfileUpsertOne {
 	return u.Update(func(s *PaymentProfileUpsert) {
@@ -564,6 +616,13 @@ func (u *PaymentProfileUpsertOne) UpdatePhone() *PaymentProfileUpsertOne {
 	})
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (u *PaymentProfileUpsertOne) ClearPhone() *PaymentProfileUpsertOne {
+	return u.Update(func(s *PaymentProfileUpsert) {
+		s.ClearPhone()
+	})
+}
+
 // SetUserToken sets the "user_token" field.
 func (u *PaymentProfileUpsertOne) SetUserToken(v string) *PaymentProfileUpsertOne {
 	return u.Update(func(s *PaymentProfileUpsert) {
@@ -575,6 +634,13 @@ func (u *PaymentProfileUpsertOne) SetUserToken(v string) *PaymentProfileUpsertOn
 func (u *PaymentProfileUpsertOne) UpdateUserToken() *PaymentProfileUpsertOne {
 	return u.Update(func(s *PaymentProfileUpsert) {
 		s.UpdateUserToken()
+	})
+}
+
+// ClearUserToken clears the value of the "user_token" field.
+func (u *PaymentProfileUpsertOne) ClearUserToken() *PaymentProfileUpsertOne {
+	return u.Update(func(s *PaymentProfileUpsert) {
+		s.ClearUserToken()
 	})
 }
 
@@ -874,6 +940,13 @@ func (u *PaymentProfileUpsertBulk) UpdateEmail() *PaymentProfileUpsertBulk {
 	})
 }
 
+// ClearEmail clears the value of the "email" field.
+func (u *PaymentProfileUpsertBulk) ClearEmail() *PaymentProfileUpsertBulk {
+	return u.Update(func(s *PaymentProfileUpsert) {
+		s.ClearEmail()
+	})
+}
+
 // SetPhone sets the "phone" field.
 func (u *PaymentProfileUpsertBulk) SetPhone(v string) *PaymentProfileUpsertBulk {
 	return u.Update(func(s *PaymentProfileUpsert) {
@@ -888,6 +961,13 @@ func (u *PaymentProfileUpsertBulk) UpdatePhone() *PaymentProfileUpsertBulk {
 	})
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (u *PaymentProfileUpsertBulk) ClearPhone() *PaymentProfileUpsertBulk {
+	return u.Update(func(s *PaymentProfileUpsert) {
+		s.ClearPhone()
+	})
+}
+
 // SetUserToken sets the "user_token" field.
 func (u *PaymentProfileUpsertBulk) SetUserToken(v string) *PaymentProfileUpsertBulk {
 	return u.Update(func(s *PaymentProfileUpsert) {
@@ -899,6 +979,13 @@ func (u *PaymentProfileUpsertBulk) SetUserToken(v string) *PaymentProfileUpsertB
 func (u *PaymentProfileUpsertBulk) UpdateUserToken() *PaymentProfileUpsertBulk {
 	return u.Update(func(s *PaymentProfileUpsert) {
 		s.UpdateUserToken()
+	})
+}
+
+// ClearUserToken clears the value of the "user_token" field.
+func (u *PaymentProfileUpsertBulk) ClearUserToken() *PaymentProfileUpsertBulk {
+	return u.Update(func(s *PaymentProfileUpsert) {
+		s.ClearUserToken()
 	})
 }
 

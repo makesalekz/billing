@@ -1,4 +1,4 @@
-h1:skMfyrm+dq2+ltL95E8CiwqnqLObdgw7xH+LguNgcGg=
+h1:SILuM6/7F9x1qqM5vfvsQ/fspNBXbox2HRby4d/Dnrw=
 20241115123738_init.sql h1:6NGuVcZ/Z4vC/axFYTQzm7jZ5+9WHeItvoqIf2H3j6I=
 20241202055245_init.sql h1:iGgvrSvNxqR72JKdLjyD9U5p5jF8fXhTRN9HyOxkLfo=
 20241202055313_init.sql h1:vsnnhr33zAczZ9MzNHF1hy5vKuAShcB/KZFHMw5hPKI=
@@ -9,3 +9,4 @@ h1:skMfyrm+dq2+ltL95E8CiwqnqLObdgw7xH+LguNgcGg=
 20250121081317_init.sql h1:CBmvpe7xf1bSE3lg95YrECwi9DZ+6YPqmZWFJkwD/h4=
 20260330120000_tiptoppay_and_qalai_products.sql h1:sw7XIfVxuMA95aav2z7hzEK0VaLgiaBZCOKL1rZ2RiU=
 20260330140000_qalai_full_plans.sql h1:wbe1epFkabjJD62WH9a0NqvuWs1tcxFyp7uB4uTAgOk=
+20260330150000_payment_profile_optional_fields.sql h1:WTW4yAGCdghgv4oVi2OYVCIpTczR3LadhC3M0Vod6nI=

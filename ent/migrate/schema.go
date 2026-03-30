@@ -125,9 +125,9 @@ var (
 		{Name: "user_id", Type: field.TypeInt64},
 		{Name: "pan_masked", Type: field.TypeString},
 		{Name: "holder", Type: field.TypeString},
-		{Name: "email", Type: field.TypeString},
-		{Name: "phone", Type: field.TypeString},
-		{Name: "user_token", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "phone", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "user_token", Type: field.TypeString, Nullable: true, Default: ""},
 		{Name: "recurrent_token", Type: field.TypeString, Unique: true, Nullable: true},
 	}
 	// PaymentProfilesTable holds the schema information for the "payment_profiles" table.
