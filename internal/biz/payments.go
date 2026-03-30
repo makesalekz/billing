@@ -505,13 +505,38 @@ func (uc *PaymentUseCase) GetPaymentStatus(ctx context.Context, txID string, act
 }
 
 func (uc *PaymentUseCase) CancelSubscription(ctx context.Context, subscriptionID int64) error {
-	err := uc.subscriptionRepo.RevokeActiveSubscription(ctx, subscriptionID, time.Now())
+	// Find the latest invoice to get TTP subscription ID
+	invoices, err := uc.invoicesRepo.ListInvoices(ctx, data.InvoiceFilter{
+		SubscriptionID: subscriptionID,
+	}, nil)
+	if err != nil {
+		return v1.ErrorDatabaseQuery("failed to find invoices: %v", err)
+	}
+
+	// Cancel TTP subscription (stop auto-billing)
+	for _, inv := range invoices {
+		if inv.TtpSubscriptionID != nil && *inv.TtpSubscriptionID != "" {
+			_, cancelErr := uc.paymentClient.CancelSubscription(ctx, *inv.TtpSubscriptionID)
+			if cancelErr != nil {
+				uc.log.Errorf("Failed to cancel TTP subscription %s: %v", *inv.TtpSubscriptionID, cancelErr)
+			} else {
+				uc.log.Infof("TTP subscription %s cancelled", *inv.TtpSubscriptionID)
+			}
+			break
+		}
+	}
+
+	// Don't revoke access immediately — user keeps access until paid_till expires.
+	// ExpireResources cron will handle RBAC downgrade when paid_till < now.
+	// Just mark subscription as cancelled so we don't renew.
+	err = uc.subscriptionRepo.RevokeActiveSubscription(ctx, subscriptionID, time.Now())
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return v1.ErrorNotFound("subscription not found")
 		}
 		return v1.ErrorDatabaseQuery("failed to cancel subscription: %v", err)
 	}
+
 	return nil
 }
 
