@@ -96,16 +96,6 @@ func GenerateInvoicePDF(data *v1.InvoiceReceiptReply) ([]byte, error) {
 		productName = "Subscription"
 	}
 
-	// Add period if available
-	desc := productName
-	if data.GetPaidAt() != "" && data.GetPaidTill() != "" {
-		paidAt, _ := time.Parse(time.RFC3339, data.GetPaidAt())
-		paidTill, _ := time.Parse(time.RFC3339, data.GetPaidTill())
-		if !paidAt.IsZero() && !paidTill.IsZero() {
-			desc += fmt.Sprintf("\n(%s - %s)", paidAt.Format("02.01.2006"), paidTill.Format("02.01.2006"))
-		}
-	}
-
 	pdf.CellFormat(cols[0], 7, productName, "1", 0, "L", false, 0, "")
 	pdf.CellFormat(cols[1], 7, fmt.Sprintf("%d", data.GetQuantity()), "1", 0, "R", false, 0, "")
 	pdf.CellFormat(cols[2], 7, formatPrice(data.GetUnitPrice(), data.GetCurrency()), "1", 0, "R", false, 0, "")
