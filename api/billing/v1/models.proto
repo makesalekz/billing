@@ -91,3 +91,18 @@ message Subscription {
   string appId = 4;
   int64 productId = 5;
 }
+
+message PlanPricing {
+  int64 productId = 1;
+  string price = 2;
+  string currency = 3;
+}
+
+message Plan {
+  string slug = 1;
+  string name = 2;
+  string description = 3;
+  repeated string features = 4;
+  PlanPricing monthly = 5;
+  PlanPricing yearly = 6;
+}

@@ -47,3 +47,7 @@ message ListProductsReply{
   repeated Product products = 1;
   utils.v1.PaginateReply pagination = 2;
 }
+
+message ListPlansReply{
+  repeated Plan plans = 1;
+}
