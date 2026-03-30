@@ -12,6 +12,33 @@ option java_package = "billing.v1";
 service Invoices {
   rpc GetInvoice(GetInvoiceRequest) returns (InvoiceReply);
   rpc ListInvoices(ListInvoicesRequest) returns (ListInvoicesReply);
+  rpc GetInvoiceReceipt(GetInvoiceReceiptRequest) returns (InvoiceReceiptReply);
+}
+
+message GetInvoiceReceiptRequest {
+  int64 invoiceId = 1;
+}
+
+message InvoiceReceiptReply {
+  int64 invoiceId = 1;
+  string invoiceDate = 2;
+  string status = 3;
+  // Product
+  string productName = 4;
+  string productDescription = 5;
+  int64 quantity = 6;
+  string unitPrice = 7;
+  string totalPrice = 8;
+  string currency = 9;
+  // Payment
+  string paidAt = 10;
+  string paidTill = 11;
+  string cardType = 12;
+  string cardLastFour = 13;
+  string transactionId = 14;
+  // User
+  int64 userId = 15;
+  int64 tenantId = 16;
 }
 
 

@@ -130,6 +130,10 @@ func (uc *InvoicesUseCase) ListInvoices(
 	}, nil
 }
 
+func (uc *InvoicesUseCase) GetProduct(ctx context.Context, productID int64) (*ent.Product, error) {
+	return uc.productRepo.GetProduct(ctx, productID)
+}
+
 func (uc *InvoicesUseCase) RevokeInvoice(
 	ctx context.Context, actorID, tenantID int64, appID string, invoiceID int64,
 ) error {
