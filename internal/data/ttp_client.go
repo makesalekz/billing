@@ -3,17 +3,12 @@ package data
 import (
 	"bytes"
 	"context"
-	"crypto/hmac"
-	"crypto/sha1"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -129,62 +124,6 @@ type TtpSubscriptionModel struct {
 	NextPaymentDate string  `json:"NextPaymentDate"`
 }
 
-// --- Webhook payload ---
-
-type TtpWebhookPayload struct {
-	TransactionId  int64
-	Amount         float64
-	Currency       string
-	Status         string
-	InvoiceId      string
-	AccountId      string
-	Token          string
-	SubscriptionId string
-	ReasonCode     int
-	CardFirstSix   string
-	CardLastFour   string
-	CardExpDate    string
-	DateTime       string
-	Name           string
-	Email          string
-}
-
-// ParseWebhookPayload parses form-encoded or JSON webhook body from TTP.
-func ParseWebhookPayload(body []byte) (*TtpWebhookPayload, error) {
-	p := &TtpWebhookPayload{}
-
-	// Try JSON first
-	if len(body) > 0 && body[0] == '{' {
-		if err := json.Unmarshal(body, p); err == nil {
-			return p, nil
-		}
-	}
-
-	// Parse as form-encoded
-	values, err := url.ParseQuery(string(body))
-	if err != nil {
-		return nil, fmt.Errorf("parse webhook body: %w", err)
-	}
-
-	p.TransactionId, _ = strconv.ParseInt(values.Get("TransactionId"), 10, 64)
-	p.Amount, _ = strconv.ParseFloat(values.Get("Amount"), 64)
-	p.Currency = values.Get("Currency")
-	p.Status = values.Get("Status")
-	p.InvoiceId = values.Get("InvoiceId")
-	p.AccountId = values.Get("AccountId")
-	p.Token = values.Get("Token")
-	p.SubscriptionId = values.Get("SubscriptionId")
-	p.ReasonCode, _ = strconv.Atoi(values.Get("ReasonCode"))
-	p.CardFirstSix = values.Get("CardFirstSix")
-	p.CardLastFour = values.Get("CardLastFour")
-	p.CardExpDate = values.Get("CardExpDate")
-	p.DateTime = values.Get("DateTime")
-	p.Name = values.Get("Name")
-	p.Email = values.Get("Email")
-
-	return p, nil
-}
-
 // --- Client ---
 
 type PaymentClient interface {
@@ -194,7 +133,6 @@ type PaymentClient interface {
 	CreateSubscription(ctx context.Context, req TtpRecurrentCreateRequest) (*TtpSubscriptionResponse, error)
 	CancelSubscription(ctx context.Context, subscriptionId string) (*TtpSubscriptionResponse, error)
 	Refund(ctx context.Context, req TtpRefundRequest) (*TtpResponse, error)
-	VerifyWebhookHMAC(body []byte, hmacHeader string) bool
 }
 
 const maxResponseSize = 1 << 20 // 1 MB
@@ -390,18 +328,4 @@ func (c *TtpClient) Refund(ctx context.Context, req TtpRefundRequest) (*TtpRespo
 	}
 
 	return &resp, nil
-}
-
-func (c *TtpClient) VerifyWebhookHMAC(body []byte, hmacHeader string) bool {
-	// If no HMAC header provided, skip verification (TTP may not send it in test mode)
-	if hmacHeader == "" {
-		c.log.Warn("Webhook HMAC header is empty — skipping verification")
-		return true
-	}
-
-	mac := hmac.New(sha1.New, []byte(c.apiSecret))
-	mac.Write(body)
-	expectedMAC := hex.EncodeToString(mac.Sum(nil))
-
-	return hmac.Equal([]byte(expectedMAC), []byte(hmacHeader))
 }
