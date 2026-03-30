@@ -22,6 +22,7 @@ const (
 	Invoices_GetInvoice_FullMethodName        = "/billing.v1.Invoices/GetInvoice"
 	Invoices_ListInvoices_FullMethodName      = "/billing.v1.Invoices/ListInvoices"
 	Invoices_GetInvoiceReceipt_FullMethodName = "/billing.v1.Invoices/GetInvoiceReceipt"
+	Invoices_GetInvoicePDF_FullMethodName     = "/billing.v1.Invoices/GetInvoicePDF"
 )
 
 // InvoicesClient is the client API for Invoices service.
@@ -31,6 +32,7 @@ type InvoicesClient interface {
 	GetInvoice(ctx context.Context, in *GetInvoiceRequest, opts ...grpc.CallOption) (*InvoiceReply, error)
 	ListInvoices(ctx context.Context, in *ListInvoicesRequest, opts ...grpc.CallOption) (*ListInvoicesReply, error)
 	GetInvoiceReceipt(ctx context.Context, in *GetInvoiceReceiptRequest, opts ...grpc.CallOption) (*InvoiceReceiptReply, error)
+	GetInvoicePDF(ctx context.Context, in *GetInvoiceReceiptRequest, opts ...grpc.CallOption) (*InvoicePDFReply, error)
 }
 
 type invoicesClient struct {
@@ -71,6 +73,16 @@ func (c *invoicesClient) GetInvoiceReceipt(ctx context.Context, in *GetInvoiceRe
 	return out, nil
 }
 
+func (c *invoicesClient) GetInvoicePDF(ctx context.Context, in *GetInvoiceReceiptRequest, opts ...grpc.CallOption) (*InvoicePDFReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InvoicePDFReply)
+	err := c.cc.Invoke(ctx, Invoices_GetInvoicePDF_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InvoicesServer is the server API for Invoices service.
 // All implementations must embed UnimplementedInvoicesServer
 // for forward compatibility.
@@ -78,6 +90,7 @@ type InvoicesServer interface {
 	GetInvoice(context.Context, *GetInvoiceRequest) (*InvoiceReply, error)
 	ListInvoices(context.Context, *ListInvoicesRequest) (*ListInvoicesReply, error)
 	GetInvoiceReceipt(context.Context, *GetInvoiceReceiptRequest) (*InvoiceReceiptReply, error)
+	GetInvoicePDF(context.Context, *GetInvoiceReceiptRequest) (*InvoicePDFReply, error)
 	mustEmbedUnimplementedInvoicesServer()
 }
 
@@ -96,6 +109,9 @@ func (UnimplementedInvoicesServer) ListInvoices(context.Context, *ListInvoicesRe
 }
 func (UnimplementedInvoicesServer) GetInvoiceReceipt(context.Context, *GetInvoiceReceiptRequest) (*InvoiceReceiptReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetInvoiceReceipt not implemented")
+}
+func (UnimplementedInvoicesServer) GetInvoicePDF(context.Context, *GetInvoiceReceiptRequest) (*InvoicePDFReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInvoicePDF not implemented")
 }
 func (UnimplementedInvoicesServer) mustEmbedUnimplementedInvoicesServer() {}
 func (UnimplementedInvoicesServer) testEmbeddedByValue()                  {}
@@ -172,6 +188,24 @@ func _Invoices_GetInvoiceReceipt_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Invoices_GetInvoicePDF_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInvoiceReceiptRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoicesServer).GetInvoicePDF(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Invoices_GetInvoicePDF_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoicesServer).GetInvoicePDF(ctx, req.(*GetInvoiceReceiptRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Invoices_ServiceDesc is the grpc.ServiceDesc for Invoices service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +224,10 @@ var Invoices_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetInvoiceReceipt",
 			Handler:    _Invoices_GetInvoiceReceipt_Handler,
+		},
+		{
+			MethodName: "GetInvoicePDF",
+			Handler:    _Invoices_GetInvoicePDF_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

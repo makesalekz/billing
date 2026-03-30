@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
@@ -140,4 +141,22 @@ func (s *InvoiceService) GetInvoiceReceipt(ctx context.Context, req *v1.GetInvoi
 	}
 
 	return reply, nil
+}
+
+func (s *InvoiceService) GetInvoicePDF(ctx context.Context, req *v1.GetInvoiceReceiptRequest) (*v1.InvoicePDFReply, error) {
+	receipt, err := s.GetInvoiceReceipt(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	pdfBytes, err := biz.GenerateInvoicePDF(receipt)
+	if err != nil {
+		return nil, v1.ErrorInternal("failed to generate PDF: %v", err)
+	}
+
+	filename := fmt.Sprintf("qalai-invoice-%d.pdf", req.GetInvoiceId())
+	return &v1.InvoicePDFReply{
+		PdfData:  pdfBytes,
+		Filename: filename,
+	}, nil
 }
