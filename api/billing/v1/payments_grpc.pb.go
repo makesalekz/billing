@@ -24,6 +24,7 @@ const (
 	Payments_Complete3DS_FullMethodName        = "/billing.v1.Payments/Complete3DS"
 	Payments_GetPaymentStatus_FullMethodName   = "/billing.v1.Payments/GetPaymentStatus"
 	Payments_CancelSubscription_FullMethodName = "/billing.v1.Payments/CancelSubscription"
+	Payments_CheckWebhook_FullMethodName       = "/billing.v1.Payments/CheckWebhook"
 	Payments_PaymentWebhook_FullMethodName     = "/billing.v1.Payments/PaymentWebhook"
 	Payments_RecurrentWebhook_FullMethodName   = "/billing.v1.Payments/RecurrentWebhook"
 	Payments_PaymentCallback_FullMethodName    = "/billing.v1.Payments/PaymentCallback"
@@ -37,6 +38,7 @@ type PaymentsClient interface {
 	Complete3DS(ctx context.Context, in *Complete3DSRequest, opts ...grpc.CallOption) (*Complete3DSResponse, error)
 	GetPaymentStatus(ctx context.Context, in *GetPaymentStatusRequest, opts ...grpc.CallOption) (*GetPaymentStatusResponse, error)
 	CancelSubscription(ctx context.Context, in *CancelSubscriptionRequest, opts ...grpc.CallOption) (*v1.EmptyReply, error)
+	CheckWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
 	PaymentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
 	RecurrentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
 	// Legacy OVP callback — kept for backward compatibility
@@ -91,6 +93,16 @@ func (c *paymentsClient) CancelSubscription(ctx context.Context, in *CancelSubsc
 	return out, nil
 }
 
+func (c *paymentsClient) CheckWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WebhookResponse)
+	err := c.cc.Invoke(ctx, Payments_CheckWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *paymentsClient) PaymentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(WebhookResponse)
@@ -129,6 +141,7 @@ type PaymentsServer interface {
 	Complete3DS(context.Context, *Complete3DSRequest) (*Complete3DSResponse, error)
 	GetPaymentStatus(context.Context, *GetPaymentStatusRequest) (*GetPaymentStatusResponse, error)
 	CancelSubscription(context.Context, *CancelSubscriptionRequest) (*v1.EmptyReply, error)
+	CheckWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
 	PaymentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
 	RecurrentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
 	// Legacy OVP callback — kept for backward compatibility
@@ -154,6 +167,9 @@ func (UnimplementedPaymentsServer) GetPaymentStatus(context.Context, *GetPayment
 }
 func (UnimplementedPaymentsServer) CancelSubscription(context.Context, *CancelSubscriptionRequest) (*v1.EmptyReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelSubscription not implemented")
+}
+func (UnimplementedPaymentsServer) CheckWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckWebhook not implemented")
 }
 func (UnimplementedPaymentsServer) PaymentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PaymentWebhook not implemented")
@@ -257,6 +273,24 @@ func _Payments_CancelSubscription_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Payments_CheckWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentsServer).CheckWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Payments_CheckWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentsServer).CheckWebhook(ctx, req.(*WebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Payments_PaymentWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(WebhookRequest)
 	if err := dec(in); err != nil {
@@ -333,6 +367,10 @@ var Payments_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelSubscription",
 			Handler:    _Payments_CancelSubscription_Handler,
+		},
+		{
+			MethodName: "CheckWebhook",
+			Handler:    _Payments_CheckWebhook_Handler,
 		},
 		{
 			MethodName: "PaymentWebhook",

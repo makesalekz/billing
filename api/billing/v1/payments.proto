@@ -13,6 +13,7 @@ service Payments {
   rpc Complete3DS(Complete3DSRequest) returns (Complete3DSResponse);
   rpc GetPaymentStatus(GetPaymentStatusRequest) returns (GetPaymentStatusResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (utils.v1.EmptyReply);
+  rpc CheckWebhook(WebhookRequest) returns (WebhookResponse);
   rpc PaymentWebhook(WebhookRequest) returns (WebhookResponse);
   rpc RecurrentWebhook(WebhookRequest) returns (WebhookResponse);
   // Legacy OVP callback — kept for backward compatibility

@@ -324,6 +324,41 @@ func (uc *PaymentUseCase) handleFailedPayment(ctx context.Context, invoice *ent.
 	}
 }
 
+// HandleCheckWebhook validates a payment before TTP processes it.
+func (uc *PaymentUseCase) HandleCheckWebhook(ctx context.Context, body []byte, hmacSignature string) (int, string) {
+	if !uc.paymentClient.VerifyWebhookHMAC(body, hmacSignature) {
+		uc.log.Errorf("Invalid Check webhook HMAC")
+		return 13, "Invalid signature"
+	}
+
+	var payload data.TtpWebhookPayload
+	if err := json.Unmarshal(body, &payload); err != nil {
+		uc.log.Errorf("Failed to unmarshal Check webhook: %v", err)
+		return 13, "Invalid payload"
+	}
+
+	uc.log.Infof("Check webhook: InvoiceId=%s, Amount=%.2f", payload.InvoiceId, payload.Amount)
+
+	invoiceID, err := strconv.ParseInt(payload.InvoiceId, 10, 64)
+	if err != nil {
+		uc.log.Errorf("Invalid InvoiceId in Check: %s", payload.InvoiceId)
+		return 100, "Invalid InvoiceId"
+	}
+
+	invoice, err := uc.invoicesRepo.GetInvoiceByID(ctx, invoiceID)
+	if err != nil {
+		uc.log.Errorf("Invoice not found for Check: %d", invoiceID)
+		return 100, "Invoice not found"
+	}
+
+	if invoice.Status != enum.Created {
+		uc.log.Warnf("Check for non-CREATED invoice %d (status=%s)", invoiceID, invoice.Status)
+		return 100, "Invoice already processed"
+	}
+
+	return 0, "OK"
+}
+
 // HandleWebhook processes TTP webhook notifications.
 func (uc *PaymentUseCase) HandleWebhook(ctx context.Context, body []byte, hmacSignature string) (int, string) {
 	if !uc.paymentClient.VerifyWebhookHMAC(body, hmacSignature) {

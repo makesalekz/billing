@@ -107,6 +107,11 @@ func (s *PaymentsService) GetPaymentStatus(ctx context.Context, req *v1.GetPayme
 	return s.uc.GetPaymentStatus(ctx, txID, actorID)
 }
 
+func (s *PaymentsService) CheckWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {
+	code, message := s.uc.HandleCheckWebhook(ctx, req.GetBody(), req.GetHmacSignature())
+	return &v1.WebhookResponse{Code: int32(code), Message: message}, nil
+}
+
 func (s *PaymentsService) PaymentWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {
 	code, message := s.uc.HandleWebhook(ctx, req.GetBody(), req.GetHmacSignature())
 	return &v1.WebhookResponse{Code: int32(code), Message: message}, nil
