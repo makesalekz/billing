@@ -114,7 +114,7 @@ func (uc *PaymentUseCase) CreatePayment(
 		uc.log.Errorf("Failed to save transaction ID for invoice %v: %v", invoice.ID, err)
 	}
 
-	// 3DS required
+	// 3DS required — frontend redirects to AcsUrl
 	if !resp.Success && resp.Model.AcsUrl != "" {
 		return &v1.CreatePaymentResponse{
 			InvoiceId:     invoice.ID,
@@ -125,19 +125,12 @@ func (uc *PaymentUseCase) CreatePayment(
 		}, nil
 	}
 
-	// Immediate success
+	// Immediate success — payment confirmed, webhook Pay will handle the rest
+	// (subscription creation, RBAC activation, etc.)
 	if resp.Success {
-		err = uc.handleCompletedPayment(ctx, invoice, product, resp.Model.Token, resp.Model.CardFirstSix+resp.Model.CardLastFour, name, email)
-		if err != nil {
-			uc.log.Errorf("Failed to process completed payment for invoice %v: %v", invoice.ID, err)
-			return nil, v1.ErrorInternal("payment succeeded but processing failed: %v", err)
-		}
-
-		token := resp.Model.Token
 		return &v1.CreatePaymentResponse{
 			InvoiceId: invoice.ID,
 			Success:   true,
-			Token:     &token,
 		}, nil
 	}
 
@@ -169,21 +162,10 @@ func (uc *PaymentUseCase) Complete3DS(
 		return nil, v1.ErrorNotFound("invoice not found for transaction %d", transactionID)
 	}
 
+	// 3DS success — webhook Pay will handle subscription/RBAC
 	if resp.Success {
-		product, err := uc.productRepo.GetProduct(ctx, invoice.ProductID)
-		if err != nil {
-			return nil, v1.ErrorInternal("failed to get product: %v", err)
-		}
-
-		err = uc.handleCompletedPayment(ctx, invoice, product, resp.Model.Token, resp.Model.CardFirstSix+resp.Model.CardLastFour, "", "")
-		if err != nil {
-			return nil, v1.ErrorInternal("payment succeeded but processing failed: %v", err)
-		}
-
-		token := resp.Model.Token
 		return &v1.Complete3DSResponse{
 			Success:   true,
-			Token:     &token,
 			InvoiceId: &invoice.ID,
 		}, nil
 	}
