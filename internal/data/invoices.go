@@ -25,6 +25,8 @@ type InvoicesRepo interface {
 	GetInvoicesToExpire(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoicesToRevoke(ctx context.Context, paidTill *time.Time) ([]*ent.Invoice, error)
 	GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoice, error)
+	FindByExternalTransactionID(ctx context.Context, txID string) (*ent.Invoice, error)
+	FindByTtpSubscriptionID(ctx context.Context, subscriptionID string) (*ent.Invoice, error)
 }
 
 type invoicesRepo struct {
@@ -69,6 +71,15 @@ func (r *invoicesRepo) CreateInvoice(ctx context.Context, dto InvoiceDto) (*ent.
 		query.SetPaymentProvider(enum.OneVisionPayment)
 	}
 
+	if dto.TtpTransactionID != nil {
+		query.SetExternalTransactionID(*dto.TtpTransactionID)
+		query.SetPaymentProvider(enum.TipTopPayment)
+	}
+
+	if dto.RecurrentProfileID != nil {
+		query.SetPaymentProfileID(*dto.RecurrentProfileID)
+	}
+
 	return query.Save(ctx)
 }
 
@@ -108,6 +119,27 @@ func (r *invoicesRepo) UpdateInvoice(
 	if dto.OneVisionTransactionID != nil {
 		query.SetExternalTransactionID(*dto.OneVisionTransactionID)
 		query.SetPaymentProvider(enum.OneVisionPayment)
+	}
+
+	if dto.TtpTransactionID != nil {
+		query.SetExternalTransactionID(*dto.TtpTransactionID)
+		query.SetPaymentProvider(enum.TipTopPayment)
+	}
+
+	if dto.TtpSubscriptionID != nil {
+		query.SetTtpSubscriptionID(*dto.TtpSubscriptionID)
+	}
+
+	if dto.SubscriptionID != 0 {
+		query.SetSubscriptionID(dto.SubscriptionID)
+	}
+
+	if dto.RecurrentProfileID != nil {
+		query.SetPaymentProfileID(*dto.RecurrentProfileID)
+	}
+
+	if dto.PaidTill != nil {
+		query.SetPaidTill(*dto.PaidTill)
 	}
 
 	return query.Save(ctx)
@@ -278,4 +310,17 @@ func (r *invoicesRepo) GetInvoicesToRevoke(ctx context.Context, paidTill *time.T
 		},
 	).Limit(int(BackgroundProcessPageSize)).
 		All(ctx)
+}
+
+func (r *invoicesRepo) FindByExternalTransactionID(ctx context.Context, txID string) (*ent.Invoice, error) {
+	return r.db.Invoice.Query().
+		Where(invoice.ExternalTransactionID(txID)).
+		Only(ctx)
+}
+
+func (r *invoicesRepo) FindByTtpSubscriptionID(ctx context.Context, subscriptionID string) (*ent.Invoice, error) {
+	return r.db.Invoice.Query().
+		Where(invoice.TtpSubscriptionID(subscriptionID)).
+		Order(ent.Desc(invoice.FieldID)).
+		First(ctx)
 }

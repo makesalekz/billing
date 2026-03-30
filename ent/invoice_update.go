@@ -17,6 +17,7 @@ import (
 	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
 	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
 	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
+	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
 )
 
 // InvoiceUpdate is the builder for updating Invoice entities.
@@ -198,6 +199,26 @@ func (iu *InvoiceUpdate) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpdate 
 	return iu
 }
 
+// SetSubscriptionID sets the "subscription_id" field.
+func (iu *InvoiceUpdate) SetSubscriptionID(i int64) *InvoiceUpdate {
+	iu.mutation.SetSubscriptionID(i)
+	return iu
+}
+
+// SetNillableSubscriptionID sets the "subscription_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableSubscriptionID(i *int64) *InvoiceUpdate {
+	if i != nil {
+		iu.SetSubscriptionID(*i)
+	}
+	return iu
+}
+
+// ClearSubscriptionID clears the value of the "subscription_id" field.
+func (iu *InvoiceUpdate) ClearSubscriptionID() *InvoiceUpdate {
+	iu.mutation.ClearSubscriptionID()
+	return iu
+}
+
 // SetExternalTransactionID sets the "external_transaction_id" field.
 func (iu *InvoiceUpdate) SetExternalTransactionID(s string) *InvoiceUpdate {
 	iu.mutation.SetExternalTransactionID(s)
@@ -266,6 +287,45 @@ func (iu *InvoiceUpdate) ClearPaymentProfileID() *InvoiceUpdate {
 	return iu
 }
 
+// SetTtpSubscriptionID sets the "ttp_subscription_id" field.
+func (iu *InvoiceUpdate) SetTtpSubscriptionID(s string) *InvoiceUpdate {
+	iu.mutation.SetTtpSubscriptionID(s)
+	return iu
+}
+
+// SetNillableTtpSubscriptionID sets the "ttp_subscription_id" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableTtpSubscriptionID(s *string) *InvoiceUpdate {
+	if s != nil {
+		iu.SetTtpSubscriptionID(*s)
+	}
+	return iu
+}
+
+// ClearTtpSubscriptionID clears the value of the "ttp_subscription_id" field.
+func (iu *InvoiceUpdate) ClearTtpSubscriptionID() *InvoiceUpdate {
+	iu.mutation.ClearTtpSubscriptionID()
+	return iu
+}
+
+// SetSubscriptionsID sets the "subscriptions" edge to the Subscriptions entity by ID.
+func (iu *InvoiceUpdate) SetSubscriptionsID(id int64) *InvoiceUpdate {
+	iu.mutation.SetSubscriptionsID(id)
+	return iu
+}
+
+// SetNillableSubscriptionsID sets the "subscriptions" edge to the Subscriptions entity by ID if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableSubscriptionsID(id *int64) *InvoiceUpdate {
+	if id != nil {
+		iu = iu.SetSubscriptionsID(*id)
+	}
+	return iu
+}
+
+// SetSubscriptions sets the "subscriptions" edge to the Subscriptions entity.
+func (iu *InvoiceUpdate) SetSubscriptions(s *Subscriptions) *InvoiceUpdate {
+	return iu.SetSubscriptionsID(s.ID)
+}
+
 // SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
 func (iu *InvoiceUpdate) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdate {
 	return iu.SetPaymentProfileID(p.ID)
@@ -289,6 +349,12 @@ func (iu *InvoiceUpdate) AddReservations(p ...*ProductReservation) *InvoiceUpdat
 // Mutation returns the InvoiceMutation object of the builder.
 func (iu *InvoiceUpdate) Mutation() *InvoiceMutation {
 	return iu.mutation
+}
+
+// ClearSubscriptions clears the "subscriptions" edge to the Subscriptions entity.
+func (iu *InvoiceUpdate) ClearSubscriptions() *InvoiceUpdate {
+	iu.mutation.ClearSubscriptions()
+	return iu
 }
 
 // ClearPaymentProfile clears the "payment_profile" edge to the PaymentProfile entity.
@@ -439,6 +505,41 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := iu.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+	}
+	if value, ok := iu.mutation.TtpSubscriptionID(); ok {
+		_spec.SetField(invoice.FieldTtpSubscriptionID, field.TypeString, value)
+	}
+	if iu.mutation.TtpSubscriptionIDCleared() {
+		_spec.ClearField(invoice.FieldTtpSubscriptionID, field.TypeString)
+	}
+	if iu.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.SubscriptionsTable,
+			Columns: []string{invoice.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.SubscriptionsTable,
+			Columns: []string{invoice.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if iu.mutation.PaymentProfileCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -701,6 +802,26 @@ func (iuo *InvoiceUpdateOne) SetNillableIsPaidTillProcessed(b *bool) *InvoiceUpd
 	return iuo
 }
 
+// SetSubscriptionID sets the "subscription_id" field.
+func (iuo *InvoiceUpdateOne) SetSubscriptionID(i int64) *InvoiceUpdateOne {
+	iuo.mutation.SetSubscriptionID(i)
+	return iuo
+}
+
+// SetNillableSubscriptionID sets the "subscription_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableSubscriptionID(i *int64) *InvoiceUpdateOne {
+	if i != nil {
+		iuo.SetSubscriptionID(*i)
+	}
+	return iuo
+}
+
+// ClearSubscriptionID clears the value of the "subscription_id" field.
+func (iuo *InvoiceUpdateOne) ClearSubscriptionID() *InvoiceUpdateOne {
+	iuo.mutation.ClearSubscriptionID()
+	return iuo
+}
+
 // SetExternalTransactionID sets the "external_transaction_id" field.
 func (iuo *InvoiceUpdateOne) SetExternalTransactionID(s string) *InvoiceUpdateOne {
 	iuo.mutation.SetExternalTransactionID(s)
@@ -769,6 +890,45 @@ func (iuo *InvoiceUpdateOne) ClearPaymentProfileID() *InvoiceUpdateOne {
 	return iuo
 }
 
+// SetTtpSubscriptionID sets the "ttp_subscription_id" field.
+func (iuo *InvoiceUpdateOne) SetTtpSubscriptionID(s string) *InvoiceUpdateOne {
+	iuo.mutation.SetTtpSubscriptionID(s)
+	return iuo
+}
+
+// SetNillableTtpSubscriptionID sets the "ttp_subscription_id" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableTtpSubscriptionID(s *string) *InvoiceUpdateOne {
+	if s != nil {
+		iuo.SetTtpSubscriptionID(*s)
+	}
+	return iuo
+}
+
+// ClearTtpSubscriptionID clears the value of the "ttp_subscription_id" field.
+func (iuo *InvoiceUpdateOne) ClearTtpSubscriptionID() *InvoiceUpdateOne {
+	iuo.mutation.ClearTtpSubscriptionID()
+	return iuo
+}
+
+// SetSubscriptionsID sets the "subscriptions" edge to the Subscriptions entity by ID.
+func (iuo *InvoiceUpdateOne) SetSubscriptionsID(id int64) *InvoiceUpdateOne {
+	iuo.mutation.SetSubscriptionsID(id)
+	return iuo
+}
+
+// SetNillableSubscriptionsID sets the "subscriptions" edge to the Subscriptions entity by ID if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableSubscriptionsID(id *int64) *InvoiceUpdateOne {
+	if id != nil {
+		iuo = iuo.SetSubscriptionsID(*id)
+	}
+	return iuo
+}
+
+// SetSubscriptions sets the "subscriptions" edge to the Subscriptions entity.
+func (iuo *InvoiceUpdateOne) SetSubscriptions(s *Subscriptions) *InvoiceUpdateOne {
+	return iuo.SetSubscriptionsID(s.ID)
+}
+
 // SetPaymentProfile sets the "payment_profile" edge to the PaymentProfile entity.
 func (iuo *InvoiceUpdateOne) SetPaymentProfile(p *PaymentProfile) *InvoiceUpdateOne {
 	return iuo.SetPaymentProfileID(p.ID)
@@ -792,6 +952,12 @@ func (iuo *InvoiceUpdateOne) AddReservations(p ...*ProductReservation) *InvoiceU
 // Mutation returns the InvoiceMutation object of the builder.
 func (iuo *InvoiceUpdateOne) Mutation() *InvoiceMutation {
 	return iuo.mutation
+}
+
+// ClearSubscriptions clears the "subscriptions" edge to the Subscriptions entity.
+func (iuo *InvoiceUpdateOne) ClearSubscriptions() *InvoiceUpdateOne {
+	iuo.mutation.ClearSubscriptions()
+	return iuo
 }
 
 // ClearPaymentProfile clears the "payment_profile" edge to the PaymentProfile entity.
@@ -972,6 +1138,41 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	}
 	if value, ok := iuo.mutation.IsTrial(); ok {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
+	}
+	if value, ok := iuo.mutation.TtpSubscriptionID(); ok {
+		_spec.SetField(invoice.FieldTtpSubscriptionID, field.TypeString, value)
+	}
+	if iuo.mutation.TtpSubscriptionIDCleared() {
+		_spec.ClearField(invoice.FieldTtpSubscriptionID, field.TypeString)
+	}
+	if iuo.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.SubscriptionsTable,
+			Columns: []string{invoice.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   invoice.SubscriptionsTable,
+			Columns: []string{invoice.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptions.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if iuo.mutation.PaymentProfileCleared() {
 		edge := &sqlgraph.EdgeSpec{

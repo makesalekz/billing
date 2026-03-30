@@ -1,8 +1,8 @@
 package server
 
 import (
-	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1".
 	"gitlab.calendaria.team/services/finance/billing/internal/conf"
+	"gitlab.calendaria.team/services/finance/billing/internal/service"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
 	"gitlab.calendaria.team/services/utils/v2/jwt"
 	"gitlab.calendaria.team/services/utils/v2/middlewares/auth"
@@ -44,6 +44,7 @@ var _activeRequests = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 func NewHTTPServer(
 	c *conf.Bootstrap,
 	jwtp jwt.IJwtProcessor,
+	paymentService *service.PaymentsService,
 ) *khttp.Server {
 	prometheus.MustRegister(_metricSeconds, _metricRequests, _activeRequests)
 
@@ -71,6 +72,10 @@ func NewHTTPServer(
 	srv := khttp.NewServer(opts...)
 
 	srv.Handle("/metrics", promhttp.Handler())
+
+	// TipTopPay webhook endpoints (no auth — TTP calls these directly)
+	srv.HandleFunc("/webhooks/tiptoppay/pay", paymentService.HandleWebhookHTTP)
+	srv.HandleFunc("/webhooks/tiptoppay/recurrent", paymentService.HandleRecurrentWebhookHTTP)
 
 	return srv
 }

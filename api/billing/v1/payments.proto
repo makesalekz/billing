@@ -10,18 +10,41 @@ option java_package = "billing.v1";
 
 service Payments {
   rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
+  rpc Complete3DS(Complete3DSRequest) returns (Complete3DSResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (utils.v1.EmptyReply);
+  // Legacy OVP callback — kept for backward compatibility
   rpc PaymentCallback(PaymentCallbackRequest) returns (utils.v1.EmptyReply);
 }
 
 message CreatePaymentRequest {
   int64 productId = 1;
   optional int64 amount = 2;
+  string cardCryptogramPacket = 3;
+  string ipAddress = 4;
+  optional string name = 5;
+  optional string email = 6;
 }
 
 message CreatePaymentResponse {
   int64 invoiceId = 1;
-  string paymentUrl = 2;
+  bool success = 2;
+  // 3DS fields (populated when 3DS is required)
+  optional int64 transactionId = 3;
+  optional string paReq = 4;
+  optional string acsUrl = 5;
+  // Card token (populated on immediate success)
+  optional string token = 6;
+}
+
+message Complete3DSRequest {
+  int64 transactionId = 1;
+  string paRes = 2;
+}
+
+message Complete3DSResponse {
+  bool success = 1;
+  optional string token = 2;
+  optional int64 invoiceId = 3;
 }
 
 message CancelSubscriptionRequest {
@@ -47,8 +70,7 @@ message PayerInfo {
   string userToken = 5;
 }
 
-// PaymentCallbackRequest is a request to process a payment callback
-// https://docs.onevisionpay.com/ go to "Отправка callback-ов платежной системой после каждой операции"
+// Legacy OVP callback
 message PaymentCallbackRequest {
   string data = 1;
   string sign = 2;

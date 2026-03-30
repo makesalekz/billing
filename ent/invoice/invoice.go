@@ -55,6 +55,8 @@ const (
 	FieldIsTrial = "is_trial"
 	// FieldPaymentProfileID holds the string denoting the payment_profile_id field in the database.
 	FieldPaymentProfileID = "payment_profile_id"
+	// FieldTtpSubscriptionID holds the string denoting the ttp_subscription_id field in the database.
+	FieldTtpSubscriptionID = "ttp_subscription_id"
 	// EdgeProduct holds the string denoting the product edge name in mutations.
 	EdgeProduct = "product"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
@@ -118,6 +120,7 @@ var Columns = []string{
 	FieldPaymentProvider,
 	FieldIsTrial,
 	FieldPaymentProfileID,
+	FieldTtpSubscriptionID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -164,7 +167,7 @@ const DefaultPaymentProvider enum.PaymentProvider = "APP_STORE"
 // PaymentProviderValidator is a validator for the "payment_provider" field enum values. It is called by the builders before save.
 func PaymentProviderValidator(pp enum.PaymentProvider) error {
 	switch pp {
-	case "APP_STORE", "ONE_VISION_PAYMENT":
+	case "APP_STORE", "ONE_VISION_PAYMENT", "TIP_TOP_PAYMENT":
 		return nil
 	default:
 		return fmt.Errorf("invoice: invalid enum value for payment_provider field: %q", pp)
@@ -277,6 +280,11 @@ func ByIsTrial(opts ...sql.OrderTermOption) OrderOption {
 // ByPaymentProfileID orders the results by the payment_profile_id field.
 func ByPaymentProfileID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPaymentProfileID, opts...).ToFunc()
+}
+
+// ByTtpSubscriptionID orders the results by the ttp_subscription_id field.
+func ByTtpSubscriptionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTtpSubscriptionID, opts...).ToFunc()
 }
 
 // ByProductField orders the results by product field.

@@ -260,6 +260,20 @@ func (ic *InvoiceCreate) SetNillablePaymentProfileID(i *int64) *InvoiceCreate {
 	return ic
 }
 
+// SetTtpSubscriptionID sets the "ttp_subscription_id" field.
+func (ic *InvoiceCreate) SetTtpSubscriptionID(s string) *InvoiceCreate {
+	ic.mutation.SetTtpSubscriptionID(s)
+	return ic
+}
+
+// SetNillableTtpSubscriptionID sets the "ttp_subscription_id" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableTtpSubscriptionID(s *string) *InvoiceCreate {
+	if s != nil {
+		ic.SetTtpSubscriptionID(*s)
+	}
+	return ic
+}
+
 // SetID sets the "id" field.
 func (ic *InvoiceCreate) SetID(i int64) *InvoiceCreate {
 	ic.mutation.SetID(i)
@@ -542,6 +556,10 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec) {
 		_spec.SetField(invoice.FieldIsTrial, field.TypeBool, value)
 		_node.IsTrial = value
 	}
+	if value, ok := ic.mutation.TtpSubscriptionID(); ok {
+		_spec.SetField(invoice.FieldTtpSubscriptionID, field.TypeString, value)
+		_node.TtpSubscriptionID = &value
+	}
 	if nodes := ic.mutation.ProductIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -805,6 +823,24 @@ func (u *InvoiceUpsert) UpdateIsPaidTillProcessed() *InvoiceUpsert {
 	return u
 }
 
+// SetSubscriptionID sets the "subscription_id" field.
+func (u *InvoiceUpsert) SetSubscriptionID(v int64) *InvoiceUpsert {
+	u.Set(invoice.FieldSubscriptionID, v)
+	return u
+}
+
+// UpdateSubscriptionID sets the "subscription_id" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateSubscriptionID() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldSubscriptionID)
+	return u
+}
+
+// ClearSubscriptionID clears the value of the "subscription_id" field.
+func (u *InvoiceUpsert) ClearSubscriptionID() *InvoiceUpsert {
+	u.SetNull(invoice.FieldSubscriptionID)
+	return u
+}
+
 // SetExternalTransactionID sets the "external_transaction_id" field.
 func (u *InvoiceUpsert) SetExternalTransactionID(v string) *InvoiceUpsert {
 	u.Set(invoice.FieldExternalTransactionID, v)
@@ -865,6 +901,24 @@ func (u *InvoiceUpsert) ClearPaymentProfileID() *InvoiceUpsert {
 	return u
 }
 
+// SetTtpSubscriptionID sets the "ttp_subscription_id" field.
+func (u *InvoiceUpsert) SetTtpSubscriptionID(v string) *InvoiceUpsert {
+	u.Set(invoice.FieldTtpSubscriptionID, v)
+	return u
+}
+
+// UpdateTtpSubscriptionID sets the "ttp_subscription_id" field to the value that was provided on create.
+func (u *InvoiceUpsert) UpdateTtpSubscriptionID() *InvoiceUpsert {
+	u.SetExcluded(invoice.FieldTtpSubscriptionID)
+	return u
+}
+
+// ClearTtpSubscriptionID clears the value of the "ttp_subscription_id" field.
+func (u *InvoiceUpsert) ClearTtpSubscriptionID() *InvoiceUpsert {
+	u.SetNull(invoice.FieldTtpSubscriptionID)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -896,9 +950,6 @@ func (u *InvoiceUpsertOne) UpdateNewValues() *InvoiceUpsertOne {
 		}
 		if _, exists := u.create.mutation.Amount(); exists {
 			s.SetIgnore(invoice.FieldAmount)
-		}
-		if _, exists := u.create.mutation.SubscriptionID(); exists {
-			s.SetIgnore(invoice.FieldSubscriptionID)
 		}
 	}))
 	return u
@@ -1099,6 +1150,27 @@ func (u *InvoiceUpsertOne) UpdateIsPaidTillProcessed() *InvoiceUpsertOne {
 	})
 }
 
+// SetSubscriptionID sets the "subscription_id" field.
+func (u *InvoiceUpsertOne) SetSubscriptionID(v int64) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetSubscriptionID(v)
+	})
+}
+
+// UpdateSubscriptionID sets the "subscription_id" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateSubscriptionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateSubscriptionID()
+	})
+}
+
+// ClearSubscriptionID clears the value of the "subscription_id" field.
+func (u *InvoiceUpsertOne) ClearSubscriptionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearSubscriptionID()
+	})
+}
+
 // SetExternalTransactionID sets the "external_transaction_id" field.
 func (u *InvoiceUpsertOne) SetExternalTransactionID(v string) *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
@@ -1166,6 +1238,27 @@ func (u *InvoiceUpsertOne) UpdatePaymentProfileID() *InvoiceUpsertOne {
 func (u *InvoiceUpsertOne) ClearPaymentProfileID() *InvoiceUpsertOne {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearPaymentProfileID()
+	})
+}
+
+// SetTtpSubscriptionID sets the "ttp_subscription_id" field.
+func (u *InvoiceUpsertOne) SetTtpSubscriptionID(v string) *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetTtpSubscriptionID(v)
+	})
+}
+
+// UpdateTtpSubscriptionID sets the "ttp_subscription_id" field to the value that was provided on create.
+func (u *InvoiceUpsertOne) UpdateTtpSubscriptionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateTtpSubscriptionID()
+	})
+}
+
+// ClearTtpSubscriptionID clears the value of the "ttp_subscription_id" field.
+func (u *InvoiceUpsertOne) ClearTtpSubscriptionID() *InvoiceUpsertOne {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearTtpSubscriptionID()
 	})
 }
 
@@ -1365,9 +1458,6 @@ func (u *InvoiceUpsertBulk) UpdateNewValues() *InvoiceUpsertBulk {
 			}
 			if _, exists := b.mutation.Amount(); exists {
 				s.SetIgnore(invoice.FieldAmount)
-			}
-			if _, exists := b.mutation.SubscriptionID(); exists {
-				s.SetIgnore(invoice.FieldSubscriptionID)
 			}
 		}
 	}))
@@ -1569,6 +1659,27 @@ func (u *InvoiceUpsertBulk) UpdateIsPaidTillProcessed() *InvoiceUpsertBulk {
 	})
 }
 
+// SetSubscriptionID sets the "subscription_id" field.
+func (u *InvoiceUpsertBulk) SetSubscriptionID(v int64) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetSubscriptionID(v)
+	})
+}
+
+// UpdateSubscriptionID sets the "subscription_id" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateSubscriptionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateSubscriptionID()
+	})
+}
+
+// ClearSubscriptionID clears the value of the "subscription_id" field.
+func (u *InvoiceUpsertBulk) ClearSubscriptionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearSubscriptionID()
+	})
+}
+
 // SetExternalTransactionID sets the "external_transaction_id" field.
 func (u *InvoiceUpsertBulk) SetExternalTransactionID(v string) *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
@@ -1636,6 +1747,27 @@ func (u *InvoiceUpsertBulk) UpdatePaymentProfileID() *InvoiceUpsertBulk {
 func (u *InvoiceUpsertBulk) ClearPaymentProfileID() *InvoiceUpsertBulk {
 	return u.Update(func(s *InvoiceUpsert) {
 		s.ClearPaymentProfileID()
+	})
+}
+
+// SetTtpSubscriptionID sets the "ttp_subscription_id" field.
+func (u *InvoiceUpsertBulk) SetTtpSubscriptionID(v string) *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.SetTtpSubscriptionID(v)
+	})
+}
+
+// UpdateTtpSubscriptionID sets the "ttp_subscription_id" field to the value that was provided on create.
+func (u *InvoiceUpsertBulk) UpdateTtpSubscriptionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.UpdateTtpSubscriptionID()
+	})
+}
+
+// ClearTtpSubscriptionID clears the value of the "ttp_subscription_id" field.
+func (u *InvoiceUpsertBulk) ClearTtpSubscriptionID() *InvoiceUpsertBulk {
+	return u.Update(func(s *InvoiceUpsert) {
+		s.ClearTtpSubscriptionID()
 	})
 }
 

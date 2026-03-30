@@ -63,14 +63,14 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
-	ovpClient, err := data.NewOvpClient(configConfig, logger)
+	ttpClient, err := data.NewTtpClient(configConfig, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
-	paymentUseCase, err := biz.NewPaymentUsecase(logger, ovpClient, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo, invoicesManager)
+	paymentUseCase, err := biz.NewPaymentUsecase(logger, ttpClient, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo, invoicesManager)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -78,7 +78,7 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	}
 	paymentsService := service.NewPaymentsService(paymentUseCase)
 	grpcServer := server.NewGRPCServer(bootstrap, iJwtProcessor, tracer, itemService, productService, invoiceService, subscriptionService, appleStoreService, paymentsService)
-	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor)
+	httpServer := server.NewHTTPServer(bootstrap, iJwtProcessor, paymentsService)
 	cronServer := server.NewCronServer(logger, invoicesUseCase, paymentUseCase)
 	app := newApp(logger, configConfig, grpcServer, httpServer, cronServer)
 	return app, func() {

@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"io"
+	"net/http"
 
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/internal/biz"
@@ -44,20 +47,43 @@ func (s *PaymentsService) CreatePayment(ctx context.Context, req *v1.CreatePayme
 		return nil, v1.ErrorInvalidRequest("product id is empty")
 	}
 
-	amount := req.GetAmount()
-	if amount == 0 {
-		amount = int64(1)
+	if req.GetCardCryptogramPacket() == "" {
+		return nil, v1.ErrorInvalidRequest("card cryptogram is required")
 	}
 
-	invoiceID, paymentPageURL, err := s.uc.CreatePayment(ctx, tenantID, actorID, req.GetProductId(), appID, amount)
+	if req.GetIpAddress() == "" {
+		return nil, v1.ErrorInvalidRequest("ip address is required")
+	}
+
+	amount := req.GetAmount()
+	if amount == 0 {
+		amount = 1
+	}
+
+	resp, err := s.uc.CreatePayment(
+		ctx, tenantID, actorID, req.GetProductId(), appID, amount,
+		req.GetCardCryptogramPacket(), req.GetIpAddress(),
+		req.GetName(), req.GetEmail(),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.CreatePaymentResponse{
-		InvoiceId:  invoiceID,
-		PaymentUrl: paymentPageURL,
-	}, nil
+	return resp, nil
+}
+
+func (s *PaymentsService) Complete3DS(ctx context.Context, req *v1.Complete3DSRequest) (
+	*v1.Complete3DSResponse, error,
+) {
+	if req.GetTransactionId() == 0 {
+		return nil, v1.ErrorInvalidRequest("transaction id is required")
+	}
+
+	if req.GetPaRes() == "" {
+		return nil, v1.ErrorInvalidRequest("paRes is required")
+	}
+
+	return s.uc.Complete3DS(ctx, req.GetTransactionId(), req.GetPaRes())
 }
 
 func (s *PaymentsService) CancelSubscription(
@@ -70,9 +96,54 @@ func (s *PaymentsService) CancelSubscription(
 	return &utils_v1.EmptyReply{}, nil
 }
 
+// PaymentCallback handles legacy OVP callbacks (no-op).
 func (s *PaymentsService) PaymentCallback(
 	ctx context.Context, req *v1.PaymentCallbackRequest,
 ) (*utils_v1.EmptyReply, error) {
 	s.uc.HandlePaymentCallback(ctx, req)
 	return &utils_v1.EmptyReply{}, nil
+}
+
+const maxWebhookBodySize = 64 * 1024 // 64 KB
+
+// HandleWebhookHTTP handles TipTopPay webhook notifications via HTTP.
+func (s *PaymentsService) HandleWebhookHTTP(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxWebhookBodySize)
+	defer r.Body.Close()
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read body", http.StatusBadRequest)
+		return
+	}
+
+	hmacSignature := r.Header.Get("Content-HMAC")
+
+	code, message := s.uc.HandleWebhook(r.Context(), body, hmacSignature)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := map[string]any{"Code": code, "Message": message}
+	json.NewEncoder(w).Encode(resp) //nolint:errcheck
+}
+
+// HandleRecurrentWebhookHTTP handles TTP recurrent payment webhooks via HTTP.
+func (s *PaymentsService) HandleRecurrentWebhookHTTP(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxWebhookBodySize)
+	defer r.Body.Close()
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read body", http.StatusBadRequest)
+		return
+	}
+
+	hmacSignature := r.Header.Get("Content-HMAC")
+
+	code, message := s.uc.HandleRecurrentWebhook(r.Context(), body, hmacSignature)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	resp := map[string]any{"Code": code, "Message": message}
+	json.NewEncoder(w).Encode(resp) //nolint:errcheck
 }

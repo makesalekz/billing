@@ -40,11 +40,12 @@ func (Invoice) Fields() []ent.Field {
 		field.Bool("is_revoked_processed").Default(false),
 		field.Bool("is_paid_at_processed").Default(false),
 		field.Bool("is_paid_till_processed").Default(false),
-		field.Int64("subscription_id").Optional().Nillable().Immutable(),
+		field.Int64("subscription_id").Optional().Nillable(),
 		field.String("external_transaction_id").Optional().Nillable(),
 		field.Enum("payment_provider").GoType(enum.PaymentProvider("")).Default(enum.AppStore.Value()),
 		field.Bool("is_trial").Default(false),
 		field.Int64("payment_profile_id").Optional().Nillable(),
+		field.String("ttp_subscription_id").Optional().Nillable(),
 	}
 }
 
@@ -60,7 +61,6 @@ func (Invoice) Edges() []ent.Edge {
 		edge.From("subscriptions", Subscriptions.Type).
 			Ref("invoices").
 			Unique().
-			Immutable().
 			Field("subscription_id"),
 		edge.From("payment_profile", PaymentProfile.Type).
 			Ref("invoices").

@@ -67,8 +67,9 @@ var (
 		{Name: "is_paid_at_processed", Type: field.TypeBool, Default: false},
 		{Name: "is_paid_till_processed", Type: field.TypeBool, Default: false},
 		{Name: "external_transaction_id", Type: field.TypeString, Nullable: true},
-		{Name: "payment_provider", Type: field.TypeEnum, Enums: []string{"APP_STORE", "ONE_VISION_PAYMENT"}, Default: "APP_STORE"},
+		{Name: "payment_provider", Type: field.TypeEnum, Enums: []string{"APP_STORE", "ONE_VISION_PAYMENT", "TIP_TOP_PAYMENT"}, Default: "APP_STORE"},
 		{Name: "is_trial", Type: field.TypeBool, Default: false},
+		{Name: "ttp_subscription_id", Type: field.TypeString, Nullable: true},
 		{Name: "payment_profile_id", Type: field.TypeInt64, Nullable: true},
 		{Name: "product_id", Type: field.TypeInt64},
 		{Name: "subscription_id", Type: field.TypeInt64, Nullable: true},
@@ -81,19 +82,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "invoices_payment_profiles_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[18]},
+				Columns:    []*schema.Column{InvoicesColumns[19]},
 				RefColumns: []*schema.Column{PaymentProfilesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "invoices_products_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[19]},
+				Columns:    []*schema.Column{InvoicesColumns[20]},
 				RefColumns: []*schema.Column{ProductsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "invoices_subscriptions_invoices",
-				Columns:    []*schema.Column{InvoicesColumns[20]},
+				Columns:    []*schema.Column{InvoicesColumns[21]},
 				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

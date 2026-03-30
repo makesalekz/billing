@@ -37,7 +37,7 @@ func (cs *CronServer) processInvoices(uc *biz.InvoicesUseCase, pc *biz.PaymentUs
 			uc.RevokeResources(context.Background())
 			uc.ExpireResources(context.Background())
 
-			pc.ProcessExpiredPayments(context.Background())
+			// ProcessExpiredPayments removed — TTP manages recurring charges via subscriptions API
 			pc.CancelReservations(context.Background())
 		},
 	)
