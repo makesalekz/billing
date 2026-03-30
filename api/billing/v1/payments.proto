@@ -12,6 +12,8 @@ service Payments {
   rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
   rpc Complete3DS(Complete3DSRequest) returns (Complete3DSResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (utils.v1.EmptyReply);
+  rpc PaymentWebhook(WebhookRequest) returns (WebhookResponse);
+  rpc RecurrentWebhook(WebhookRequest) returns (WebhookResponse);
   // Legacy OVP callback — kept for backward compatibility
   rpc PaymentCallback(PaymentCallbackRequest) returns (utils.v1.EmptyReply);
 }
@@ -68,6 +70,17 @@ message PayerInfo {
   string email = 3;
   string phone = 4;
   string userToken = 5;
+}
+
+// TipTopPay webhook
+message WebhookRequest {
+  bytes body = 1;
+  string hmacSignature = 2;
+}
+
+message WebhookResponse {
+  int32 code = 1;
+  string message = 2;
 }
 
 // Legacy OVP callback

@@ -96,6 +96,16 @@ func (s *PaymentsService) CancelSubscription(
 	return &utils_v1.EmptyReply{}, nil
 }
 
+func (s *PaymentsService) PaymentWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {
+	code, message := s.uc.HandleWebhook(ctx, req.GetBody(), req.GetHmacSignature())
+	return &v1.WebhookResponse{Code: int32(code), Message: message}, nil
+}
+
+func (s *PaymentsService) RecurrentWebhook(ctx context.Context, req *v1.WebhookRequest) (*v1.WebhookResponse, error) {
+	code, message := s.uc.HandleRecurrentWebhook(ctx, req.GetBody(), req.GetHmacSignature())
+	return &v1.WebhookResponse{Code: int32(code), Message: message}, nil
+}
+
 // PaymentCallback handles legacy OVP callbacks (no-op).
 func (s *PaymentsService) PaymentCallback(
 	ctx context.Context, req *v1.PaymentCallbackRequest,

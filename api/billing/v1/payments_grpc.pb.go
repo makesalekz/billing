@@ -23,6 +23,8 @@ const (
 	Payments_CreatePayment_FullMethodName      = "/billing.v1.Payments/CreatePayment"
 	Payments_Complete3DS_FullMethodName        = "/billing.v1.Payments/Complete3DS"
 	Payments_CancelSubscription_FullMethodName = "/billing.v1.Payments/CancelSubscription"
+	Payments_PaymentWebhook_FullMethodName     = "/billing.v1.Payments/PaymentWebhook"
+	Payments_RecurrentWebhook_FullMethodName   = "/billing.v1.Payments/RecurrentWebhook"
 	Payments_PaymentCallback_FullMethodName    = "/billing.v1.Payments/PaymentCallback"
 )
 
@@ -33,6 +35,8 @@ type PaymentsClient interface {
 	CreatePayment(ctx context.Context, in *CreatePaymentRequest, opts ...grpc.CallOption) (*CreatePaymentResponse, error)
 	Complete3DS(ctx context.Context, in *Complete3DSRequest, opts ...grpc.CallOption) (*Complete3DSResponse, error)
 	CancelSubscription(ctx context.Context, in *CancelSubscriptionRequest, opts ...grpc.CallOption) (*v1.EmptyReply, error)
+	PaymentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
+	RecurrentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error)
 	// Legacy OVP callback — kept for backward compatibility
 	PaymentCallback(ctx context.Context, in *PaymentCallbackRequest, opts ...grpc.CallOption) (*v1.EmptyReply, error)
 }
@@ -75,6 +79,26 @@ func (c *paymentsClient) CancelSubscription(ctx context.Context, in *CancelSubsc
 	return out, nil
 }
 
+func (c *paymentsClient) PaymentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WebhookResponse)
+	err := c.cc.Invoke(ctx, Payments_PaymentWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentsClient) RecurrentWebhook(ctx context.Context, in *WebhookRequest, opts ...grpc.CallOption) (*WebhookResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WebhookResponse)
+	err := c.cc.Invoke(ctx, Payments_RecurrentWebhook_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *paymentsClient) PaymentCallback(ctx context.Context, in *PaymentCallbackRequest, opts ...grpc.CallOption) (*v1.EmptyReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(v1.EmptyReply)
@@ -92,6 +116,8 @@ type PaymentsServer interface {
 	CreatePayment(context.Context, *CreatePaymentRequest) (*CreatePaymentResponse, error)
 	Complete3DS(context.Context, *Complete3DSRequest) (*Complete3DSResponse, error)
 	CancelSubscription(context.Context, *CancelSubscriptionRequest) (*v1.EmptyReply, error)
+	PaymentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
+	RecurrentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error)
 	// Legacy OVP callback — kept for backward compatibility
 	PaymentCallback(context.Context, *PaymentCallbackRequest) (*v1.EmptyReply, error)
 	mustEmbedUnimplementedPaymentsServer()
@@ -112,6 +138,12 @@ func (UnimplementedPaymentsServer) Complete3DS(context.Context, *Complete3DSRequ
 }
 func (UnimplementedPaymentsServer) CancelSubscription(context.Context, *CancelSubscriptionRequest) (*v1.EmptyReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelSubscription not implemented")
+}
+func (UnimplementedPaymentsServer) PaymentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PaymentWebhook not implemented")
+}
+func (UnimplementedPaymentsServer) RecurrentWebhook(context.Context, *WebhookRequest) (*WebhookResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecurrentWebhook not implemented")
 }
 func (UnimplementedPaymentsServer) PaymentCallback(context.Context, *PaymentCallbackRequest) (*v1.EmptyReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PaymentCallback not implemented")
@@ -191,6 +223,42 @@ func _Payments_CancelSubscription_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Payments_PaymentWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentsServer).PaymentWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Payments_PaymentWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentsServer).PaymentWebhook(ctx, req.(*WebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Payments_RecurrentWebhook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WebhookRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentsServer).RecurrentWebhook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Payments_RecurrentWebhook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentsServer).RecurrentWebhook(ctx, req.(*WebhookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Payments_PaymentCallback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PaymentCallbackRequest)
 	if err := dec(in); err != nil {
@@ -227,6 +295,14 @@ var Payments_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelSubscription",
 			Handler:    _Payments_CancelSubscription_Handler,
+		},
+		{
+			MethodName: "PaymentWebhook",
+			Handler:    _Payments_PaymentWebhook_Handler,
+		},
+		{
+			MethodName: "RecurrentWebhook",
+			Handler:    _Payments_RecurrentWebhook_Handler,
 		},
 		{
 			MethodName: "PaymentCallback",
