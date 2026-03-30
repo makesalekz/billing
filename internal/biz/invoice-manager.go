@@ -119,7 +119,7 @@ func (im *InvoicesManager) calculateInvoicePrice(
 	}
 
 	if product.PaymentModel == enum.Recurrent {
-		hasActive, isFirst, subscriptionErr := im.checkSubscriptionStatus(
+		hasActive, _, subscriptionErr := im.checkSubscriptionStatus(
 			ctx, invoiceDto.TenantID, invoiceDto.UserID, invoiceDto.ProductID,
 		)
 		if subscriptionErr != nil {
@@ -128,10 +128,6 @@ func (im *InvoicesManager) calculateInvoicePrice(
 
 		if hasActive {
 			return errors.New("subscription already active")
-		}
-
-		if isFirst {
-			invoiceDto.IsTrial = true
 		}
 	}
 	return nil
