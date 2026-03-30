@@ -59,7 +59,7 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesManager, invoicesRepo, itemsRepo, productRepo, productReservationRepo, iQueueManager)
 	invoiceService := service.NewInvoiceService(invoicesUseCase)
 	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)
-	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo)
+	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo, invoicesRepo, productRepo)
 	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)

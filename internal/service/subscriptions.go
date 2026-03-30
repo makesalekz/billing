@@ -77,3 +77,22 @@ func (s *SubscriptionService) ListSubscriptions(
 		Pagination:    listSubscription.PaginateReply,
 	}, nil
 }
+
+func (s *SubscriptionService) GetSubscriptionStatus(ctx context.Context, req *v1.GetSubscriptionStatusRequest) (
+	*v1.SubscriptionStatusReply, error,
+) {
+	actorID := auth.GetActorIdFromContext(ctx)
+	if actorID == 0 {
+		return nil, v1.ErrorEmptyActorId("empty actor id")
+	}
+	tenantID := auth.GetTenantIdFromContext(ctx)
+	if tenantID == 0 {
+		return nil, v1.ErrorEmptyTenantId("empty tenant id")
+	}
+	appID := auth.GetAppIdFromContext(ctx)
+	if appID == "" {
+		return nil, v1.ErrorEmptyAppId("empty app id")
+	}
+
+	return s.uc.GetSubscriptionStatus(ctx, actorID, tenantID, appID)
+}

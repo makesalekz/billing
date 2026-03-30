@@ -29,6 +29,9 @@ type SubscriptionsRepo interface {
 	ListSubscriptions(
 		ctx context.Context, actorID int64, withInvoices bool, paginate *utils_v1.PaginateRequest,
 	) ([]*ent.Subscriptions, error)
+	GetSubscriptionsByUser(
+		ctx context.Context, userID, tenantID int64, appID string,
+	) ([]*ent.Subscriptions, error)
 }
 
 type subscriptionsRepo struct {
@@ -129,4 +132,15 @@ func (r *subscriptionsRepo) ListSubscriptions(
 		WithInvoices().
 		Limit(int(paginate.GetLimit())).
 		All(ctx)
+}
+
+func (r *subscriptionsRepo) GetSubscriptionsByUser(
+	ctx context.Context, userID, tenantID int64, appID string,
+) ([]*ent.Subscriptions, error) {
+	return r.db.Subscriptions.Query().
+		Where(
+			subscriptions.UserID(userID),
+			subscriptions.TenantID(tenantID),
+			subscriptions.AppID(appID),
+		).All(ctx)
 }

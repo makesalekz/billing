@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Subscriptions_GetSubscription_FullMethodName   = "/billing.v1.Subscriptions/GetSubscription"
-	Subscriptions_ListSubscriptions_FullMethodName = "/billing.v1.Subscriptions/ListSubscriptions"
+	Subscriptions_GetSubscription_FullMethodName       = "/billing.v1.Subscriptions/GetSubscription"
+	Subscriptions_ListSubscriptions_FullMethodName     = "/billing.v1.Subscriptions/ListSubscriptions"
+	Subscriptions_GetSubscriptionStatus_FullMethodName = "/billing.v1.Subscriptions/GetSubscriptionStatus"
 )
 
 // SubscriptionsClient is the client API for Subscriptions service.
@@ -29,6 +30,7 @@ const (
 type SubscriptionsClient interface {
 	GetSubscription(ctx context.Context, in *GetSubscriptionRequest, opts ...grpc.CallOption) (*SubscriptionReply, error)
 	ListSubscriptions(ctx context.Context, in *ListSubscriptionsRequest, opts ...grpc.CallOption) (*ListSubscriptionsReply, error)
+	GetSubscriptionStatus(ctx context.Context, in *GetSubscriptionStatusRequest, opts ...grpc.CallOption) (*SubscriptionStatusReply, error)
 }
 
 type subscriptionsClient struct {
@@ -59,12 +61,23 @@ func (c *subscriptionsClient) ListSubscriptions(ctx context.Context, in *ListSub
 	return out, nil
 }
 
+func (c *subscriptionsClient) GetSubscriptionStatus(ctx context.Context, in *GetSubscriptionStatusRequest, opts ...grpc.CallOption) (*SubscriptionStatusReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SubscriptionStatusReply)
+	err := c.cc.Invoke(ctx, Subscriptions_GetSubscriptionStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SubscriptionsServer is the server API for Subscriptions service.
 // All implementations must embed UnimplementedSubscriptionsServer
 // for forward compatibility.
 type SubscriptionsServer interface {
 	GetSubscription(context.Context, *GetSubscriptionRequest) (*SubscriptionReply, error)
 	ListSubscriptions(context.Context, *ListSubscriptionsRequest) (*ListSubscriptionsReply, error)
+	GetSubscriptionStatus(context.Context, *GetSubscriptionStatusRequest) (*SubscriptionStatusReply, error)
 	mustEmbedUnimplementedSubscriptionsServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedSubscriptionsServer) GetSubscription(context.Context, *GetSub
 }
 func (UnimplementedSubscriptionsServer) ListSubscriptions(context.Context, *ListSubscriptionsRequest) (*ListSubscriptionsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSubscriptions not implemented")
+}
+func (UnimplementedSubscriptionsServer) GetSubscriptionStatus(context.Context, *GetSubscriptionStatusRequest) (*SubscriptionStatusReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubscriptionStatus not implemented")
 }
 func (UnimplementedSubscriptionsServer) mustEmbedUnimplementedSubscriptionsServer() {}
 func (UnimplementedSubscriptionsServer) testEmbeddedByValue()                       {}
@@ -138,6 +154,24 @@ func _Subscriptions_ListSubscriptions_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Subscriptions_GetSubscriptionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSubscriptionStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubscriptionsServer).GetSubscriptionStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Subscriptions_GetSubscriptionStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubscriptionsServer).GetSubscriptionStatus(ctx, req.(*GetSubscriptionStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Subscriptions_ServiceDesc is the grpc.ServiceDesc for Subscriptions service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var Subscriptions_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListSubscriptions",
 			Handler:    _Subscriptions_ListSubscriptions_Handler,
+		},
+		{
+			MethodName: "GetSubscriptionStatus",
+			Handler:    _Subscriptions_GetSubscriptionStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

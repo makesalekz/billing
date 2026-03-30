@@ -27,6 +27,7 @@ type InvoicesRepo interface {
 	GetInvoiceByID(ctx context.Context, id int64) (*ent.Invoice, error)
 	FindByExternalTransactionID(ctx context.Context, txID string) (*ent.Invoice, error)
 	FindByTtpSubscriptionID(ctx context.Context, subscriptionID string) (*ent.Invoice, error)
+	GetLatestPaidInvoiceBySubscription(ctx context.Context, subscriptionID int64) (*ent.Invoice, error)
 }
 
 type invoicesRepo struct {
@@ -303,7 +304,7 @@ func (r *invoicesRepo) GetInvoicesToRevoke(ctx context.Context, paidTill *time.T
 				sql.And(
 					sql.IsNull(invoicesT.C(invoice.FieldPaidTill)),
 					sql.NotNull(s.C(invoice.FieldPaidTill)),
-					sql.GT(s.C(invoice.FieldPaidTill), paidTill),
+					sql.LT(s.C(invoice.FieldPaidTill), paidTill),
 					sql.ColumnsLT(s.C(invoice.FieldRevokedAt), s.C(invoice.FieldPaidTill)),
 				),
 			)
@@ -322,5 +323,16 @@ func (r *invoicesRepo) FindByTtpSubscriptionID(ctx context.Context, subscription
 	return r.db.Invoice.Query().
 		Where(invoice.TtpSubscriptionID(subscriptionID)).
 		Order(ent.Desc(invoice.FieldID)).
+		First(ctx)
+}
+
+func (r *invoicesRepo) GetLatestPaidInvoiceBySubscription(ctx context.Context, subscriptionID int64) (*ent.Invoice, error) {
+	return r.db.Invoice.Query().
+		Where(
+			invoice.SubscriptionID(subscriptionID),
+			invoice.StatusEQ(enum.Paid),
+		).
+		WithPaymentProfile().
+		Order(ent.Desc(invoice.FieldPaidTill)).
 		First(ctx)
 }
