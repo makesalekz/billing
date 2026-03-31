@@ -107,6 +107,18 @@ func init() {
 	paymentprofile.DefaultUpdatedAt = paymentprofileDescUpdatedAt.Default.(func() time.Time)
 	// paymentprofile.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	paymentprofile.UpdateDefaultUpdatedAt = paymentprofileDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// paymentprofileDescEmail is the schema descriptor for email field.
+	paymentprofileDescEmail := paymentprofileFields[4].Descriptor()
+	// paymentprofile.DefaultEmail holds the default value on creation for the email field.
+	paymentprofile.DefaultEmail = paymentprofileDescEmail.Default.(string)
+	// paymentprofileDescPhone is the schema descriptor for phone field.
+	paymentprofileDescPhone := paymentprofileFields[5].Descriptor()
+	// paymentprofile.DefaultPhone holds the default value on creation for the phone field.
+	paymentprofile.DefaultPhone = paymentprofileDescPhone.Default.(string)
+	// paymentprofileDescUserToken is the schema descriptor for user_token field.
+	paymentprofileDescUserToken := paymentprofileFields[6].Descriptor()
+	// paymentprofile.DefaultUserToken holds the default value on creation for the user_token field.
+	paymentprofile.DefaultUserToken = paymentprofileDescUserToken.Default.(string)
 	productMixin := schema.Product{}.Mixin()
 	productMixinHooks1 := productMixin[1].Hooks()
 	product.Hooks[0] = productMixinHooks1[0]

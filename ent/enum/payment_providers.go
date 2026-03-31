@@ -5,10 +5,11 @@ type PaymentProvider string
 const (
 	AppStore         PaymentProvider = "APP_STORE"
 	OneVisionPayment PaymentProvider = "ONE_VISION_PAYMENT"
+	TipTopPayment    PaymentProvider = "TIP_TOP_PAYMENT"
 )
 
 func paymentProviderValues() []PaymentProvider {
-	return []PaymentProvider{AppStore, OneVisionPayment}
+	return []PaymentProvider{AppStore, OneVisionPayment, TipTopPayment}
 }
 
 func (PaymentProvider) Values() (kinds []string) {

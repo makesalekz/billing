@@ -70,6 +70,12 @@ func (ppu *PaymentProfileUpdate) SetNillableEmail(s *string) *PaymentProfileUpda
 	return ppu
 }
 
+// ClearEmail clears the value of the "email" field.
+func (ppu *PaymentProfileUpdate) ClearEmail() *PaymentProfileUpdate {
+	ppu.mutation.ClearEmail()
+	return ppu
+}
+
 // SetPhone sets the "phone" field.
 func (ppu *PaymentProfileUpdate) SetPhone(s string) *PaymentProfileUpdate {
 	ppu.mutation.SetPhone(s)
@@ -84,6 +90,12 @@ func (ppu *PaymentProfileUpdate) SetNillablePhone(s *string) *PaymentProfileUpda
 	return ppu
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (ppu *PaymentProfileUpdate) ClearPhone() *PaymentProfileUpdate {
+	ppu.mutation.ClearPhone()
+	return ppu
+}
+
 // SetUserToken sets the "user_token" field.
 func (ppu *PaymentProfileUpdate) SetUserToken(s string) *PaymentProfileUpdate {
 	ppu.mutation.SetUserToken(s)
@@ -95,6 +107,12 @@ func (ppu *PaymentProfileUpdate) SetNillableUserToken(s *string) *PaymentProfile
 	if s != nil {
 		ppu.SetUserToken(*s)
 	}
+	return ppu
+}
+
+// ClearUserToken clears the value of the "user_token" field.
+func (ppu *PaymentProfileUpdate) ClearUserToken() *PaymentProfileUpdate {
+	ppu.mutation.ClearUserToken()
 	return ppu
 }
 
@@ -228,11 +246,20 @@ func (ppu *PaymentProfileUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if value, ok := ppu.mutation.Email(); ok {
 		_spec.SetField(paymentprofile.FieldEmail, field.TypeString, value)
 	}
+	if ppu.mutation.EmailCleared() {
+		_spec.ClearField(paymentprofile.FieldEmail, field.TypeString)
+	}
 	if value, ok := ppu.mutation.Phone(); ok {
 		_spec.SetField(paymentprofile.FieldPhone, field.TypeString, value)
 	}
+	if ppu.mutation.PhoneCleared() {
+		_spec.ClearField(paymentprofile.FieldPhone, field.TypeString)
+	}
 	if value, ok := ppu.mutation.UserToken(); ok {
 		_spec.SetField(paymentprofile.FieldUserToken, field.TypeString, value)
+	}
+	if ppu.mutation.UserTokenCleared() {
+		_spec.ClearField(paymentprofile.FieldUserToken, field.TypeString)
 	}
 	if value, ok := ppu.mutation.RecurrentToken(); ok {
 		_spec.SetField(paymentprofile.FieldRecurrentToken, field.TypeString, value)
@@ -347,6 +374,12 @@ func (ppuo *PaymentProfileUpdateOne) SetNillableEmail(s *string) *PaymentProfile
 	return ppuo
 }
 
+// ClearEmail clears the value of the "email" field.
+func (ppuo *PaymentProfileUpdateOne) ClearEmail() *PaymentProfileUpdateOne {
+	ppuo.mutation.ClearEmail()
+	return ppuo
+}
+
 // SetPhone sets the "phone" field.
 func (ppuo *PaymentProfileUpdateOne) SetPhone(s string) *PaymentProfileUpdateOne {
 	ppuo.mutation.SetPhone(s)
@@ -361,6 +394,12 @@ func (ppuo *PaymentProfileUpdateOne) SetNillablePhone(s *string) *PaymentProfile
 	return ppuo
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (ppuo *PaymentProfileUpdateOne) ClearPhone() *PaymentProfileUpdateOne {
+	ppuo.mutation.ClearPhone()
+	return ppuo
+}
+
 // SetUserToken sets the "user_token" field.
 func (ppuo *PaymentProfileUpdateOne) SetUserToken(s string) *PaymentProfileUpdateOne {
 	ppuo.mutation.SetUserToken(s)
@@ -372,6 +411,12 @@ func (ppuo *PaymentProfileUpdateOne) SetNillableUserToken(s *string) *PaymentPro
 	if s != nil {
 		ppuo.SetUserToken(*s)
 	}
+	return ppuo
+}
+
+// ClearUserToken clears the value of the "user_token" field.
+func (ppuo *PaymentProfileUpdateOne) ClearUserToken() *PaymentProfileUpdateOne {
+	ppuo.mutation.ClearUserToken()
 	return ppuo
 }
 
@@ -535,11 +580,20 @@ func (ppuo *PaymentProfileUpdateOne) sqlSave(ctx context.Context) (_node *Paymen
 	if value, ok := ppuo.mutation.Email(); ok {
 		_spec.SetField(paymentprofile.FieldEmail, field.TypeString, value)
 	}
+	if ppuo.mutation.EmailCleared() {
+		_spec.ClearField(paymentprofile.FieldEmail, field.TypeString)
+	}
 	if value, ok := ppuo.mutation.Phone(); ok {
 		_spec.SetField(paymentprofile.FieldPhone, field.TypeString, value)
 	}
+	if ppuo.mutation.PhoneCleared() {
+		_spec.ClearField(paymentprofile.FieldPhone, field.TypeString)
+	}
 	if value, ok := ppuo.mutation.UserToken(); ok {
 		_spec.SetField(paymentprofile.FieldUserToken, field.TypeString, value)
+	}
+	if ppuo.mutation.UserTokenCleared() {
+		_spec.ClearField(paymentprofile.FieldUserToken, field.TypeString)
 	}
 	if value, ok := ppuo.mutation.RecurrentToken(); ok {
 		_spec.SetField(paymentprofile.FieldRecurrentToken, field.TypeString, value)

@@ -20,9 +20,9 @@ func (PaymentProfile) Fields() []ent.Field {
 		field.Int64("user_id").Immutable(),
 		field.String("pan_masked").Immutable(),
 		field.String("holder").Immutable(),
-		field.String("email"),
-		field.String("phone"),
-		field.String("user_token"),
+		field.String("email").Optional().Default(""),
+		field.String("phone").Optional().Default(""),
+		field.String("user_token").Optional().Default(""),
 		field.String("recurrent_token").Optional().Nillable().Unique(),
 	}
 }

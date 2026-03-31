@@ -33,7 +33,8 @@ var ProviderSet = wire.NewSet(
 	NewSubscriptionsRepo,
 	NewPaymentProfileRepo,
 	NewProductReservationRepo,
-	NewOvpClient,
+	NewTtpClient,
+	wire.Bind(new(PaymentClient), new(*TtpClient)),
 )
 
 const (

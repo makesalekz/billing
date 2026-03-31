@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"time"
 
 	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
 	"gitlab.calendaria.team/services/finance/billing/ent"
@@ -16,13 +17,19 @@ type SubscriptionList struct {
 
 type SubscriptionsUseCase struct {
 	subscriptionRepo data.SubscriptionsRepo
+	invoiceRepo      data.InvoicesRepo
+	productRepo      data.ProductRepo
 }
 
 func NewSubscriptionUsecase(
 	subscriptionRepo data.SubscriptionsRepo,
+	invoiceRepo data.InvoicesRepo,
+	productRepo data.ProductRepo,
 ) *SubscriptionsUseCase {
 	return &SubscriptionsUseCase{
 		subscriptionRepo: subscriptionRepo,
+		invoiceRepo:      invoiceRepo,
+		productRepo:      productRepo,
 	}
 }
 
@@ -83,6 +90,80 @@ func (uc *SubscriptionsUseCase) ListSubscriptions(
 		Subscriptions: subscriptions,
 		PaginateReply: paginateReply,
 	}, nil
+}
+
+func (uc *SubscriptionsUseCase) GetSubscriptionStatus(
+	ctx context.Context, userID, tenantID int64, appID string,
+) (*v1.SubscriptionStatusReply, error) {
+	subs, err := uc.subscriptionRepo.GetSubscriptionsByUser(ctx, userID, tenantID, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(subs) == 0 {
+		return &v1.SubscriptionStatusReply{
+			HasSubscription: false,
+			Status:          "expired",
+		}, nil
+	}
+
+	// Find the subscription with the latest paid invoice
+	var bestInvoice *ent.Invoice
+	var bestSub *ent.Subscriptions
+	var bestProduct *ent.Product
+
+	for _, sub := range subs {
+		inv, err := uc.invoiceRepo.GetLatestPaidInvoiceBySubscription(ctx, sub.ID)
+		if err != nil || inv == nil {
+			continue
+		}
+		if bestInvoice == nil || (inv.PaidTill != nil && bestInvoice.PaidTill != nil && inv.PaidTill.After(*bestInvoice.PaidTill)) {
+			bestInvoice = inv
+			bestSub = sub
+		}
+	}
+
+	if bestInvoice == nil || bestSub == nil {
+		return &v1.SubscriptionStatusReply{
+			HasSubscription: false,
+			Status:          "expired",
+		}, nil
+	}
+
+	bestProduct, _ = uc.productRepo.GetProduct(ctx, bestSub.ProductID)
+
+	reply := &v1.SubscriptionStatusReply{
+		HasSubscription: true,
+		ProductId:       bestSub.ProductID,
+		SubscriptionId:  bestSub.ID,
+	}
+
+	if bestProduct != nil {
+		reply.ProductName = bestProduct.Name
+	}
+
+	now := time.Now()
+	if bestInvoice.PaidTill != nil {
+		reply.PaidTill = bestInvoice.PaidTill.Format(time.RFC3339)
+
+		if bestInvoice.PaidTill.After(now) {
+			if bestInvoice.IsRevoked {
+				reply.Status = "cancelled"
+				reply.AutoRenew = false
+				if bestInvoice.RevokedAt != nil {
+					reply.CancelledAt = bestInvoice.RevokedAt.Format(time.RFC3339)
+				}
+			} else {
+				reply.Status = "active"
+				reply.AutoRenew = true
+			}
+		} else {
+			reply.Status = "expired"
+			reply.AutoRenew = false
+		}
+	}
+
+	return reply, nil
 }
 
 func ReplySubscription(sub *ent.Subscriptions) *v1.Subscription {

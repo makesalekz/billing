@@ -1,7 +1,6 @@
 package server
 
 import (
-	// v1 "gitlab.calendaria.team/services/dummy/api/dummy/v1".
 	"gitlab.calendaria.team/services/finance/billing/internal/conf"
 	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
 	"gitlab.calendaria.team/services/utils/v2/jwt"

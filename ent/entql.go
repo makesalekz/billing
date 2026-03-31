@@ -71,6 +71,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			invoice.FieldPaymentProvider:       {Type: field.TypeEnum, Column: invoice.FieldPaymentProvider},
 			invoice.FieldIsTrial:               {Type: field.TypeBool, Column: invoice.FieldIsTrial},
 			invoice.FieldPaymentProfileID:      {Type: field.TypeInt64, Column: invoice.FieldPaymentProfileID},
+			invoice.FieldTtpSubscriptionID:     {Type: field.TypeString, Column: invoice.FieldTtpSubscriptionID},
 		},
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
@@ -621,6 +622,11 @@ func (f *InvoiceFilter) WhereIsTrial(p entql.BoolP) {
 // WherePaymentProfileID applies the entql int64 predicate on the payment_profile_id field.
 func (f *InvoiceFilter) WherePaymentProfileID(p entql.Int64P) {
 	f.Where(p.Field(invoice.FieldPaymentProfileID))
+}
+
+// WhereTtpSubscriptionID applies the entql string predicate on the ttp_subscription_id field.
+func (f *InvoiceFilter) WhereTtpSubscriptionID(p entql.StringP) {
+	f.Where(p.Field(invoice.FieldTtpSubscriptionID))
 }
 
 // WhereHasProduct applies a predicate to check if query has an edge product.

@@ -87,6 +87,12 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultEmail holds the default value on creation for the "email" field.
+	DefaultEmail string
+	// DefaultPhone holds the default value on creation for the "phone" field.
+	DefaultPhone string
+	// DefaultUserToken holds the default value on creation for the "user_token" field.
+	DefaultUserToken string
 )
 
 // OrderOption defines the ordering options for the PaymentProfile queries.

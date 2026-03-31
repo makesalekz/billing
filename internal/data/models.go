@@ -135,6 +135,8 @@ type InvoiceDto struct {
 
 	AppleStoreTransactionID *string
 	OneVisionTransactionID  *string
+	TtpTransactionID        *string
+	TtpSubscriptionID       *string
 	IsTrial                 bool
 }
 

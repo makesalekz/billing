@@ -1,0 +1,212 @@
+package biz
+
+import (
+	"bytes"
+	"fmt"
+	"time"
+
+	"codeberg.org/go-pdf/fpdf"
+
+	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
+)
+
+// GenerateInvoicePDF creates a PDF receipt from invoice receipt data.
+func GenerateInvoicePDF(data *v1.InvoiceReceiptReply) ([]byte, error) {
+	pdf := fpdf.New("P", "mm", "A4", "")
+	pdf.SetCompression(true)
+	pdf.SetAutoPageBreak(true, 20)
+	pdf.AddPage()
+
+	pageW, _ := pdf.GetPageSize()
+	ml := 15.0
+	w := pageW - ml*2
+
+	// === HEADER ===
+	pdf.SetFont("Helvetica", "B", 20)
+	pdf.SetXY(ml, 15)
+	pdf.CellFormat(w/2, 10, "QALAI", "", 0, "L", false, 0, "")
+
+	pdf.SetFont("Helvetica", "B", 14)
+	pdf.CellFormat(w/2, 10, "RECEIPT", "", 1, "R", false, 0, "")
+
+	pdf.SetFont("Helvetica", "", 9)
+	pdf.SetTextColor(100, 100, 100)
+	pdf.SetXY(ml, 26)
+	pdf.CellFormat(w/2, 5, "AI Platform", "", 0, "L", false, 0, "")
+	pdf.CellFormat(w/2, 5, fmt.Sprintf("No: QAL-%06d", data.GetInvoiceId()), "", 1, "R", false, 0, "")
+	pdf.SetTextColor(0, 0, 0)
+
+	// Separator
+	y := pdf.GetY() + 3
+	pdf.SetDrawColor(220, 220, 220)
+	pdf.SetLineWidth(0.5)
+	pdf.Line(ml, y, ml+w, y)
+	pdf.SetY(y + 8)
+
+	// === COMPANY INFO ===
+	colW := w / 2
+	startY := pdf.GetY()
+
+	pdf.SetFont("Helvetica", "B", 9)
+	pdf.SetXY(ml, startY)
+	pdf.CellFormat(colW, 5, "From:", "", 1, "L", false, 0, "")
+	pdf.SetFont("Helvetica", "", 9)
+	pdf.SetX(ml)
+	pdf.CellFormat(colW, 5, "Calendaria LLP", "", 1, "L", false, 0, "")
+	pdf.SetX(ml)
+	pdf.CellFormat(colW, 5, "Almaty, Kazakhstan", "", 1, "L", false, 0, "")
+
+	// === CUSTOMER INFO ===
+	pdf.SetFont("Helvetica", "B", 9)
+	pdf.SetXY(ml+colW, startY)
+	pdf.CellFormat(colW, 5, "To:", "", 1, "R", false, 0, "")
+	pdf.SetFont("Helvetica", "", 9)
+	pdf.SetXY(ml+colW, startY+5)
+	pdf.CellFormat(colW, 5, fmt.Sprintf("User ID: %d", data.GetUserId()), "", 1, "R", false, 0, "")
+	pdf.SetXY(ml+colW, startY+10)
+	pdf.CellFormat(colW, 5, fmt.Sprintf("Tenant ID: %d", data.GetTenantId()), "", 1, "R", false, 0, "")
+
+	pdf.SetY(startY + 20)
+
+	// === LINE ITEMS TABLE ===
+	pdf.SetY(pdf.GetY() + 5)
+
+	// Table header
+	cols := []float64{w - 30 - 30 - 35, 30, 30, 35}
+	headers := []string{"Description", "Qty", "Unit Price", "Total"}
+
+	pdf.SetFont("Helvetica", "B", 9)
+	pdf.SetFillColor(245, 245, 245)
+	pdf.SetX(ml)
+	for i, h := range headers {
+		align := "L"
+		if i > 0 {
+			align = "R"
+		}
+		pdf.CellFormat(cols[i], 8, h, "1", 0, align, true, 0, "")
+	}
+	pdf.Ln(-1)
+
+	// Product row
+	pdf.SetFont("Helvetica", "", 9)
+	pdf.SetX(ml)
+
+	productName := data.GetProductName()
+	if productName == "" {
+		productName = "Subscription"
+	}
+
+	pdf.CellFormat(cols[0], 7, productName, "1", 0, "L", false, 0, "")
+	pdf.CellFormat(cols[1], 7, fmt.Sprintf("%d", data.GetQuantity()), "1", 0, "R", false, 0, "")
+	pdf.CellFormat(cols[2], 7, formatPrice(data.GetUnitPrice(), data.GetCurrency()), "1", 0, "R", false, 0, "")
+	pdf.CellFormat(cols[3], 7, formatPrice(data.GetTotalPrice(), data.GetCurrency()), "1", 0, "R", false, 0, "")
+	pdf.Ln(-1)
+
+	// Period row
+	if data.GetPaidAt() != "" && data.GetPaidTill() != "" {
+		paidAt, _ := time.Parse(time.RFC3339, data.GetPaidAt())
+		paidTill, _ := time.Parse(time.RFC3339, data.GetPaidTill())
+		if !paidAt.IsZero() && !paidTill.IsZero() {
+			pdf.SetFont("Helvetica", "", 8)
+			pdf.SetTextColor(100, 100, 100)
+			pdf.SetX(ml)
+			pdf.CellFormat(w, 5, fmt.Sprintf("Subscription period: %s — %s",
+				paidAt.Format("02.01.2006"), paidTill.Format("02.01.2006")), "", 1, "L", false, 0, "")
+			pdf.SetTextColor(0, 0, 0)
+		}
+	}
+
+	// === TOTALS ===
+	pdf.SetY(pdf.GetY() + 5)
+	pdf.SetDrawColor(220, 220, 220)
+	pdf.Line(ml, pdf.GetY(), ml+w, pdf.GetY())
+	pdf.SetY(pdf.GetY() + 3)
+
+	pdf.SetFont("Helvetica", "B", 11)
+	pdf.SetX(ml)
+	pdf.CellFormat(w-60, 8, "Total:", "", 0, "R", false, 0, "")
+	pdf.CellFormat(60, 8, formatPrice(data.GetTotalPrice(), data.GetCurrency()), "", 1, "R", false, 0, "")
+
+	// === PAYMENT INFO ===
+	pdf.SetY(pdf.GetY() + 10)
+	pdf.SetFont("Helvetica", "B", 10)
+	pdf.SetX(ml)
+	pdf.CellFormat(w, 6, "Payment Details", "", 1, "L", false, 0, "")
+
+	pdf.SetFont("Helvetica", "", 9)
+	paymentRows := []struct{ label, value string }{
+		{"Status:", statusLabel(data.GetStatus())},
+		{"Transaction ID:", data.GetTransactionId()},
+	}
+
+	if data.GetCardLastFour() != "" {
+		paymentRows = append(paymentRows, struct{ label, value string }{
+			"Card:", fmt.Sprintf("•••• %s", lastFour(data.GetCardLastFour())),
+		})
+	}
+
+	if data.GetPaidAt() != "" {
+		paidAt, _ := time.Parse(time.RFC3339, data.GetPaidAt())
+		if !paidAt.IsZero() {
+			paymentRows = append(paymentRows, struct{ label, value string }{
+				"Paid at:", paidAt.Format("02.01.2006 15:04"),
+			})
+		}
+	}
+
+	for _, r := range paymentRows {
+		pdf.SetX(ml)
+		pdf.SetFont("Helvetica", "B", 9)
+		pdf.CellFormat(40, 5, r.label, "", 0, "L", false, 0, "")
+		pdf.SetFont("Helvetica", "", 9)
+		pdf.CellFormat(w-40, 5, r.value, "", 1, "L", false, 0, "")
+	}
+
+	// === FOOTER ===
+	pdf.SetY(pdf.GetY() + 20)
+	pdf.SetFont("Helvetica", "", 8)
+	pdf.SetTextColor(150, 150, 150)
+	pdf.SetX(ml)
+	pdf.CellFormat(w, 5, "Generated by Qalai AI Platform — qalai.kz", "", 1, "C", false, 0, "")
+
+	invoiceDate := time.Now()
+	if data.GetInvoiceDate() != "" {
+		if t, err := time.Parse(time.RFC3339, data.GetInvoiceDate()); err == nil {
+			invoiceDate = t
+		}
+	}
+	pdf.SetX(ml)
+	pdf.CellFormat(w, 5, fmt.Sprintf("Issued: %s", invoiceDate.Format("02.01.2006 15:04")), "", 1, "C", false, 0, "")
+	pdf.SetTextColor(0, 0, 0)
+
+	var buf bytes.Buffer
+	if err := pdf.Output(&buf); err != nil {
+		return nil, fmt.Errorf("pdf output: %w", err)
+	}
+	return buf.Bytes(), nil
+}
+
+func formatPrice(price, currency string) string {
+	if currency == "" {
+		currency = "KZT"
+	}
+	return fmt.Sprintf("%s %s", price, currency)
+}
+
+func statusLabel(status string) string {
+	switch status {
+	case "PAID":
+		return "Paid"
+	case "CREATED":
+		return "Pending"
+	default:
+		return status
+	}
+}
+
+func lastFour(panMasked string) string {
+	if len(panMasked) >= 4 {
+		return panMasked[len(panMasked)-4:]
+	}
+	return panMasked
+}

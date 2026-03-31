@@ -460,6 +460,16 @@ func EmailHasSuffix(v string) predicate.PaymentProfile {
 	return predicate.PaymentProfile(sql.FieldHasSuffix(FieldEmail, v))
 }
 
+// EmailIsNil applies the IsNil predicate on the "email" field.
+func EmailIsNil() predicate.PaymentProfile {
+	return predicate.PaymentProfile(sql.FieldIsNull(FieldEmail))
+}
+
+// EmailNotNil applies the NotNil predicate on the "email" field.
+func EmailNotNil() predicate.PaymentProfile {
+	return predicate.PaymentProfile(sql.FieldNotNull(FieldEmail))
+}
+
 // EmailEqualFold applies the EqualFold predicate on the "email" field.
 func EmailEqualFold(v string) predicate.PaymentProfile {
 	return predicate.PaymentProfile(sql.FieldEqualFold(FieldEmail, v))
@@ -525,6 +535,16 @@ func PhoneHasSuffix(v string) predicate.PaymentProfile {
 	return predicate.PaymentProfile(sql.FieldHasSuffix(FieldPhone, v))
 }
 
+// PhoneIsNil applies the IsNil predicate on the "phone" field.
+func PhoneIsNil() predicate.PaymentProfile {
+	return predicate.PaymentProfile(sql.FieldIsNull(FieldPhone))
+}
+
+// PhoneNotNil applies the NotNil predicate on the "phone" field.
+func PhoneNotNil() predicate.PaymentProfile {
+	return predicate.PaymentProfile(sql.FieldNotNull(FieldPhone))
+}
+
 // PhoneEqualFold applies the EqualFold predicate on the "phone" field.
 func PhoneEqualFold(v string) predicate.PaymentProfile {
 	return predicate.PaymentProfile(sql.FieldEqualFold(FieldPhone, v))
@@ -588,6 +608,16 @@ func UserTokenHasPrefix(v string) predicate.PaymentProfile {
 // UserTokenHasSuffix applies the HasSuffix predicate on the "user_token" field.
 func UserTokenHasSuffix(v string) predicate.PaymentProfile {
 	return predicate.PaymentProfile(sql.FieldHasSuffix(FieldUserToken, v))
+}
+
+// UserTokenIsNil applies the IsNil predicate on the "user_token" field.
+func UserTokenIsNil() predicate.PaymentProfile {
+	return predicate.PaymentProfile(sql.FieldIsNull(FieldUserToken))
+}
+
+// UserTokenNotNil applies the NotNil predicate on the "user_token" field.
+func UserTokenNotNil() predicate.PaymentProfile {
+	return predicate.PaymentProfile(sql.FieldNotNull(FieldUserToken))
 }
 
 // UserTokenEqualFold applies the EqualFold predicate on the "user_token" field.

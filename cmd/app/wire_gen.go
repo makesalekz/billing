@@ -59,18 +59,18 @@ func wireApp(bootstrap *conf.Bootstrap, logger log.Logger) (*kratos.App, func(),
 	invoicesUseCase := biz.NewInvoicesUseCase(logger, invoicesManager, invoicesRepo, itemsRepo, productRepo, productReservationRepo, iQueueManager)
 	invoiceService := service.NewInvoiceService(invoicesUseCase)
 	subscriptionsRepo := data.NewSubscriptionsRepo(dataData)
-	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo)
+	subscriptionsUseCase := biz.NewSubscriptionUsecase(subscriptionsRepo, invoicesRepo, productRepo)
 	subscriptionService := service.NewSubscriptionService(subscriptionsUseCase)
 	appleStoreUsecase := biz.NewAppleStoreUsecase(invoicesRepo)
 	appleStoreService := service.NewAppleStoreService(appleStoreUsecase)
-	ovpClient, err := data.NewOvpClient(configConfig, logger)
+	ttpClient, err := data.NewTtpClient(configConfig, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	paymentProfileRepo := data.NewPaymentProfileRepo(dataData)
-	paymentUseCase, err := biz.NewPaymentUsecase(logger, ovpClient, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo, invoicesManager)
+	paymentUseCase, err := biz.NewPaymentUsecase(logger, ttpClient, invoicesRepo, productRepo, subscriptionsRepo, paymentProfileRepo, productReservationRepo, invoicesManager)
 	if err != nil {
 		cleanup2()
 		cleanup()

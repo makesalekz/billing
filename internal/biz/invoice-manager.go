@@ -74,7 +74,7 @@ func (im *InvoicesManager) CreateInvoice(
 		return nil, nil, nil, err
 	}
 
-	im.applyInvoicePeriod(product, &invoiceDto)
+	// PaidTill is set in handleCompletedPayment when payment actually succeeds
 
 	invoice, err := im.invoiceRepo.CreateInvoice(ctx, invoiceDto)
 	if err != nil {
@@ -119,7 +119,7 @@ func (im *InvoicesManager) calculateInvoicePrice(
 	}
 
 	if product.PaymentModel == enum.Recurrent {
-		hasActive, isFirst, subscriptionErr := im.checkSubscriptionStatus(
+		hasActive, _, subscriptionErr := im.checkSubscriptionStatus(
 			ctx, invoiceDto.TenantID, invoiceDto.UserID, invoiceDto.ProductID,
 		)
 		if subscriptionErr != nil {
@@ -129,33 +129,8 @@ func (im *InvoicesManager) calculateInvoicePrice(
 		if hasActive {
 			return errors.New("subscription already active")
 		}
-
-		if isFirst {
-			invoiceDto.Price = decimal.NewFromInt(DefaultPriceForCardLink)
-			invoiceDto.IsTrial = true
-		}
 	}
 	return nil
-}
-
-func (im *InvoicesManager) applyInvoicePeriod(product *ent.Product, dto *data.InvoiceDto) {
-	var duration time.Duration
-	switch product.ProductPeriod {
-	case enum.ProductPeriodDay:
-		duration = HoursInDay * time.Hour
-	case enum.ProductPeriodWeek:
-		duration = DaysInWeek * HoursInDay * time.Hour
-	case enum.ProductPeriodMonth:
-		duration = DaysInMonth * HoursInDay * time.Hour
-	case enum.ProductPeriodYear:
-		duration = DaysInYear * HoursInDay * time.Hour
-	case enum.ProductPeriodUnlimited:
-		duration = UnlimitedYears * DaysInYear * HoursInDay * time.Hour
-	default:
-		return
-	}
-	paidTill := time.Now().Add(duration)
-	dto.PaidTill = &paidTill
 }
 
 func (im *InvoicesManager) checkSubscriptionStatus(

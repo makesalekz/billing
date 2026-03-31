@@ -828,6 +828,7 @@ type InvoiceMutation struct {
 	external_transaction_id *string
 	payment_provider        *enum.PaymentProvider
 	is_trial                *bool
+	ttp_subscription_id     *string
 	clearedFields           map[string]struct{}
 	product                 *int64
 	clearedproduct          bool
@@ -1825,6 +1826,55 @@ func (m *InvoiceMutation) ResetPaymentProfileID() {
 	delete(m.clearedFields, invoice.FieldPaymentProfileID)
 }
 
+// SetTtpSubscriptionID sets the "ttp_subscription_id" field.
+func (m *InvoiceMutation) SetTtpSubscriptionID(s string) {
+	m.ttp_subscription_id = &s
+}
+
+// TtpSubscriptionID returns the value of the "ttp_subscription_id" field in the mutation.
+func (m *InvoiceMutation) TtpSubscriptionID() (r string, exists bool) {
+	v := m.ttp_subscription_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTtpSubscriptionID returns the old "ttp_subscription_id" field's value of the Invoice entity.
+// If the Invoice object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InvoiceMutation) OldTtpSubscriptionID(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTtpSubscriptionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTtpSubscriptionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTtpSubscriptionID: %w", err)
+	}
+	return oldValue.TtpSubscriptionID, nil
+}
+
+// ClearTtpSubscriptionID clears the value of the "ttp_subscription_id" field.
+func (m *InvoiceMutation) ClearTtpSubscriptionID() {
+	m.ttp_subscription_id = nil
+	m.clearedFields[invoice.FieldTtpSubscriptionID] = struct{}{}
+}
+
+// TtpSubscriptionIDCleared returns if the "ttp_subscription_id" field was cleared in this mutation.
+func (m *InvoiceMutation) TtpSubscriptionIDCleared() bool {
+	_, ok := m.clearedFields[invoice.FieldTtpSubscriptionID]
+	return ok
+}
+
+// ResetTtpSubscriptionID resets all changes to the "ttp_subscription_id" field.
+func (m *InvoiceMutation) ResetTtpSubscriptionID() {
+	m.ttp_subscription_id = nil
+	delete(m.clearedFields, invoice.FieldTtpSubscriptionID)
+}
+
 // ClearProduct clears the "product" edge to the Product entity.
 func (m *InvoiceMutation) ClearProduct() {
 	m.clearedproduct = true
@@ -2007,7 +2057,7 @@ func (m *InvoiceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InvoiceMutation) Fields() []string {
-	fields := make([]string, 0, 20)
+	fields := make([]string, 0, 21)
 	if m.user_id != nil {
 		fields = append(fields, invoice.FieldUserID)
 	}
@@ -2068,6 +2118,9 @@ func (m *InvoiceMutation) Fields() []string {
 	if m.payment_profile != nil {
 		fields = append(fields, invoice.FieldPaymentProfileID)
 	}
+	if m.ttp_subscription_id != nil {
+		fields = append(fields, invoice.FieldTtpSubscriptionID)
+	}
 	return fields
 }
 
@@ -2116,6 +2169,8 @@ func (m *InvoiceMutation) Field(name string) (ent.Value, bool) {
 		return m.IsTrial()
 	case invoice.FieldPaymentProfileID:
 		return m.PaymentProfileID()
+	case invoice.FieldTtpSubscriptionID:
+		return m.TtpSubscriptionID()
 	}
 	return nil, false
 }
@@ -2165,6 +2220,8 @@ func (m *InvoiceMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldIsTrial(ctx)
 	case invoice.FieldPaymentProfileID:
 		return m.OldPaymentProfileID(ctx)
+	case invoice.FieldTtpSubscriptionID:
+		return m.OldTtpSubscriptionID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Invoice field %s", name)
 }
@@ -2314,6 +2371,13 @@ func (m *InvoiceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPaymentProfileID(v)
 		return nil
+	case invoice.FieldTtpSubscriptionID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTtpSubscriptionID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Invoice field %s", name)
 }
@@ -2413,6 +2477,9 @@ func (m *InvoiceMutation) ClearedFields() []string {
 	if m.FieldCleared(invoice.FieldPaymentProfileID) {
 		fields = append(fields, invoice.FieldPaymentProfileID)
 	}
+	if m.FieldCleared(invoice.FieldTtpSubscriptionID) {
+		fields = append(fields, invoice.FieldTtpSubscriptionID)
+	}
 	return fields
 }
 
@@ -2444,6 +2511,9 @@ func (m *InvoiceMutation) ClearField(name string) error {
 		return nil
 	case invoice.FieldPaymentProfileID:
 		m.ClearPaymentProfileID()
+		return nil
+	case invoice.FieldTtpSubscriptionID:
+		m.ClearTtpSubscriptionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice nullable field %s", name)
@@ -2512,6 +2582,9 @@ func (m *InvoiceMutation) ResetField(name string) error {
 		return nil
 	case invoice.FieldPaymentProfileID:
 		m.ResetPaymentProfileID()
+		return nil
+	case invoice.FieldTtpSubscriptionID:
+		m.ResetTtpSubscriptionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice field %s", name)
@@ -3801,9 +3874,22 @@ func (m *PaymentProfileMutation) OldEmail(ctx context.Context) (v string, err er
 	return oldValue.Email, nil
 }
 
+// ClearEmail clears the value of the "email" field.
+func (m *PaymentProfileMutation) ClearEmail() {
+	m.email = nil
+	m.clearedFields[paymentprofile.FieldEmail] = struct{}{}
+}
+
+// EmailCleared returns if the "email" field was cleared in this mutation.
+func (m *PaymentProfileMutation) EmailCleared() bool {
+	_, ok := m.clearedFields[paymentprofile.FieldEmail]
+	return ok
+}
+
 // ResetEmail resets all changes to the "email" field.
 func (m *PaymentProfileMutation) ResetEmail() {
 	m.email = nil
+	delete(m.clearedFields, paymentprofile.FieldEmail)
 }
 
 // SetPhone sets the "phone" field.
@@ -3837,9 +3923,22 @@ func (m *PaymentProfileMutation) OldPhone(ctx context.Context) (v string, err er
 	return oldValue.Phone, nil
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (m *PaymentProfileMutation) ClearPhone() {
+	m.phone = nil
+	m.clearedFields[paymentprofile.FieldPhone] = struct{}{}
+}
+
+// PhoneCleared returns if the "phone" field was cleared in this mutation.
+func (m *PaymentProfileMutation) PhoneCleared() bool {
+	_, ok := m.clearedFields[paymentprofile.FieldPhone]
+	return ok
+}
+
 // ResetPhone resets all changes to the "phone" field.
 func (m *PaymentProfileMutation) ResetPhone() {
 	m.phone = nil
+	delete(m.clearedFields, paymentprofile.FieldPhone)
 }
 
 // SetUserToken sets the "user_token" field.
@@ -3873,9 +3972,22 @@ func (m *PaymentProfileMutation) OldUserToken(ctx context.Context) (v string, er
 	return oldValue.UserToken, nil
 }
 
+// ClearUserToken clears the value of the "user_token" field.
+func (m *PaymentProfileMutation) ClearUserToken() {
+	m.user_token = nil
+	m.clearedFields[paymentprofile.FieldUserToken] = struct{}{}
+}
+
+// UserTokenCleared returns if the "user_token" field was cleared in this mutation.
+func (m *PaymentProfileMutation) UserTokenCleared() bool {
+	_, ok := m.clearedFields[paymentprofile.FieldUserToken]
+	return ok
+}
+
 // ResetUserToken resets all changes to the "user_token" field.
 func (m *PaymentProfileMutation) ResetUserToken() {
 	m.user_token = nil
+	delete(m.clearedFields, paymentprofile.FieldUserToken)
 }
 
 // SetRecurrentToken sets the "recurrent_token" field.
@@ -4230,6 +4342,15 @@ func (m *PaymentProfileMutation) ClearedFields() []string {
 	if m.FieldCleared(paymentprofile.FieldDeletedAt) {
 		fields = append(fields, paymentprofile.FieldDeletedAt)
 	}
+	if m.FieldCleared(paymentprofile.FieldEmail) {
+		fields = append(fields, paymentprofile.FieldEmail)
+	}
+	if m.FieldCleared(paymentprofile.FieldPhone) {
+		fields = append(fields, paymentprofile.FieldPhone)
+	}
+	if m.FieldCleared(paymentprofile.FieldUserToken) {
+		fields = append(fields, paymentprofile.FieldUserToken)
+	}
 	if m.FieldCleared(paymentprofile.FieldRecurrentToken) {
 		fields = append(fields, paymentprofile.FieldRecurrentToken)
 	}
@@ -4249,6 +4370,15 @@ func (m *PaymentProfileMutation) ClearField(name string) error {
 	switch name {
 	case paymentprofile.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case paymentprofile.FieldEmail:
+		m.ClearEmail()
+		return nil
+	case paymentprofile.FieldPhone:
+		m.ClearPhone()
+		return nil
+	case paymentprofile.FieldUserToken:
+		m.ClearUserToken()
 		return nil
 	case paymentprofile.FieldRecurrentToken:
 		m.ClearRecurrentToken()

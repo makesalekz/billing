@@ -108,8 +108,10 @@ func ReplyProduct(product *ent.Product) *v1.Product {
 		Left:        &product.Left,
 		IsUnique:    product.IsUnique,
 		UniqueLimit: &product.UniqueLimit,
-		IsExpiring:  product.IsExpiring,
-		Bundles:     nil,
+		IsExpiring:    product.IsExpiring,
+		Bundles:       nil,
+		PaymentModel:  string(product.PaymentModel),
+		PaymentPeriod: string(product.ProductPeriod),
 	}
 
 	if product.LimitedTill != nil {
@@ -125,11 +127,19 @@ func ReplyProduct(product *ent.Product) *v1.Product {
 	}
 
 	for _, bundle := range product.Edges.Bundles {
-		reply.Bundles = append(reply.Bundles, &v1.Bundle{
+		b := &v1.Bundle{
 			Id:     bundle.ID,
 			ItemId: bundle.ItemID,
 			Amount: bundle.Amount,
-		})
+		}
+		if bundle.Edges.Item != nil {
+			b.Item = &v1.Item{
+				Id:          bundle.Edges.Item.ID,
+				Name:        bundle.Edges.Item.Name,
+				Description: bundle.Edges.Item.Description,
+			}
+		}
+		reply.Bundles = append(reply.Bundles, b)
 	}
 
 	return reply

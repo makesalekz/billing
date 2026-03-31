@@ -12,6 +12,20 @@ option java_package = "billing.v1";
 service Subscriptions {
   rpc GetSubscription(GetSubscriptionRequest) returns (SubscriptionReply);
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsReply);
+  rpc GetSubscriptionStatus(GetSubscriptionStatusRequest) returns (SubscriptionStatusReply);
+}
+
+message GetSubscriptionStatusRequest {}
+
+message SubscriptionStatusReply {
+  bool hasSubscription = 1;
+  int64 productId = 2;
+  string productName = 3;
+  string status = 4;
+  string paidTill = 5;
+  bool autoRenew = 6;
+  int64 subscriptionId = 7;
+  string cancelledAt = 8;
 }
 
 message GetSubscriptionRequest {

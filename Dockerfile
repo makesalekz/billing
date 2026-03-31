@@ -12,15 +12,11 @@ RUN mkdir -p -m 0700 ~/.ssh && \
     chmod 600 ~/.netrc && \
     go env -w GO111MODULE='on' GOPRIVATE='gitlab.calendaria.team'
 
-RUN --mount=type=ssh,id=rsa make build
+RUN --mount=type=ssh,id=rsa CGO_ENABLED=0 make build
 
-FROM debian:stable-slim
+FROM alpine:3.21
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-		ca-certificates  \
-        netbase \
-        && rm -rf /var/lib/apt/lists/ \
-        && apt-get autoremove -y && apt-get autoclean -y
+RUN apk add --no-cache ca-certificates
 
 ARG ENV
 COPY --from=builder /src/bin /app

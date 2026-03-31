@@ -40,6 +40,7 @@ message Bundle {
   int64 id = 1;
   int64 itemId = 2;
   double amount = 3;
+  Item item = 4;
 }
 
 message ProductDto{
