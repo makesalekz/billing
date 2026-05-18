@@ -10,11 +10,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
-	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
-	"gitlab.calendaria.team/services/finance/billing/ent/product"
-	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
+	"github.com/makesalekz/billing/ent/enum"
+	"github.com/makesalekz/billing/ent/invoice"
+	"github.com/makesalekz/billing/ent/paymentprofile"
+	"github.com/makesalekz/billing/ent/product"
+	"github.com/makesalekz/billing/ent/subscriptions"
 )
 
 // Invoice is the model entity for the Invoice schema.

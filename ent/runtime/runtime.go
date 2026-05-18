@@ -5,13 +5,13 @@ package runtime
 import (
 	"time"
 
-	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
-	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
-	"gitlab.calendaria.team/services/finance/billing/ent/item"
-	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
-	"gitlab.calendaria.team/services/finance/billing/ent/product"
-	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
-	"gitlab.calendaria.team/services/finance/billing/ent/schema"
+	"github.com/makesalekz/billing/ent/bundle"
+	"github.com/makesalekz/billing/ent/invoice"
+	"github.com/makesalekz/billing/ent/item"
+	"github.com/makesalekz/billing/ent/paymentprofile"
+	"github.com/makesalekz/billing/ent/product"
+	"github.com/makesalekz/billing/ent/productreservation"
+	"github.com/makesalekz/billing/ent/schema"
 )
 
 // The init function reads all schema descriptors with runtime code

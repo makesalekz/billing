@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/internal/biz"
-	"gitlab.calendaria.team/services/finance/billing/internal/data"
-	"gitlab.calendaria.team/services/utils/v2/auth"
+	v1 "github.com/makesalekz/billing/api/billing/v1"
+	"github.com/makesalekz/billing/ent/enum"
+	"github.com/makesalekz/billing/internal/biz"
+	"github.com/makesalekz/billing/internal/data"
+	"github.com/makesalekz/utils/v2/auth"
 )
 
 type InvoiceService struct {

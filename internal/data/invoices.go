@@ -6,11 +6,11 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 
-	"gitlab.calendaria.team/services/finance/billing/ent"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
-	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
-	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
+	"github.com/makesalekz/billing/ent"
+	"github.com/makesalekz/billing/ent/enum"
+	"github.com/makesalekz/billing/ent/invoice"
+	"github.com/makesalekz/billing/ent/paymentprofile"
+	utils_v1 "github.com/makesalekz/utils/api/utils/v1"
 )
 
 type InvoicesRepo interface {

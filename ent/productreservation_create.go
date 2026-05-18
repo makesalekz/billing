@@ -11,10 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
-	"gitlab.calendaria.team/services/finance/billing/ent/product"
-	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
+	"github.com/makesalekz/billing/ent/enum"
+	"github.com/makesalekz/billing/ent/invoice"
+	"github.com/makesalekz/billing/ent/product"
+	"github.com/makesalekz/billing/ent/productreservation"
 )
 
 // ProductReservationCreate is the builder for creating a ProductReservation entity.

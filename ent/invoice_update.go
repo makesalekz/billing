@@ -12,12 +12,12 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
-	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
-	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
-	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
-	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
+	"github.com/makesalekz/billing/ent/enum"
+	"github.com/makesalekz/billing/ent/invoice"
+	"github.com/makesalekz/billing/ent/paymentprofile"
+	"github.com/makesalekz/billing/ent/predicate"
+	"github.com/makesalekz/billing/ent/productreservation"
+	"github.com/makesalekz/billing/ent/subscriptions"
 )
 
 // InvoiceUpdate is the builder for updating Invoice entities.

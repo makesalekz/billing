@@ -9,9 +9,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
-	"gitlab.calendaria.team/services/finance/billing/ent/item"
-	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"github.com/makesalekz/billing/ent/bundle"
+	"github.com/makesalekz/billing/ent/item"
+	"github.com/makesalekz/billing/ent/product"
 )
 
 // Bundle is the model entity for the Bundle schema.

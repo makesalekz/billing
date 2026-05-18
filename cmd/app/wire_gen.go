@@ -9,15 +9,15 @@ package main
 import (
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
-	"gitlab.calendaria.team/services/finance/billing/internal/biz"
-	"gitlab.calendaria.team/services/finance/billing/internal/conf"
-	"gitlab.calendaria.team/services/finance/billing/internal/data"
-	"gitlab.calendaria.team/services/finance/billing/internal/server"
-	"gitlab.calendaria.team/services/finance/billing/internal/service"
-	"gitlab.calendaria.team/services/utils/v1/config"
-	"gitlab.calendaria.team/services/utils/v2/jwt"
-	"gitlab.calendaria.team/services/utils/v2/nats"
-	"gitlab.calendaria.team/services/utils/v2/tracing"
+	"github.com/makesalekz/billing/internal/biz"
+	"github.com/makesalekz/billing/internal/conf"
+	"github.com/makesalekz/billing/internal/data"
+	"github.com/makesalekz/billing/internal/server"
+	"github.com/makesalekz/billing/internal/service"
+	"github.com/makesalekz/utils/v1/config"
+	"github.com/makesalekz/utils/v2/jwt"
+	"github.com/makesalekz/utils/v2/nats"
+	"github.com/makesalekz/utils/v2/tracing"
 )
 
 import (

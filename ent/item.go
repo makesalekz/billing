@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"gitlab.calendaria.team/services/finance/billing/ent/item"
+	"github.com/makesalekz/billing/ent/item"
 )
 
 // Item is the model entity for the Item schema.

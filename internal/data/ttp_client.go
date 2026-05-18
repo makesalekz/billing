@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-kratos/kratos/v2/log"
 
-	"gitlab.calendaria.team/services/utils/v1/config"
+	"github.com/makesalekz/utils/v1/config"
 )
 
 type contextKey string

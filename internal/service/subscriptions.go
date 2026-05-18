@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
-	"gitlab.calendaria.team/services/finance/billing/internal/biz"
-	"gitlab.calendaria.team/services/utils/v2/auth"
+	v1 "github.com/makesalekz/billing/api/billing/v1"
+	"github.com/makesalekz/billing/internal/biz"
+	"github.com/makesalekz/utils/v2/auth"
 )
 
 type SubscriptionService struct {

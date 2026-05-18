@@ -11,10 +11,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
-	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
-	"gitlab.calendaria.team/services/finance/billing/ent"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/internal/data"
+	v1 "github.com/makesalekz/billing/api/billing/v1"
+	"github.com/makesalekz/billing/ent"
+	"github.com/makesalekz/billing/ent/enum"
+	"github.com/makesalekz/billing/internal/data"
 )
 
 const (

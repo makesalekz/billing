@@ -6,7 +6,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/robfig/cron/v3"
 
-	"gitlab.calendaria.team/services/finance/billing/internal/biz"
+	"github.com/makesalekz/billing/internal/biz"
 )
 
 type CronServer struct {

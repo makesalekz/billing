@@ -12,13 +12,13 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
-	"gitlab.calendaria.team/services/finance/billing/ent/invoice"
-	"gitlab.calendaria.team/services/finance/billing/ent/item"
-	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
-	"gitlab.calendaria.team/services/finance/billing/ent/product"
-	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
-	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
+	"github.com/makesalekz/billing/ent/bundle"
+	"github.com/makesalekz/billing/ent/invoice"
+	"github.com/makesalekz/billing/ent/item"
+	"github.com/makesalekz/billing/ent/paymentprofile"
+	"github.com/makesalekz/billing/ent/product"
+	"github.com/makesalekz/billing/ent/productreservation"
+	"github.com/makesalekz/billing/ent/subscriptions"
 )
 
 // ent aliases to avoid import conflicts in user's code.

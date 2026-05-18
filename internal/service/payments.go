@@ -4,10 +4,10 @@ import (
 	"context"
 	"strconv"
 
-	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
-	"gitlab.calendaria.team/services/finance/billing/internal/biz"
-	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
-	"gitlab.calendaria.team/services/utils/v2/auth"
+	v1 "github.com/makesalekz/billing/api/billing/v1"
+	"github.com/makesalekz/billing/internal/biz"
+	utils_v1 "github.com/makesalekz/utils/api/utils/v1"
+	"github.com/makesalekz/utils/v2/auth"
 )
 
 type PaymentsService struct {

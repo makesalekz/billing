@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
+	"github.com/makesalekz/billing/ent/paymentprofile"
 )
 
 // PaymentProfile is the model entity for the PaymentProfile schema.

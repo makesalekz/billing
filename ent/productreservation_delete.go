@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
-	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
+	"github.com/makesalekz/billing/ent/predicate"
+	"github.com/makesalekz/billing/ent/productreservation"
 )
 
 // ProductReservationDelete is the builder for deleting a ProductReservation entity.

@@ -3,8 +3,8 @@ package service
 import (
 	"github.com/google/wire"
 
-	"gitlab.calendaria.team/services/finance/billing/internal/data"
-	utils_v1 "gitlab.calendaria.team/services/utils/api/utils/v1"
+	"github.com/makesalekz/billing/internal/data"
+	utils_v1 "github.com/makesalekz/utils/api/utils/v1"
 )
 
 // ProviderSet is service providers.

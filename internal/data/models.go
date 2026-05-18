@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
+	"github.com/makesalekz/billing/ent/enum"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/shopspring/decimal"

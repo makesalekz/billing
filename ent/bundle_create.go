@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
-	"gitlab.calendaria.team/services/finance/billing/ent/item"
-	"gitlab.calendaria.team/services/finance/billing/ent/product"
+	"github.com/makesalekz/billing/ent/bundle"
+	"github.com/makesalekz/billing/ent/item"
+	"github.com/makesalekz/billing/ent/product"
 )
 
 // BundleCreate is the builder for creating a Bundle entity.

@@ -7,7 +7,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/shopspring/decimal"
 
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
+	"github.com/makesalekz/billing/ent/enum"
 )
 
 // Invoice holds the schema definition for the Invoice entity.

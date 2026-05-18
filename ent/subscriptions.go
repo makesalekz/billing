@@ -8,8 +8,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"gitlab.calendaria.team/services/finance/billing/ent/product"
-	"gitlab.calendaria.team/services/finance/billing/ent/subscriptions"
+	"github.com/makesalekz/billing/ent/product"
+	"github.com/makesalekz/billing/ent/subscriptions"
 )
 
 // Subscriptions is the model entity for the Subscriptions schema.

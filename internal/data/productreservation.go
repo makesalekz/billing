@@ -6,9 +6,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"gitlab.calendaria.team/services/finance/billing/ent"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
+	"github.com/makesalekz/billing/ent"
+	"github.com/makesalekz/billing/ent/enum"
+	"github.com/makesalekz/billing/ent/productreservation"
 )
 
 type ProductReservationRepo interface {

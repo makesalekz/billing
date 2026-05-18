@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"entgo.io/ent/schema/mixin"
-	taskent "gitlab.calendaria.team/services/finance/billing/ent"
-	"gitlab.calendaria.team/services/finance/billing/ent/hook"
-	"gitlab.calendaria.team/services/finance/billing/ent/intercept"
+	taskent "github.com/makesalekz/billing/ent"
+	"github.com/makesalekz/billing/ent/hook"
+	"github.com/makesalekz/billing/ent/intercept"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"

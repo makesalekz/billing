@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.calendaria.team/services/finance/billing/ent"
+	"github.com/makesalekz/billing/ent"
 )
 
 // The BundleFunc type is an adapter to allow the use of ordinary

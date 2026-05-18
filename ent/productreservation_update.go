@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/billing/ent/enum"
-	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
-	"gitlab.calendaria.team/services/finance/billing/ent/productreservation"
+	"github.com/makesalekz/billing/ent/enum"
+	"github.com/makesalekz/billing/ent/predicate"
+	"github.com/makesalekz/billing/ent/productreservation"
 )
 
 // ProductReservationUpdate is the builder for updating ProductReservation entities.

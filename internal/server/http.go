@@ -1,10 +1,10 @@
 package server
 
 import (
-	"gitlab.calendaria.team/services/finance/billing/internal/conf"
-	"gitlab.calendaria.team/services/utils/v1/middlewares/metrics"
-	"gitlab.calendaria.team/services/utils/v2/jwt"
-	"gitlab.calendaria.team/services/utils/v2/middlewares/auth"
+	"github.com/makesalekz/billing/internal/conf"
+	"github.com/makesalekz/utils/v1/middlewares/metrics"
+	"github.com/makesalekz/utils/v2/jwt"
+	"github.com/makesalekz/utils/v2/middlewares/auth"
 
 	prom "github.com/go-kratos/kratos/contrib/metrics/prometheus/v2"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"

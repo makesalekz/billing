@@ -3,8 +3,8 @@ package data
 import (
 	"context"
 
-	"gitlab.calendaria.team/services/finance/billing/ent"
-	"gitlab.calendaria.team/services/finance/billing/ent/paymentprofile"
+	"github.com/makesalekz/billing/ent"
+	"github.com/makesalekz/billing/ent/paymentprofile"
 )
 
 type PaymentProfileRepo interface {

@@ -7,7 +7,7 @@ import (
 
 	"codeberg.org/go-pdf/fpdf"
 
-	v1 "gitlab.calendaria.team/services/finance/billing/api/billing/v1"
+	v1 "github.com/makesalekz/billing/api/billing/v1"
 )
 
 // GenerateInvoicePDF creates a PDF receipt from invoice receipt data.

@@ -5,7 +5,7 @@ package subscriptions
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
+	"github.com/makesalekz/billing/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"gitlab.calendaria.team/services/finance/billing/ent/bundle"
-	"gitlab.calendaria.team/services/finance/billing/ent/predicate"
+	"github.com/makesalekz/billing/ent/bundle"
+	"github.com/makesalekz/billing/ent/predicate"
 )
 
 // BundleUpdate is the builder for updating Bundle entities.
