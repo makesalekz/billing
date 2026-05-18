@@ -5,7 +5,7 @@ server:
   grpc:
     addr: 0.0.0.0:9000
     timeout: 30s
-db: host=finance-billing_db port=5432 user=umag dbname=api password=umag_secret_2026 sslmode=disable
+db: host=postgres_db port=5432 user=umag dbname=billing password=umag_secret_2026 sslmode=disable
 nats: nats://nats:4222
 discovery:
   iam: discovery:///iam
