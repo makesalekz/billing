@@ -11,12 +11,12 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
 	github.com/lib/pq v1.10.9
+	github.com/makesalekz/utils v0.4.0
 	github.com/nats-io/nats.go v1.36.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.18.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shopspring/decimal v1.4.0
-	github.com/makesalekz/utils v0.3.15
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/exp v0.0.0-20240110193028-0dcbfd608b1e
 	google.golang.org/grpc v1.65.0
@@ -101,5 +101,3 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/makesalekz/utils => ../utils
