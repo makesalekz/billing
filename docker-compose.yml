@@ -1,72 +1,16 @@
-version: '3.5'
-
 services:
-  db:
-    container_name: ${SERVICE_NAME}_db
-    restart: always
-    image: postgres:15.4
-    volumes:
-      - ${DB_VOLUME}:/var/lib/postgresql/data
-    ports:
-      - '${DB_PORT}:5432'
-    environment:
-      - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
-    networks:
-      - backend
-  service:
-    image: ${REGISTRY_IMAGE}
-    container_name: ${SERVICE_NAME}_service
-    networks:
-      - backend
-    restart: unless-stopped
-    depends_on:
-      - db
-    environment:
-      - SERVICE_NAME=${SERVICE_NAME}
-      - CONSUL_ADDRESS=${CONSUL_ADDRESS}
-      - VAULT_ADDRESS=${VAULT_ADDRESS}
-      - VAULT_ROLE_ID=${VAULT_ROLE_ID}
-      - VAULT_SECRET_ID_PATH=/run/secrets/vault_secret_id
-      - OTLP_GRPC_ADDRESS=${OTLP_GRPC_ADDRESS}
-    secrets:
-      - vault_secret_id
-    command: ["./app"]
-  local-service:
+  billing:
     build:
-      context: ./
+      context: .
       dockerfile: Dockerfile
       args:
-        - TOKEN=${TOKEN}
-        - ENV=dev
-    container_name: ${SERVICE_NAME}_service
-    ports:
-      - '${HTTP_PORT}:8000'
-      - '${GRPC_PORT}:9000'
-    networks:
-      - backend
+        ENV: dev
+    container_name: billing
     restart: unless-stopped
     environment:
+      - SERVICE_NAME=billing
+      - CONSUL_ADDRESS=${CONSUL_ADDRESS}
+      - VAULT_ADDRESS=${VAULT_ADDRESS}
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN_ID}
+      - DEBUG=true
       - AUTOMIGRATE=true
-      - SERVICE_NAME=${SERVICE_NAME}
-      - CONSUL_ADDRESS=http://consul:8500
-      - VAULT_ADDRESS=http://vault:8200
-      - VAULT_TOKEN=myroot
-    command: ["./app"]
-
-volumes:
-  dbvol:
-    name: ${SERVICE_NAME}_db
-    external: true
-
-networks:
-  backend:
-    name: ${NETWORK}
-    driver: bridge
-    external: true
-
-secrets:
-  vault_secret_id:
-    environment: 'VAULT_SECRET_ID'

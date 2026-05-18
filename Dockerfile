@@ -1,28 +1,22 @@
-FROM golang:latest AS builder
+FROM golang:1.23-alpine AS builder
+
+RUN apk add --no-cache git make
 
 COPY . /src
 WORKDIR /src
-ARG TOKEN
 
-RUN mkdir -p -m 0700 ~/.ssh && \
-    ssh-keyscan gitlab.calendaria.team >> ~/.ssh/known_hosts && \
-    git config --global url.ssh://git@gitlab.calendaria.team.insteadOf https://gitlab.calendaria.team && \
-    touch .env && \
-    echo "machine gitlab.calendaria.team login gitlab-ci-token password ${TOKEN}" > ~/.netrc && \
-    chmod 600 ~/.netrc && \
-    go env -w GO111MODULE='on' GOPRIVATE='gitlab.calendaria.team'
-
-RUN --mount=type=ssh,id=rsa CGO_ENABLED=0 make build
+RUN touch .env && CGO_ENABLED=0 go build -o bin/app ./cmd/app/
 
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates ffmpeg
 
-ARG ENV
-COPY --from=builder /src/bin /app
+ARG ENV=dev
+COPY --from=builder /src/bin/app /app/app
 COPY --from=builder /src/configs/config.${ENV}.yaml /app/config.yaml
 
 WORKDIR /app
 
-EXPOSE 8000
-EXPOSE 9000
+EXPOSE 8000 9000
+
+CMD ["./app", "-conf", "config.yaml"]
